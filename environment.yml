@@ -1,0 +1,78 @@
+name: workshop
+channels:
+ - conda-forge
+ - defaults
+dependencies:
+ - python=3.8
+ - pip
+ - git
+ - pylint
+ - rope           # python refactoring library
+ #- rstcheck       # restructuredText linter    # Some issues with this linter causing too many jobs
+ - line_profiler  # profile code line by line 
+ 
+ # JupyterLab
+ #------------
+ - jupyter
+ - jupyterlab=2
+ - nodejs
+ #- jupyterlab-git
+ #- jupyter-lsp
+ #- jupyter-lsp-python
+    # Also manually installed these:
+    #  jupyter labextension install @jupyterlab/toc
+    #  jupyter labextension install @jupyterlab/shortcutui
+    #  jupyter labextension install @krassowski/jupyterlab-lsp
+    #  jupyter labextension install @ijmbarr/jupyterlab_spellchecker   
+ 
+ # Toolbox
+ #---------
+ - requests
+ - matplotlib
+ - matplotlib-venn
+ - cartopy
+ - numpy
+ - scipy
+ - scikit-learn
+ - pandas
+ - xarray
+ - rasterio
+ - imageio
+ - netcdf4
+ - eccodes
+ - cfgrib
+ - pygrib
+ - h5py
+ - h5netcdf
+ - xesmf      # Not available on PC (v0.5.0 only works with xarray 0.16.0, but that has issues)
+ - esmpy      # Not available on PC
+ - cf_xarray
+ - metpy
+ - dask
+ - f90nml      # For fortran namelist files
+ 
+ # Access to Amazon AWS S3 and other cloud storage
+ - s3fs
+
+ # Access to Unidata Catalog and THREDDS Data Servers
+ - siphon
+
+ # For Sphinx Documentation
+ - sphinx
+ - nbsphinx
+ - sphinx_rtd_theme          # ReadTheDocs Sphinx Theme (Lots of others)
+ - pydata-sphinx-theme       # PyData Sphinx Theme (i.e, Numpy, Pandas, MetPy)
+ - recommonmark
+ - sphinxcontrib-jsmath
+ - sphinx-markdown-tables
+ - autodocsumm
+ - latexmk
+
+ # Other
+ #-------
+ - pip:
+   - bootstrapped
+   - git+https://github.com/blaylockbk/HRRR_archive_download
+   - git+https://github.com/blaylockbk/SynopticPy
+   - git+https://github.com/blaylockbk/goes2go
+   - git+https://github.com/blaylockbk/Carptenter_Workshop

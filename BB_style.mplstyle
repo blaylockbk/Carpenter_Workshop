@@ -1,0 +1,121 @@
+## Brian Blaylock's custom matplotlib style sheet
+## December 9, 2019
+
+# 
+# Copy/link this to the "/p/home/blaylock/.config/matplotlib/stylelib" folder
+# 
+#     ln -sf ~/BB_python/pyBKB_NRL/BB_style.mplstyle BB_style.mplstyle
+# 
+# Goal: A consistent style suitable for both publication and presentation.
+# 
+# Look for more style options here:
+# https://matplotlib.org/tutorials/introductory/customizing.html
+# 
+
+##----------------------------------------------------------------------
+## Figure
+##----------------------------------------------------------------------
+## Default size is based on the AMS publication guide for a two-column
+## wide color images without type.
+##   https://www.ametsoc.org/index.cfm/aMS/publications/authors/journal-and-bams-authors/figure-information-for-authors/#Raster
+
+## Dots per inch
+## Defaul is 300 to be large enough for a presentation and develpment,
+## but when making a figure for a publication, use 700 for most other
+## images.
+figure.dpi      : 300    # 1100 dpi for black/white line art
+                         #  700 dpi for greyscale/color image with text
+                         #  300 dpi for greyscale/color image without text
+
+# Default is transparent, but we don't want that when we save figures
+figure.facecolor : white
+
+# Figure width and height    
+figure.figsize  : 5.7, 3.5
+
+# Note: This default figsize is used for 2-column wide AMS publication
+# figures, and is also generally a good size for adding 4 pannels to a PowerPoint
+
+# Note: Need to add 0.2 inches to the figsize to get the correct figsize.
+# I'm not sure why plt.savefig isn't using the figsize specified.
+# Is it becasue of `savefig.bbox='tight'`?
+# | figsize width | AMS (actual) width             |
+# |---------------|--------------------------------|
+# |     3.4       | 3.2 inches wide for one column |
+# |     4.7       | 4.5 inches wide for 2/3 column |
+# |     5.7       | 5.5 inches wide for two column |
+# |     6.7       | 6.5 inches wide for >two column|
+                         
+                         
+figure.subplot.wspace : 0.1
+figure.subplot.hspace : 0.1
+
+##----------------------------------------------------------------------
+## Histogram
+##----------------------------------------------------------------------
+hist.bins       : auto
+
+
+##----------------------------------------------------------------------
+## Images
+##----------------------------------------------------------------------
+image.origin    : lower  ## I primarily work with data arrays 
+                         ## (e.g., GOES-16) and not real "images" 
+                         ## where origin is the upper corner.
+
+##----------------------------------------------------------------------
+## Grid
+##----------------------------------------------------------------------
+axes.grid           : True
+grid.color          : 0.85
+grid.linestyle      : --
+grid.linewidth      : .75
+grid.alpha          : 0.5
+
+# Draw gridlines and ticks *behind* patches (i.e., bar plots)
+# https://matplotlib.org/3.3.3/gallery/misc/zorder_demo.html#zorder-demo
+axes.axisbelow      : True   
+
+##----------------------------------------------------------------------
+## Hatches
+##----------------------------------------------------------------------
+hatch.color     : (1, 1, 1, .33)
+hatch.linewidth : 8
+
+
+##----------------------------------------------------------------------
+## Axes Text
+##----------------------------------------------------------------------
+figure.titlesize    : 11
+axes.titlesize      : 11
+axes.labelsize      : 10
+xtick.labelsize     : 8
+ytick.labelsize     : 8
+legend.fontsize     : 8
+
+##----------------------------------------------------------------------
+## Dates format (someday, a newline character may be used, but not yet)
+##----------------------------------------------------------------------
+date.autoformatter.year     : %Y
+date.autoformatter.month    : %b %Y
+date.autoformatter.day      : %b %d
+date.autoformatter.hour     : %b %d %H:%M
+date.autoformatter.minute   : %b %d %H:%M
+date.autoformatter.second   : %b %d %H:%M:%S
+
+
+##----------------------------------------------------------------------
+## Legend
+##----------------------------------------------------------------------
+legend.framealpha    : 0.7      ## legend patch transparency
+legend.edgecolor     : 0.9      ## background patch boundary color
+legend.labelspacing  : 0.4      ## the vertical space between the legend entries
+legend.handlelength  : 1.5      ## the length of the legend lines
+legend.handletextpad : 0.6      ## the space between the legend line and legend text
+
+
+##----------------------------------------------------------------------
+## Save Settings
+##----------------------------------------------------------------------
+savefig.bbox        : tight
+savefig.pad_inches   : 0.05
