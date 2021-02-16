@@ -93,3 +93,38 @@ def center_axis_on_zero(x=True, y=False, ax=None):
         down, up = ax.get_ylim()
         du_max = np.maximum(np.abs(down), np.abs(up))
         ax.set_ylim(-du_max, du_max)
+
+def add_fig_letters(axes):
+    """
+    Add a figure letter to top-left corner for all axes
+    
+    Like is done in a publication figure, all axes are labeled with a
+    letter so individual axes can be referred to from the text.
+
+    Example
+    -------
+    
+    .. code-block: python
+        
+        fig, axes = plt.subplots(4,4)
+        add_fig_letters(axes)
+
+    """
+    if not hasattr(axes, 'flat'): 
+        np.array(axes)
+    ### Add letters to plots
+    import string
+        
+    for i, (ax, letter) in enumerate(zip(axes.flat, string.ascii_lowercase)):
+        plt.sca(ax)
+
+        # Add figure letter
+        box_prop = dict(boxstyle='round',
+                        facecolor='wheat',
+                        alpha=1,
+                        linewidth=.5)
+        
+        plt.text(0, 1, f'{letter}', 
+                 transform=ax.transAxes, fontfamily='monospace',
+                 va='top', ha='left', 
+                 bbox=box_prop, zorder=10_000)

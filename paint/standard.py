@@ -29,14 +29,14 @@ For example:
 
 """
 import matplotlib as mpl
-mpl.use('Agg') 
+#mpl.use('Agg') # Uncomment if you don't want to display the figure.
 
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 import numpy as np
 import matplotlib as mpl
 
-def cm_tmp(display_cmap=False, levels=40):
+def cm_tmp(display_cmap=False, levels=40, vmin=-50, vmax=50):
     """
     Colormap for temperature in Celsius.
     
@@ -70,7 +70,7 @@ def cm_tmp(display_cmap=False, levels=40):
     else:
         cmap = colors.LinearSegmentedColormap.from_list("Temperature",
                                                         COLORS, N=levels)
-    norm = colors.Normalize(-50, 50)
+    norm = colors.Normalize(vmin, vmax)
     
     if display_cmap:
         fig = plt.figure(figsize=(8, 3))
@@ -159,7 +159,7 @@ def cm_rh(display_cmap=False):
     return {'cmap': cmap, 'norm': norm}, \
            {'label': label, 'ticks': bounds, 'spacing': 'proportional'}
     
-def cm_wind(display_cmap=False):
+def cm_wind(display_cmap=False, continuous=False, vmin=0, vmax=140):
     """
     Colormap for wind speed (m/s).
     
@@ -173,20 +173,27 @@ def cm_wind(display_cmap=False):
     label = r'Wind Speed (m s$\mathregular{^{-1}}$)'
     
     # Color tuple for every bin
-    COLORS = [
+    COLORS = np.array([
        '#103f78', '#225ea8', '#1d91c0', '#41b6c4',
        '#7fcdbb', '#b4d79e', '#dfff9e', '#ffffa6',
        '#ffe873', '#ffc400', '#ffaa00', '#ff5900',
        '#ff0000', '#a80000', '#6e0000', '#ffbee8',
        '#ff73df'
-    ]
+    ])
 
     bounds = np.array([0,5,10,15,20,25,30,35,40,45,50,60,70,80,100,120,140])
     
-    cmap = colors.LinearSegmentedColormap.from_list("Wind Speed", COLORS,
-                                                    N=len(COLORS)+1)
-    
-    norm = colors.BoundaryNorm(boundaries=bounds, ncolors=len(bounds))
+    if continuous:
+        cmap = colors.LinearSegmentedColormap.from_list("Wind Speed", COLORS)
+        norm = colors.Normalize(vmin, vmax)
+    else:
+        logic = np.logical_and(bounds >=vmin, bounds <= vmax)
+        COLORS = COLORS[logic]
+        BOUNDS = bounds[logic]
+        cmap = colors.LinearSegmentedColormap.from_list("Wind Speed", COLORS,
+                                                        N=len(COLORS)+1)
+        
+        norm = colors.BoundaryNorm(boundaries=bounds, ncolors=len(bounds))
     
     if display_cmap:
         fig = plt.figure(figsize=(8, 3))
@@ -292,23 +299,29 @@ if __name__ == '__main__':
 
     cm_tmp(display_cmap=True)
     plt.savefig(IMG_DIR / 'cm_tmp', bbox_inches='tight')
+    plt.close()
     
     cm_dpt(display_cmap=True)
     plt.savefig(IMG_DIR / 'cm_dpt', bbox_inches='tight')
+    plt.close()
     
     cm_rh(display_cmap=True)
     plt.savefig(IMG_DIR / 'cm_rh', bbox_inches='tight')
+    plt.close()
     
     cm_wind(display_cmap=True)
     plt.savefig(IMG_DIR / 'cm_wind', bbox_inches='tight')
+    plt.close()
     
     cm_sky(display_cmap=True)
     plt.savefig(IMG_DIR / 'cm_sky', bbox_inches='tight')
+    plt.close()
     
     cm_precip(display_cmap=True)
     plt.savefig(IMG_DIR / 'cm_precip', bbox_inches='tight')
-
+    plt.close()
 
     # Continuous Colorbar
     cm_tmp(display_cmap=True, levels=None)
     plt.savefig(IMG_DIR / 'cm_tmp_continuous', bbox_inches='tight')
+    plt.close()
