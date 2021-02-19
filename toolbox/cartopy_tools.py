@@ -13,20 +13,30 @@ General helpers for cartopy plots.
 
 """
 import warnings
+
 import matplotlib.pyplot as plt
-import cartopy.crs as ccrs
-import cartopy.feature as feature
-import cartopy.io.img_tiles as cimgt
 from shapely.geometry import Polygon
 import xarray as xr
 import numpy as np
+
+import cartopy.crs as ccrs
+import cartopy.feature as feature
+import cartopy.io.img_tiles as cimgt
+from cartopy.io import shapereader
 
 try:
     from metpy.plots import USCOUNTIES
 except Exception as e:
     print(f"WARNING! {e}")
     print('Without metpy, you cannot draw USCOUNTIES on the map.')
-    
+try:
+    import geopandas
+except Exception as e:
+    print(f"WARNING! {e}")
+    print('Without geopandas, you cannot subset some'
+          'NaturalEarthFeatures, like "Major Highways" from roads.')
+
+
 pc = ccrs.PlateCarree()
 
 ########################################################################
@@ -64,17 +74,19 @@ def check_cartopy_axes(ax=None, crs=pc, verbose=False):
 
 def common_features(scale='110m', counties_scale='20m', figsize=None, *,
                     ax=None, crs=pc, verbose=False,
-                    dark_theme=False,                    
+                    dark=False,                    
                     COASTLINES=True, BORDERS=False,
                     STATES=False, COUNTIES=False, 
                     OCEAN=False, LAND=False,
                     RIVERS=False, LAKES=False, 
-                    STAMEN=False,
+                    ROADS=False,
+                    STAMEN=False, OSM=False,
                     COASTLINES_kwargs={}, BORDERS_kwargs={},
                     STATES_kwargs={}, COUNTIES_kwargs={},
                     OCEAN_kwargs={}, LAND_kwargs={},
                     RIVERS_kwargs={}, LAKES_kwargs={},
-                    STAMEN_kwargs={},
+                    ROADS_kwargs={},
+                    STAMEN_kwargs={}, OSM_kwargs={},
                     **kwargs):
     """
     Add common features to a cartopy axis. 
@@ -95,7 +107,7 @@ def common_features(scale='110m', counties_scale='20m', figsize=None, *,
         available than other features.
         -  20m = 20,000,000 resolution (Ok if you show a large area)
         -   5m =  5,000,000 resolution (provides good detail)
-        - 500k =    500,000 resolution (plots very slow)
+        - 500k =    500,000 resolution (high resolution, plots very slow)
     
     ax : plot axes
         The axis to add the feature to.
@@ -103,7 +115,7 @@ def common_features(scale='110m', counties_scale='20m', figsize=None, *,
     crs : cartopy.crs
         Coordinate reference system (aka "projection") to create new map
         if no cartopy axes is given. Default is ccrs.PlateCarree.
-    dark_theme : bool
+    dark : bool
         If True, use alternative "dark theme" colors for land and water.
         
         .. figure:: _static/BB_maps/common_features-1.png
@@ -126,6 +138,7 @@ def common_features(scale='110m', counties_scale='20m', figsize=None, *,
         LAND       Colored land area
         RIVERS     Lines where rivers exist
         LAKES      Colored lake area
+        ROADS      All major roads. Can break filter by road type.
         ========== =========================================================
     
         ========== =========================================================
@@ -134,10 +147,30 @@ def common_features(scale='110m', counties_scale='20m', figsize=None, *,
         Stamen     Specify type and zoom level. http://maps.stamen.com/
                    Style: ``terrain-background``, ``terrain``, 
                           ``toner-background``, ``toner``, `watercolor``
-                   Zoom: int [0-10]
+                   zoom: int [0-10]
                    alpha: [0-1]
                    alpha_color: an overlay color to put on top of map
+        OSM        Open Street Maps
+                   zoom: int
         ========== =========================================================
+
+    .. note::
+        For ``ROADS_kwargs`` you may provide a key for 'type' to filter 
+        out the types of roads you want. The road type may be a single
+        string or a list of road types. For example
+        ``ROADS_kwargs=dict(type='Major Highway')`` or
+        ``ROADS_kwargs=dict(type=['Secondary Highway', 'Major Highway'])
+        
+        Of course, the shapefile has many other road classifiers for each
+        road, like "level" (Federal, State, Interstate), road "name",
+        "length_km", etc. Filters for each of these could be added if I
+        need them later.
+
+    .. note::
+        When adding a tile product to a map, it might be better to add
+        it to the map first, then set the map extent, then make a separate
+        call to ``common_features`` to add other features like roads and
+        counties. The reason is because, if you add a tile map to  
 
     Examples
     --------
@@ -178,7 +211,7 @@ def common_features(scale='110m', counties_scale='20m', figsize=None, *,
     OCEAN_kwargs = {**{'edgecolor': 'none'}, **OCEAN_kwargs}
     LAKES_kwargs = {**{'linewidth': 0}, **LAKES_kwargs}
     
-    if dark_theme:
+    if dark:
         kwargs = {**kwargs, **{'edgecolor':'.5'}}
         land = '#060613'
         water = '#0f2b38'
@@ -221,8 +254,8 @@ def common_features(scale='110m', counties_scale='20m', figsize=None, *,
     if OCEAN: 
         ax.add_feature(feature.OCEAN.with_scale(scale),
                        **{**kwargs, **OCEAN_kwargs})
-    if LAND and not dark_theme:
-        # If `dark_theme=True`, the face_color is the land color.
+    if LAND and not dark:
+        # If `dark=True`, the face_color is the land color.
         ax.add_feature(feature.LAND.with_scale(scale), 
                        **{**kwargs, **LAND_kwargs})
     if RIVERS: 
@@ -231,7 +264,27 @@ def common_features(scale='110m', counties_scale='20m', figsize=None, *,
     if LAKES: 
         ax.add_feature(feature.LAKES.with_scale(scale),
                        **{**kwargs, **LAKES_kwargs})
-    
+    if ROADS:
+        ROADS_kwargs.setdefault('edgecolor', '#b30000')
+        ROADS_kwargs.setdefault('facecolor', 'none')
+        ROADS_kwargs.setdefault('linewidth', .2)
+        
+        if 'type' not in ROADS_kwargs:
+            # Plot all roadways
+            roads = feature.NaturalEarthFeature('cultural', 'roads', '10m',
+                                                **ROADS_kwargs)
+            ax.add_feature(roads)
+        else:
+            # Specify the type of road to include in plot
+            road_types = ROADS_kwargs.pop('type')
+            if isinstance(road_types, str): road_types = [road_types]
+            shpfilename = shapereader.natural_earth('10m', 'cultural', 'roads')
+            df = geopandas.read_file(shpfilename)
+            _types = df['type'].unique()
+            assert np.all([i in _types for i in road_types]), f"`ROADS_kwargs['type']` must be a list of these: {_types}"
+            road_geos = df.loc[df['type'].apply(lambda x: x in road_types)].geometry.values
+            ax.add_geometries(road_geos, crs=pc, **ROADS_kwargs)
+
     if STAMEN:
         if verbose: print("Please use `ax.set_extent` before increasing Zoom level.")
         STAMEN_kwargs.setdefault('style', 'terrain-background')
@@ -243,7 +296,7 @@ def common_features(scale='110m', counties_scale='20m', figsize=None, *,
 
         if 'alpha' in STAMEN_kwargs:
             # Need to manually put a white layer over the STAMEN terrain
-            if dark_theme:
+            if dark:
                 STAMEN_kwargs.setdefault('alpha_color', 'k')
             else:
                 STAMEN_kwargs.setdefault('alpha_color', 'w')
@@ -252,7 +305,23 @@ def common_features(scale='110m', counties_scale='20m', figsize=None, *,
                            color=STAMEN_kwargs['alpha_color'], 
                            alpha=1-STAMEN_kwargs['alpha'], 
                            zorder=1)
-
+    
+    if OSM:
+        image = cimgt.OSM()
+        OSM_kwargs.setdefault('zoom', 1)
+        ax.add_image(image, OSM_kwargs['zoom'])
+        if 'alpha' in OSM_kwargs:
+            # Need to manually put a white layer over the STAMEN terrain
+            if dark:
+                OSM_kwargs.setdefault('alpha_color', 'k')
+            else:
+                OSM_kwargs.setdefault('alpha_color', 'w')
+            poly = ax.projection.domain
+            ax.add_feature(feature.ShapelyFeature([poly], ax.projection),
+                           color=OSM_kwargs['alpha_color'], 
+                           alpha=1-OSM_kwargs['alpha'], 
+                           zorder=1)
+    
     if figsize is not None:
         plt.gcf().set_figwidth(figsize[0])
         plt.gcf().set_figheight(figsize[1])
