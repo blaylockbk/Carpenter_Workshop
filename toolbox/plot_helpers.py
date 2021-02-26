@@ -114,8 +114,13 @@ def add_fig_letters(axes):
         np.array(axes)
     ### Add letters to plots
     import string
-        
-    for i, (ax, letter) in enumerate(zip(axes.flat, string.ascii_lowercase)):
+    
+    try:
+        axes = axes.flat 
+    except:
+        pass
+
+    for i, (ax, letter) in enumerate(zip(axes, string.ascii_lowercase)):
         plt.sca(ax)
 
         # Add figure letter

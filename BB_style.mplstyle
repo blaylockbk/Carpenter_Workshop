@@ -2,9 +2,10 @@
 ## December 9, 2019
 
 # 
-# Copy/link this to the "/p/home/blaylock/.config/matplotlib/stylelib" folder
-# 
-#     ln -sf ~/BB_python/pyBKB_NRL/BB_style.mplstyle BB_style.mplstyle
+# Copy/link this to the "$HOME/.config/matplotlib/stylelib" folder
+#
+#     cd  $HOME/.config/matplotlib/stylelib
+#     ln -sf Carpenter_Workshop/BB_style.mplstyle BB_style.mplstyle
 # 
 # Goal: A consistent style suitable for both publication and presentation.
 # 
@@ -20,7 +21,7 @@
 ##   https://www.ametsoc.org/index.cfm/aMS/publications/authors/journal-and-bams-authors/figure-information-for-authors/#Raster
 
 ## Dots per inch
-## Defaul is 300 to be large enough for a presentation and develpment,
+## Default is 300 to be large enough for a presentation and development,
 ## but when making a figure for a publication, use 700 for most other
 ## images.
 figure.dpi      : 300    # 1100 dpi for black/white line art
@@ -34,11 +35,11 @@ figure.facecolor : white
 figure.figsize  : 5.7, 3.5
 
 # Note: This default figsize is used for 2-column wide AMS publication
-# figures, and is also generally a good size for adding 4 pannels to a PowerPoint
+# figures, and is also generally a good size for adding 4 panels to a PowerPoint
 
 # Note: Need to add 0.2 inches to the figsize to get the correct figsize.
 # I'm not sure why plt.savefig isn't using the figsize specified.
-# Is it becasue of `savefig.bbox='tight'`?
+# Is it because of `savefig.bbox='tight'`?
 # | figsize width | AMS (actual) width             |
 # |---------------|--------------------------------|
 # |     3.4       | 3.2 inches wide for one column |

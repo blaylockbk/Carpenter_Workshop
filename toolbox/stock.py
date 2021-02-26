@@ -88,14 +88,14 @@ def full_path(p, must_exist=True, mkdir=False, verbose=True):
     Convert string to ``pathlib.Path``. Resolve path and environment variables.
     
     ``pathlib.Path`` does not resolve environment variables in a path string.
-    This function replaces environment variables like '$CENTER' with the value
-    of ``os.environ['CENTER']`` and returns a pathlib.Path.
+    This function replaces environment variables like '$HOME' with the value
+    of ``os.environ['HOME']`` and returns a pathlib.Path.
         
     Parameters
     ----------
     p : {str, pathlib.Path}
         The file path that may include '~', '..', or environment 
-        variables, (i.e., $HOME, $PWD, $WORKDIR, $CENTER).
+        variables, (i.e., $HOME, $PWD, $WORKDIR, $HOME).
     must_exist : bool
         True, the resolved Path must exist, or else an assert error is raised.
         False, the resolved Path does not have to exist.
@@ -109,14 +109,12 @@ def full_path(p, must_exist=True, mkdir=False, verbose=True):
     
     Examples
     --------
-    >>> full_path('$CENTER/save')
-    PosixPath('/p/cwfs/blaylock/save')
+    >>> full_path('$HOME/figs')
+    PosixPath('/p/home/blaylock/figs')
         
     >>> full_path("~/pyBKB_NRL")
     PosixPath('/p/home/blaylock/pyBKB_NRL')
-    
-    >>> full_path("$WORKDIR/../tyndall/")
-    PosixPath('/p/work1/tyndall')
+
     """
     if isinstance(p, str):
         p = Path(p)
@@ -196,12 +194,7 @@ def ls(p, pattern='*', which='files', recursive=False, hidden=False):
 def cp(src, dst='$TMPDIR', name=None, verbose=True):
     """
     Copy a file to another directory.
-    
-    Why do I need this? Because Python can't read/write NetCDF files 
-    from $CENTER with conda's NetCDF4 library. (Not sure why it worked 
-    before).  I need to copy the NetCDF file to the $WORKDIR and 
-    read/write the file there. 
-        
+            
     Parameters
     ----------
     src : {str, pathlib.Path}
@@ -252,35 +245,6 @@ def create_path(p, verbose=True):
             
     return p
             
-def open_NetCDF_from_CENTER(src, verbose=True, **xr_kwargs):
-    """
-    Read a NetCDF file from $CENTER with ``xarray.open_dataset``.
-    
-    Ok, this is annoying, but for some reason it became impossible to read
-    NetCDF files directly off $CENTER (beginning July 13, 2020).
-    Sooooo, we need to copy that file to a temporary directory ($WORKDIR/tmp)
-    and read the file from there.
-
-    UPDATE September 9, 2020: It looks like NetCDF files can be read again
-    from CENTER.
-    
-    Parameters
-    ----------
-    src : {str, pathlib.Path}
-        A NetCDF file that is on $CENTER.
-        
-    **xr_kwargs :
-        xarray key word arguments
-    """
-    src = full_path(src)
-    
-    if not src.as_posix().startswith(full_path('$CENTER/../').as_posix()):
-        warnings.warn(f"It doesn't look like this file on $CENTER: {src}")
-    
-    temp_file = cp(src, verbose=verbose)
-    
-    x = xr.open_dataset(temp_file, **xr_kwargs)
-    return x.copy(deep=True)
 
 # ======================================================================
 # Multiprocessing and Multithreading 🤹🏻‍♂️ 🧵 📏 🐲
@@ -542,7 +506,8 @@ def str_operator(left, operator_str, right):
     """
     Performs an operation when you have an operator as a string.
 
-    NOTE: An alternative method is to use the `eval()` function, if you aren't worried about the security vulnerabilities.
+    .. note:: An alternative method is to use the `eval()` function, 
+    if you aren't worried about the security vulnerabilities.
     
     Example: `a=5; b=6; eval('a + b')` the result is 11.
     

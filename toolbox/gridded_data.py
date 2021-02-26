@@ -14,14 +14,12 @@ import numpy as np
 import xarray as xr
 from shapely.geometry import Polygon
 
-from BB_maps.map_tools import to_180
-
 import warnings
 
 def _infer_interval_breaks(coords):
-    """Copied from `BB_utils.plot_helpers`"""
-    import BB_utils.plot_helpers
-    return BB_utils.plot_helpers._infer_interval_breaks(coords)
+    """Copied from `toolbox.plot_helpers`"""
+    import toolbox.plot_helpers
+    return toolbox.plot_helpers._infer_interval_breaks(coords)
 
 def _to_180(lon):
     """

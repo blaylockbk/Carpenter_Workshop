@@ -19,7 +19,6 @@ def as_gif(png_files, fname='new_gif', fps=8):
     Turn a list of image files into an animated gif.
 
     From Andrew Huang: 
-    https://inversion.nrlmry.navy.mil/confluence/display/PY/Plotting+Radar+using+ARM-PyArt+and+My+Development+Workflow
 
     Parameters
     ----------
