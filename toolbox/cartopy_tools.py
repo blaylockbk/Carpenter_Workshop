@@ -507,7 +507,7 @@ def domain_border(x, y=None, *, ax=None, text=None,
     a polygon in the crs coordinates and crs in lat/lon coordinates.
     """
     if hasattr(x, 'crs'):
-        ax = check_cartopy_axes(ax, projection=x.crs)
+        ax = check_cartopy_axes(ax, crs=x.crs)
         if verbose: print(f'crs is {x.crs}')
     else:
         print('crs is not in the xarray.Dataset')
