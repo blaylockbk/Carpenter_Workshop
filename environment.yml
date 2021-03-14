@@ -7,14 +7,14 @@ dependencies:
  - pip
  - git
  - pylint
- - rope           # python refactoring library
+ #- rope           # python refactoring library
  #- rstcheck       # restructuredText linter    # Some issues with this linter causing too many jobs
- - line_profiler  # profile code line by line 
+ #- line_profiler  # profile code line by line 
  
  # JupyterLab
  #------------
  - jupyter
- - jupyterlab=2
+ - jupyterlab
  - nodejs
  #- jupyterlab-git
  #- jupyter-lsp
@@ -44,8 +44,8 @@ dependencies:
  - pygrib
  - h5py
  - h5netcdf
- - xesmf      # Not available on PC (v0.5.0 only works with xarray 0.16.0, but that has issues)
- - esmpy      # Not available on PC
+ #- xesmf      # Not available on PC (v0.5.0 only works with xarray 0.16.0, but that has issues)
+ #- esmpy      # Not available on PC
  - cf_xarray
  - metpy
  - dask
