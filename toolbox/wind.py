@@ -17,6 +17,45 @@ Functions related to wind vectors
 
 import numpy as np
 
+def wind_degree_labels(res='m'):
+    """Wind degree increment and direction labels
+    
+    This is useful for labeling a matplotlib wind direction axis ticks.
+
+    .. code-block:: python
+
+        plt.yticks(*wind_degree_labels())
+
+    .. code-block:: python
+
+        ticks, labels = wind_degree_labels()
+        ax.set_yticks(ticks)
+        ax.set_yticklabels(labels)
+
+    ..image:: https://rechneronline.de/geo-coordinates/wind-rose.png
+
+    Parameters
+    ----------
+    res : {'l', 'm', 'h'} or {90, 45, 22.5}
+        Low, medium, and high increment resolution.
+        - l : returns 4 cardinal directions [N, E, S, W, N]
+        - m : returns 8 cardinal directions [N, NE, E, SE, ...]
+        - h : returns 16 cardinal directions [N, NNE, NE, ENE, E, ...]
+    """
+    labels = ['N', 'NNE', 'NE', 'ENE',
+              'E', 'ESE', 'SE', 'SSE',
+              'S', 'SSW', 'SW', 'WSW',
+              'W', 'WNW', 'NW', 'NNW', 
+              'N']
+    degrees = np.arange(0,361,22.5)
+    
+    if res in ['l', 90]:
+        return degrees[::4], labels[::4]
+    elif res in ['m', 45]:
+        return degrees[::2], labels[::2]
+    elif res in ['h', 22.5]:
+        return degrees, labels
+
 def spddir_to_uv(wspd, wdir):
     """
     Calculate the u and v wind components from wind speed and direction.

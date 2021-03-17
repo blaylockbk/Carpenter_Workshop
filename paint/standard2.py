@@ -32,7 +32,7 @@ import matplotlib as mpl
 #mpl.use('Agg') # Uncomment if you don't want to display the figure.
 
 import matplotlib.pyplot as plt
-import matplotlib.colors as colors
+import matplotlib.colors as mcolors
 import numpy as np
 import matplotlib as mpl
 
@@ -49,7 +49,7 @@ def cm_tmp(display_cmap=False, levels=40, vmin=-50, vmax=50):
     levels : int or None
         Number of discreate color levels. If None, cmap is continuous.
     """
-    label = 'Temperature (C)'
+    label : str = 'Temperature (C)'
     
     # Color tuple for every bin
     COLORS = [
@@ -66,11 +66,11 @@ def cm_tmp(display_cmap=False, levels=40, vmin=-50, vmax=50):
     ]
 
     if levels is None:
-        cmap = colors.LinearSegmentedColormap.from_list("Temperature", COLORS)
+        cmap = mcolors.LinearSegmentedColormap.from_list("Temperature", COLORS)
     else:
-        cmap = colors.LinearSegmentedColormap.from_list("Temperature",
+        cmap = mcolors.LinearSegmentedColormap.from_list("Temperature",
                                                         COLORS, N=levels)
-    norm = colors.Normalize(vmin, vmax)
+    norm = mcolors.Normalize(vmin, vmax)
     
     if display_cmap:
         fig = plt.figure(figsize=(8, 3))
@@ -92,7 +92,7 @@ def cm_dpt(display_cmap=False):
     display_cmap : bool
         If True, show just the cmap
     """
-    label = 'Dew Point Temperature (C)'
+    label : str = 'Dew Point Temperature (C)'
     
     # Color tuple for every bin
     COLORS = [
@@ -105,10 +105,10 @@ def cm_dpt(display_cmap=False):
     bounds = np.array([-10, 0, 10, 20, 30, 40, 45, 50, 
                        55, 60, 65, 70, 75, 80])
     
-    cmap = colors.LinearSegmentedColormap.from_list("Dew Point", COLORS,
+    cmap = mcolors.LinearSegmentedColormap.from_list("Dew Point", COLORS,
                                                     N=len(COLORS)+1)
     
-    norm = colors.BoundaryNorm(boundaries=bounds, ncolors=len(bounds))
+    norm = mcolors.BoundaryNorm(boundaries=bounds, ncolors=len(bounds))
     
     if display_cmap:
         fig = plt.figure(figsize=(8, 3))
@@ -132,7 +132,7 @@ def cm_rh(display_cmap=False):
     display_cmap : bool
         If True, show just the cmap
     """
-    label = 'Relative Humidity (%)'
+    label : str = 'Relative Humidity (%)'
     
     # Color tuple for every bin
     COLORS = [
@@ -144,10 +144,10 @@ def cm_rh(display_cmap=False):
 
     bounds = [0,5,10,15,20,25,30,35,40,50,60,70,80,90, 100]
     
-    cmap = colors.LinearSegmentedColormap.from_list("RH", COLORS,
+    cmap = mcolors.LinearSegmentedColormap.from_list("RH", COLORS,
                                                     N=len(COLORS))
     
-    norm = colors.BoundaryNorm(boundaries=bounds, ncolors=len(bounds))
+    norm = mcolors.BoundaryNorm(boundaries=bounds, ncolors=len(bounds))
     
     if display_cmap:
         fig = plt.figure(figsize=(8, 3))
@@ -159,7 +159,9 @@ def cm_rh(display_cmap=False):
     return {'cmap': cmap, 'norm': norm}, \
            {'label': label, 'ticks': bounds, 'spacing': 'proportional'}
     
-def cm_wind(display_cmap=False, continuous=False, vmin=0, vmax=140):
+def cm_wind(display_cmap=False, continuous=False,
+            vmin=0, vmax=140,
+            stretch_colors=False):
     """
     Colormap for wind speed (m/s).
     
@@ -170,7 +172,7 @@ def cm_wind(display_cmap=False, continuous=False, vmin=0, vmax=140):
     display_cmap : bool
         If True, show just the cmap
     """
-    label = r'Wind Speed (m s$\mathregular{^{-1}}$)'
+    label : str = r'Wind Speed (m s$\mathregular{^{-1}}$)'
     
     # Color tuple for every bin
     COLORS = np.array([
@@ -184,16 +186,19 @@ def cm_wind(display_cmap=False, continuous=False, vmin=0, vmax=140):
     bounds = np.array([0,5,10,15,20,25,30,35,40,45,50,60,70,80,100,120,140])
     
     if continuous:
-        cmap = colors.LinearSegmentedColormap.from_list("Wind Speed", COLORS)
-        norm = colors.Normalize(vmin, vmax)
+        cmap = mcolors.LinearSegmentedColormap.from_list("Wind Speed", COLORS)
+        norm = mcolors.Normalize(vmin, vmax)
     else:
         logic = np.logical_and(bounds >=vmin, bounds <= vmax)
-        COLORS = COLORS[logic]
+        if stretch_colors:
+            COLORS = COLORS[logic]
         BOUNDS = bounds[logic]
-        cmap = colors.LinearSegmentedColormap.from_list("Wind Speed", COLORS,
+        cmap = mcolors.LinearSegmentedColormap.from_list("Wind Speed", COLORS,
                                                         N=len(COLORS)+1)
-        
-        norm = colors.BoundaryNorm(boundaries=bounds, ncolors=len(bounds))
+        if vmax == 140 and vmin == 0:
+            norm = mcolors.BoundaryNorm(boundaries=BOUNDS, ncolors=len(BOUNDS))
+        else:
+            norm = mcolors.Normalize(vmax=vmax, vmin=vmin)
     
     if display_cmap:
         fig = plt.figure(figsize=(8, 3))
@@ -206,7 +211,6 @@ def cm_wind(display_cmap=False, continuous=False, vmin=0, vmax=140):
     return {'cmap': cmap, 'norm': norm}, \
            {'label': label, 'ticks': bounds, 'spacing': 'proportional', 'extend':'max'}
     
-
 def cm_sky(display_cmap=False):
     """
     Colormap for sky/cloud cover (%).
@@ -218,7 +222,7 @@ def cm_sky(display_cmap=False):
     display_cmap : bool
         If True, show just the cmap
     """
-    label = 'Cloud Cover (%)'
+    label : str = 'Cloud Cover (%)'
     
     # Color tuple for every bin
     COLORS = [
@@ -228,10 +232,10 @@ def cm_sky(display_cmap=False):
 
     bounds = np.arange(0,101,10)
     
-    cmap = colors.LinearSegmentedColormap.from_list("Cloud Cover", COLORS,
+    cmap = mcolors.LinearSegmentedColormap.from_list("Cloud Cover", COLORS,
                                                     N=len(COLORS))
     
-    norm = colors.BoundaryNorm(boundaries=bounds, ncolors=len(bounds))
+    norm = mcolors.BoundaryNorm(boundaries=bounds, ncolors=len(bounds))
     
     if display_cmap:
         fig = plt.figure(figsize=(8, 3))
@@ -243,7 +247,6 @@ def cm_sky(display_cmap=False):
     return {'cmap': cmap, 'norm': norm}, \
            {'label': label, 'ticks': bounds}
     
-
 def cm_precip(display_cmap=False, units='mm'):
     """
     Colormap for precipication (mm).
@@ -270,14 +273,14 @@ def cm_precip(display_cmap=False, units='mm'):
     bounds = np.array([0,.01,.1,.25,.5,1,1.5,2,3,4,6,8,10,15,20,30])
     
     if units == 'mm':
-        label = 'Precipication (mm)'
+        label : str = 'Precipication (mm)'
         bounds *= 25.4
     elif units == 'inches':
-        label = 'Precipication (inches)'
+        label : str = 'Precipication (inches)'
     
-    cmap = colors.LinearSegmentedColormap.from_list("Precipitation", COLORS,
+    cmap = mcolors.LinearSegmentedColormap.from_list("Precipitation", COLORS,
                                                     N=len(COLORS)+1)
-    norm = colors.BoundaryNorm(boundaries=bounds, ncolors=len(bounds))
+    norm = mcolors.BoundaryNorm(boundaries=bounds, ncolors=len(bounds))
     
     if display_cmap:
         fig = plt.figure(figsize=(8, 3))
@@ -288,7 +291,7 @@ def cm_precip(display_cmap=False, units='mm'):
     
     return {'cmap': cmap, 'norm': norm}, \
            {'label': label, 'ticks': bounds}
-    
+
 if __name__ == '__main__':
     # Make colorbars for docs
     

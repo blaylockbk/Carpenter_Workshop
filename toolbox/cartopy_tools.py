@@ -150,6 +150,8 @@ def common_features(scale='110m', counties_scale='20m', figsize=None, *,
                    zoom: int [0-10]
                    alpha: [0-1]
                    alpha_color: an overlay color to put on top of map
+                        use 'k' to darken background
+                        use 'w' to lighten background
         OSM        Open Street Maps
                    zoom: int
         ========== =========================================================
@@ -201,7 +203,7 @@ def common_features(scale='110m', counties_scale='20m', figsize=None, *,
     ax = check_cartopy_axes(ax, crs)
     
     if (LAND or OCEAN) and scale in ['10m']:
-        warnings.warn('🕖 OCEAN or LAND features at 10m will take a long time (3+ mins) to display.')
+        warnings.warn('🕖 OCEAN or LAND features at 10m may take a long time (3+ mins) to display on large maps.')
     
     kwargs.setdefault('linewidth', .75)
     
@@ -507,7 +509,7 @@ def domain_border(x, y=None, *, ax=None, text=None,
     a polygon in the crs coordinates and crs in lat/lon coordinates.
     """
     if hasattr(x, 'crs'):
-        ax = check_cartopy_axes(ax, projection=x.crs)
+        ax = check_cartopy_axes(ax, crs=x.crs)
         if verbose: print(f'crs is {x.crs}')
     else:
         print('crs is not in the xarray.Dataset')

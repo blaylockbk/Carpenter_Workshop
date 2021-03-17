@@ -16,6 +16,37 @@ Some helpers for plotting
 import numpy as np
 import matplotlib.pyplot as plt
 
+from matplotlib.ticker import MultipleLocator
+import matplotlib.dates as mdates
+
+# Sometimes it is useful to put this at the top of your scripts to
+# format the date axis formatting.
+# - plt.rcParams['date.autoformatter.day'] = '%b %d\n%H:%M'
+# - plt.rcParams['date.autoformatter.hour'] = '%b %d\n%H:%M'
+
+def date_axis_ticks(ax=None, locator='day', major=3, minor=1):
+    """
+    Set tick intervals for a date axis.
+
+    I always forget how to do this, so I hope this will jog my memory.
+    For reference: https://matplotlib.org/stable/api/dates_api.html
+    """
+    if ax is None:
+        ax = plt.gca()
+    
+    if locator.lower() == 'day':
+        if major is not None: 
+            ax.xaxis.set_major_locator(mdates.DayLocator(interval=major))
+        if minor is not None: 
+            ax.xaxis.set_minor_locator(mdates.DayLocator(interval=minor))
+    elif locator.lower() == 'hour':
+        if major is not None: 
+            ax.xaxis.set_major_locator(mdates.HourLocator(interval=major))
+        if minor is not None: 
+            ax.xaxis.set_minor_locator(mdates.HourLocator(interval=minor))
+    
+
+
 def _infer_interval_breaks(coord):
     """
     Infer grid spacing interval for plotting pcolormesh as center points.
@@ -94,7 +125,7 @@ def center_axis_on_zero(x=True, y=False, ax=None):
         du_max = np.maximum(np.abs(down), np.abs(up))
         ax.set_ylim(-du_max, du_max)
 
-def add_fig_letters(axes):
+def add_fig_letters(axes, offset=.03, facecolor='#f9ecd2', **kwargs):
     """
     Add a figure letter to top-left corner for all axes
     
@@ -110,8 +141,14 @@ def add_fig_letters(axes):
         add_fig_letters(axes)
 
     """
+    if not hasattr(offset, '__len__'):
+        offset = (offset, offset)
+    
+    assert len(offset) == 2, 'Offset must be a number or tuple'
+
     if not hasattr(axes, 'flat'): 
         np.array(axes)
+    
     ### Add letters to plots
     import string
     
@@ -125,11 +162,11 @@ def add_fig_letters(axes):
 
         # Add figure letter
         box_prop = dict(boxstyle='round',
-                        facecolor='wheat',
+                        facecolor=facecolor,
                         alpha=1,
                         linewidth=.5)
         
-        plt.text(0, 1, f'{letter}', 
+        plt.text(0+offset[0], 1-offset[1], f'{letter}', 
                  transform=ax.transAxes, fontfamily='monospace',
                  va='top', ha='left', 
-                 bbox=box_prop, zorder=10_000)
+                 bbox=box_prop, zorder=100_000, **kwargs)
