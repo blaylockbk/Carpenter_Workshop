@@ -5,13 +5,17 @@
 =========================
 NWS Standard Color Curves
 =========================
+Custom colormaps for standard meteorological variables with the necessary
+bounds, ticks, and labels for building the colorbar.
+
 Standardized colormaps from National Weather Service
+
 - Source: Joseph Moore <joseph.moore@noaa.gov>
 - Document: ./NWS Standard Color Curve Summary.pdf
-Returns dictionaries with kwargs used to assign a matplolib plots colormap
-and the colorbar labels.
+
 TODO
 - [ ] Units are a bit messed up. Units not factored into vmax/vmin args 
+
 """
 
 import matplotlib as mpl
@@ -21,12 +25,36 @@ import matplotlib.colors as mcolors
 import numpy as np
 import matplotlib as mpl
 
+def _display_cmap(ax=None, ticks=None, ticklabels=None, fig_kw={}, **kwargs):
+    """
+    Display a colormap by itself.
 
-def _display_cmap(**kwargs):
-    fig = plt.figure(figsize=(8, 3))
-    ax = fig.add_axes([0.05, 0.80, 0.9, 0.1])
-    mpl.colorbar.ColorbarBase(ax, orientation='horizontal', **kwargs)
+    https://matplotlib.org/stable/api/colorbar_api.html?highlight=colorbarbase#matplotlib.colorbar.ColorbarBase
+    
+        The main application of using a ColorbarBase explicitly is drawing
+        colorbars that are not associated with other elements in the figure,
+        e.g. when showing a colormap by itself.
+        --- Matplotlib Docs
 
+    """
+    kwargs.setdefault('orientation', 'horizontal')
+    fig_kw.setdefault('figsize', (8,3))
+    
+    if ax is None:
+        fig = plt.figure(**fig_kw)
+        if kwargs['orientation'] == 'horizontal':
+            ax = fig.add_axes([0.05, 0.80, 0.9, 0.1])
+        else:
+            ax = fig.add_axes([0.05, 0.80, 0.05, 2])
+    
+    cbar = mpl.colorbar.ColorbarBase(ax, **kwargs)
+
+    if ticks is not None:
+        cbar.set_ticks(ticks)
+    if ticklabels is not None:
+        cbar.set_ticklabels(ticklabels)
+    
+    return cbar
 
 class cm_tmp:
     def __init__(self, levels=40, vmin=-50, vmax=50):
@@ -62,8 +90,9 @@ class cm_tmp:
         self.cmap_kwargs = dict(cmap=self.cmap, norm=self.norm)
         self.cbar_kwargs = dict(label=self.label, extend='both')
 
-    def display(self):
-        _display_cmap(**self.cmap_kwargs, **self.cbar_kwargs)
+    def display(self, ax=None, ticklabels=None, fig_kw={}, **kwargs):
+        cbar = _display_cmap(ax, ticklabels=ticklabels, fig_kw=fig_kw, **kwargs, **self.cmap_kwargs, **self.cbar_kwargs)
+        return cbar
 
 class cm_dpt:
     def __init__(self, vmin=-10, vmax=80, levels=15):
@@ -97,8 +126,9 @@ class cm_dpt:
         self.cmap_kwargs = dict(cmap=self.cmap, norm=self.norm)
         self.cbar_kwargs = dict(label=self.label, extend='both', ticks=self.bounds, spacing='proportional')
 
-    def display(self):
-        _display_cmap(**self.cmap_kwargs, **self.cbar_kwargs)
+    def display(self, ax=None, ticklabels=None, fig_kw={}, **kwargs):
+        cbar = _display_cmap(ax, ticklabels=ticklabels, fig_kw=fig_kw, **kwargs, **self.cmap_kwargs, **self.cbar_kwargs)
+        return cbar
 
 class cm_rh:
     def __init__(self, vmin=0, vmax=100, levels=15):
@@ -134,8 +164,9 @@ class cm_rh:
         self.cmap_kwargs = dict(cmap=self.cmap, norm=self.norm)
         self.cbar_kwargs = dict(label=self.label, ticks=self.bounds, spacing='proportional')
 
-    def display(self):
-        _display_cmap(**self.cmap_kwargs, **self.cbar_kwargs)
+    def display(self, ax=None, ticklabels=None, fig_kw={}, **kwargs):
+        cbar = _display_cmap(ax, ticklabels=ticklabels, fig_kw=fig_kw, **kwargs, **self.cmap_kwargs, **self.cbar_kwargs)
+        return cbar
         
 class cm_wind:
     def __init__(self, vmin=0, vmax=140, levels=18, units='m/s'):
@@ -197,8 +228,9 @@ class cm_wind:
         self.cmap_kwargs = dict(cmap=self.cmap, norm=self.norm)
         self.cbar_kwargs = dict(label=self.label, extend='max', ticks=self.bounds, spacing='proportional')
 
-    def display(self):
-        _display_cmap(**self.cmap_kwargs, **self.cbar_kwargs)
+    def display(self, ax=None, ticklabels=None, fig_kw={}, **kwargs):
+        cbar = _display_cmap(ax, ticklabels=ticklabels, fig_kw=fig_kw, **kwargs, **self.cmap_kwargs, **self.cbar_kwargs)
+        return cbar
         
 class cm_cloud:
     def __init__(self, vmin=0, vmax=100, levels=15):
@@ -229,9 +261,9 @@ class cm_cloud:
         self.cmap_kwargs = dict(cmap=self.cmap, norm=self.norm)
         self.cbar_kwargs = dict(label=self.label, ticks=self.bounds, spacing='proportional')
 
-    def display(self):
-        _display_cmap(**self.cmap_kwargs, **self.cbar_kwargs)
->>>>>>> be4ae418b12b6182627f5c4f9676dccce3cf460a:paint/standard.py
+    def display(self, ax=None, ticklabels=None, fig_kw={}, **kwargs):
+        cbar = _display_cmap(ax, ticklabels=ticklabels, fig_kw=fig_kw, **kwargs, **self.cmap_kwargs, **self.cbar_kwargs)
+        return cbar
 
 class cm_pcp:
     def __init__(self, vmin=0, vmax=762, levels=15, units='mm'):
@@ -271,5 +303,6 @@ class cm_pcp:
         self.cmap_kwargs = dict(cmap=self.cmap, norm=self.norm)
         self.cbar_kwargs = dict(label=self.label, ticks=self.bounds, spacing='proportional')
 
-    def display(self):
-        _display_cmap(**self.cmap_kwargs, **self.cbar_kwargs)
+    def display(self, ax=None, ticklabels=None, fig_kw={}, **kwargs):
+        cbar = _display_cmap(ax, ticklabels=ticklabels, fig_kw=fig_kw, **kwargs, **self.cmap_kwargs, **self.cbar_kwargs)
+        return cbar
