@@ -295,7 +295,7 @@ def common_features(scale='110m', counties_scale='20m', figsize=None, *,
         zoom = STAMEN_kwargs['zoom']
         stamen_terrain = cimgt.Stamen(style)
         ax.add_image(stamen_terrain, zoom)
-
+        
         if 'alpha' in STAMEN_kwargs:
             # Need to manually put a white layer over the STAMEN terrain
             if dark:

@@ -25,7 +25,10 @@ import matplotlib.colors as mcolors
 import numpy as np
 import matplotlib as mpl
 
-def _display_cmap(ax=None, ticks=None, ticklabels=None, fig_kw={}, **kwargs):
+def _display_cmap(ax=None, ticks=None, ticklabels=None,
+                  cbar_shape=None,
+                  fig_kw={},
+                  **kwargs):
     """
     Display a colormap by itself.
 
@@ -36,17 +39,35 @@ def _display_cmap(ax=None, ticks=None, ticklabels=None, fig_kw={}, **kwargs):
         e.g. when showing a colormap by itself.
         --- Matplotlib Docs
 
+    Parameters
+    ----------
+    ax : axes
+    ticks : ticks locations
+    ticklabels : labels for the tick locations
+    cbar_shape : shape of a colorbar to create [x-pos, y-pos, width, height]
+    fig_kw : figure kwargs
+    kwargs : kwargs for ColorbarBase
     """
     kwargs.setdefault('orientation', 'horizontal')
     fig_kw.setdefault('figsize', (8,3))
     
     if ax is None:
+        # Display Colorbar as Standalone. Create new figure.
         fig = plt.figure(**fig_kw)
         if kwargs['orientation'] == 'horizontal':
-            ax = fig.add_axes([0.05, 0.80, 0.9, 0.1])
+            ax = fig.add_axes([0.05, 0.80, 0.9, 0.1])   # [x-pos, y-pos, width, height]
         else:
             ax = fig.add_axes([0.05, 0.80, 0.05, 2])
-    
+    elif ax is not None and cbar_shape is None:
+        # Auto create a colorbar to an axis
+        if kwargs['orientation'] == 'horizontal':
+            ax = ax.get_figure().add_axes([.1, 0.05, 0.8, 0.05])
+        else:
+            ax = ax.get_figure().add_axes([.91, 0.1, 0.05, 0.8])
+    else:
+        # Use the values specified by cbar_shape to add the colorbar to a figure
+        ax = ax.get_figure().add_axes(cbar_shape)
+
     cbar = mpl.colorbar.ColorbarBase(ax, **kwargs)
 
     if ticks is not None:
