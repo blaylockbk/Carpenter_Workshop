@@ -93,8 +93,8 @@ class cm_terrain:
 
         if water:
             self.norm = MidpointNormalize(vmin=ocean_bottom,
-                                     vcenter=water_threshold,
-                                     vmax=land_top)
+                                          vcenter=water_threshold,
+                                          vmax=land_top)
         else:
             self.norm = mcolors.Normalize(vmax=land_top, vmin=water_threshold)
             

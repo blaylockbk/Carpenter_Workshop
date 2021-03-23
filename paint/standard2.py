@@ -15,6 +15,7 @@ Standardized colormaps from National Weather Service
 
 TODO
 - [ ] Units are a bit messed up. Units not factored into vmax/vmin args 
+- [ ] General clean-up. These are far from perfect. They need some clean up.
 
 """
 
@@ -24,6 +25,19 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 import numpy as np
 import matplotlib as mpl
+
+# Inspired by the Matplotlib docs
+# https://matplotlib.org/3.2.0/tutorials/colors/colormapnorms.html#custom-normalization-manually-implement-two-linear-ranges
+class MidpointNormalize(mcolors.Normalize):
+    def __init__(self, vmin=None, vmax=None, vcenter=None, clip=False):
+        self.vcenter = vcenter
+        mcolors.Normalize.__init__(self, vmin, vmax, clip)
+
+    def __call__(self, value, clip=None):
+        # I'm ignoring masked values and all kinds of edge cases to make a
+        # simple example...
+        x, y = [self.vmin, self.vcenter, self.vmax], [0, 0.5, 1]
+        return np.ma.masked_array(np.interp(value, x, y))
 
 def _display_cmap(ax=None, ticks=None, ticklabels=None,
                   cbar_shape=None,
@@ -213,14 +227,14 @@ class cm_wind:
                                 140], dtype=float)
         
         if units == 'm/s':
-            self.units = 'm s$\mathregular{^{-1}}$'
+            self.units = r'm s$\mathregular{^{-1}}$'
         elif units == 'mph':
             self.units = 'mph'
             self.bounds *= 2.23693629
             self.vmin *= 2.23693629
             self.vmax *= 2.23693629
         elif units == 'km/h':
-            self.units = 'km h$\mathregular{^{-1}}$'
+            self.units = r'km h$\mathregular{^{-1}}$'
             self.bounds *= 3.6
             self.vmin *= 3.6
             self.vmax *= 3.6
@@ -323,6 +337,131 @@ class cm_pcp:
                                              ncolors=len(self.bounds))
         self.cmap_kwargs = dict(cmap=self.cmap, norm=self.norm)
         self.cbar_kwargs = dict(label=self.label, ticks=self.bounds, spacing='proportional')
+
+    def display(self, ax=None, ticklabels=None, fig_kw={}, **kwargs):
+        cbar = _display_cmap(ax, ticklabels=ticklabels, fig_kw=fig_kw, **kwargs, **self.cmap_kwargs, **self.cbar_kwargs)
+        return cbar
+
+class cm_pop:
+    """Colormap: Probability of Precipitation"""
+    def __init__(self, ptype='rain', vmin=0, vmax=100, levels=10):
+        self.levels = levels
+        self.vmin = vmin
+        self.vmax = vmax
+        self.name = 'Probability of Precipitation'
+        self.units = '%'
+        
+        if ptype.lower() == 'snow':
+            self.name = 'Probability of Snow'
+            self.COLORS = np.array(['#f5f5f5', '#e3ebff','#bdd6ff', '#94b8ff',
+                                    '#66a3ff', '#3690ff', '#0a7afa', '#006bd6',
+                                    '#004ead', '#002487', 'k'])
+        elif ptype.lower() == 'ice':
+            self.name = 'Probability of Ice'
+            self.COLORS = np.array(['#f5f5f5', '#ffd9ed', '#ffaafa', '#ff83f9',
+                                    '#ff57f7', '#ff37f5', '#e619f9', '#d500fd',
+                                    '#a200ad', '#640087', 'k'])
+        else:
+            # Rain
+            self.COLORS = np.array(['#f5f5f5', '#e2f6da', '#d5f2ca', '#c0ebaf',
+                                    '#98df7b', '#6fd349', '#43c634', '#23b70b',
+                                    '#139e07', '#0b8403', 'k'])
+
+        self.label = f"{self.name} ({self.units})"
+
+        self.bounds = np.linspace(vmin, vmax, levels+1)
+        
+        if levels is None:
+            self.cmap = mcolors.LinearSegmentedColormap.from_list(self.name, 
+                                                                  self.COLORS)
+            self.norm = mcolors.Normalize(self.vmin, self.vmax)
+        else:
+            logic = np.logical_and(self.bounds >=vmin, self.bounds <= vmax)
+            self.bounds = self.bounds[logic]
+            self.cmap = mcolors.LinearSegmentedColormap.from_list(self.name, 
+                                                                  self.COLORS,
+                                                                  N=len(self.COLORS)+1)
+            self.norm = mcolors.BoundaryNorm(boundaries=self.bounds,
+                                             ncolors=len(self.bounds))
+        self.cmap_kwargs = dict(cmap=self.cmap, norm=self.norm)
+        self.cbar_kwargs = dict(label=self.label, ticks=self.bounds, spacing='proportional')
+
+    def display(self, ax=None, ticklabels=None, fig_kw={}, **kwargs):
+        cbar = _display_cmap(ax, ticklabels=ticklabels, fig_kw=fig_kw, **kwargs, **self.cmap_kwargs, **self.cbar_kwargs)
+        return cbar
+
+class cm_snow:
+    def __init__(self, vmin=0, vmax=42, levels='default', units='in'):
+        assert units in ['mm', 'in'], 'units must be "mm" or "in"'
+        self.levels = levels
+        self.vmin = vmin
+        self.vmax = vmax
+        self.name = 'Snow Amount'
+        self.units = units
+        self.label = f"{self.name} ({self.units})"
+        self.COLORS = np.array(['#ffffff', 
+                                '#bdd7e7', '#6baed6', '#3182bd', '#08519c', '#082694', 
+                                '#ffff96', '#ffc400', '#ff8700', 
+                                '#db1400', '#9e0000', '#690000', '#360000'])
+        
+        # These are in inches
+        self.bounds = np.array([0, .1, 1, 2, 3, 4, 6, 8, 12, 18, 24, 30, 36, 42])
+        
+        if levels is None:
+            self.cmap = mcolors.LinearSegmentedColormap.from_list(self.name, 
+                                                                  self.COLORS)
+            #self.norm = mcolors.Normalize(self.vmin, self.vmax)
+            self.norm = MidpointNormalize(vmin=self.vmin,
+                                     vcenter=8,
+                                     vmax=self.vmax)
+        else:
+            self.cmap = mcolors.ListedColormap(self.COLORS, 
+                                               self.name,
+                                               N=len(self.COLORS))
+            self.norm = mcolors.BoundaryNorm(boundaries=self.bounds,
+                                             ncolors=len(self.bounds))
+        self.cmap_kwargs = dict(cmap=self.cmap, norm=self.norm)
+        self.cbar_kwargs = dict(label=self.label, ticks=self.bounds, extend='max', spacing='proportional')
+
+    def display(self, ax=None, ticklabels=None, fig_kw={}, **kwargs):
+        cbar = _display_cmap(ax, ticklabels=ticklabels, fig_kw=fig_kw, **kwargs, **self.cmap_kwargs, **self.cbar_kwargs)
+        return cbar
+
+class cm_wave_height:
+    """Colormap: Wave Height (ft)"""
+    def __init__(self, vmin=0, vmax=60, levels='default', units='ft'):
+        self.levels = levels
+        self.vmin = vmin
+        self.vmax = vmax
+        self.name = 'Wave Height'
+        self.units = units
+        self.label = f"{self.name} ({self.units})"
+        self.COLORS = np.array(['#ebfdff', '#abedf5', '#78cdd6', '#4bb8c4',
+                                '#55b59f', '#86d483', '#b0e890', '#ddff99',
+                                '#fed976', '#feb24c', '#fd8d3c',
+                                '#fc4e2a', '#e31a1c', '#bd0026',
+                                '#800026', '#5c002f', '#330023'])
+        self.bounds = np.array([0, 1, 2, 3,
+                                4, 5, 7, 10,
+                                12, 15, 20,
+                                25, 30, 35,
+                                40, 50, 60])
+        
+        if levels is None:
+            self.cmap = mcolors.LinearSegmentedColormap.from_list(self.name, 
+                                                                  self.COLORS)
+            self.norm = mcolors.Normalize(self.vmin, self.vmax)
+        else:
+            logic = np.logical_and(self.bounds >=vmin, self.bounds <= vmax)
+            self.COLORS = self.COLORS[logic]
+            self.bounds = self.bounds[logic]
+            self.cmap = mcolors.LinearSegmentedColormap.from_list(self.name, 
+                                                                  self.COLORS,
+                                                                  N=len(self.COLORS)+1)
+            self.norm = mcolors.BoundaryNorm(boundaries=self.bounds,
+                                             ncolors=len(self.bounds))
+        self.cmap_kwargs = dict(cmap=self.cmap, norm=self.norm)
+        self.cbar_kwargs = dict(label=self.label, extend='max', ticks=self.bounds, spacing='proportional')
 
     def display(self, ax=None, ticklabels=None, fig_kw={}, **kwargs):
         cbar = _display_cmap(ax, ticklabels=ticklabels, fig_kw=fig_kw, **kwargs, **self.cmap_kwargs, **self.cbar_kwargs)
