@@ -64,6 +64,7 @@ def _display_cmap(ax=None, ticks=None, ticklabels=None,
     """
     kwargs.setdefault('orientation', 'horizontal')
     fig_kw.setdefault('figsize', (8,3))
+    fig_kw.setdefault('dpi', 150)
     
     if ax is None:
         # Display Colorbar as Standalone. Create new figure.
@@ -92,13 +93,35 @@ def _display_cmap(ax=None, ticks=None, ticklabels=None,
     return cbar
 
 class cm_tmp:
-    def __init__(self, levels=40, vmin=-50, vmax=50):
-        self.levels = levels
+    def __init__(self, levels=38, vmin=None, vmax=None, units='C', tick_interval=5):
+        units = units.upper()
+        _units = {'C', 'F', 'K'}
+        assert units in _units, f'units must be one of {_units}'
+        
         self.vmin = vmin
         self.vmax = vmax
-        self.name = 'Temperature'
-        self.units = '$\degree$C'
+        self.levels = levels
+        self.name = 'Temperature'   
+
+        if units == 'C':
+            self.units = f'$\degree${units}'
+            if vmin is None: self.vmin = -50
+            if vmax is None: self.vmax = 50
+            self.bounds = np.arange(self.vmin, self.vmax+1, 2)
+        elif units == 'F':
+            self.units = f'$\degree${units}'
+            if vmin is None: self.vmin = -60
+            if vmax is None: self.vmax = 120
+            self.bounds = np.arange(self.vmin, self.vmax+1, 5)
+        elif units == 'K':
+            self.units = f'{units}'
+            if vmin is None: self.vmin = -50 + 273  # Don't need to be exact for a color scale
+            if vmax is None: self.vmax = 50 + 273   
+            self.bounds = np.arange(self.vmin, self.vmax+1, 2)
+        
+        
         self.label = f"{self.name} ({self.units})"
+
         self.COLORS = np.array([
             '#91003f', '#ce1256', '#e7298a', '#df65b0',
             '#ff73df', '#ffbee8', '#ffffff', '#dadaeb',
@@ -111,62 +134,112 @@ class cm_tmp:
             '#fc4e2a', '#e31a1c', '#b10026', '#800026',
             '#590042', '#280028'
         ])
+        
+        
     
         if self.levels is None:
             self.cmap = mcolors.LinearSegmentedColormap.from_list(self.name,
                                                                   self.COLORS)
+            self.norm = mcolors.Normalize(self.vmin, self.vmax)
         else:
+            self.levels = np.maximum(self.levels, len(self.bounds)+1)
             self.cmap = mcolors.LinearSegmentedColormap.from_list(self.name,
                                                                   self.COLORS,
                                                                   N=self.levels)
-        
-        self.norm = mcolors.Normalize(self.vmin, self.vmax)
+            self.norm = mcolors.BoundaryNorm(boundaries=self.bounds,
+                                             ncolors=self.cmap.N, extend='both')        
         
         self.cmap_kwargs = dict(cmap=self.cmap, norm=self.norm)
-        self.cbar_kwargs = dict(label=self.label, extend='both')
+        self.cbar_kwargs = dict(label=self.label, extend='both', extendfrac='auto', ticks=self.bounds[::tick_interval])
 
     def display(self, ax=None, ticklabels=None, fig_kw={}, **kwargs):
         cbar = _display_cmap(ax, ticklabels=ticklabels, fig_kw=fig_kw, **kwargs, **self.cmap_kwargs, **self.cbar_kwargs)
         return cbar
 
+    def colors_to_rgb(self, mpl_rgb=False):
+        """
+        Parameters
+        ----------
+        mpl_rgb : bool
+            If True, return colors as a matplotlib RGB, range [0-1]
+            if False, return colors as a regular RGB, range [0-255]
+        """
+        if mpl_rgb:
+            return [np.array(mcolors.to_rgb(i))*255 for i in self.COLORS]
+        else:
+            return [np.array(mcolors.to_rgb(i))*255 for i in self.COLORS]
+
 class cm_dpt:
-    def __init__(self, vmin=-10, vmax=80, levels=15):
-        self.levels = levels
+    def __init__(self, levels=14, vmin=None, vmax=None, units='C', tick_interval=1, convert='approximate'):
+        units = units.upper()
+        _units = {'C', 'F', 'K'}
+        assert units in _units, f'units must be one of {_units}'
+        
         self.vmin = vmin
         self.vmax = vmax
-        self.name = 'Dew Point Temperature'
-        self.units = '$\degree$C'
+        self.levels = levels
+        self.name = 'Dew Point Temperature'   
+
+        if units == 'C':
+            self.units = f'$\degree${units}'
+            if vmin is None: self.vmin = -18
+            if vmax is None: self.vmax = 28
+            self.bounds = [-18, -13, -8, -3, 2, 7, 10, 13, 16, 19, 22, 25, 28]
+        elif units == 'F':
+            self.units = f'$\degree${units}'
+            if vmin is None: self.vmin = 0
+            if vmax is None: self.vmax = 80
+            self.bounds = np.array([0, 10, 20, 30, 40, 45, 50, 55, 60, 65, 70, 75, 80])
+        elif units == 'K':
+            self.units = f'{units}'
+            if vmin is None: self.vmin = -18 + 273  # Don't need to be exact for a color scale
+            if vmax is None: self.vmax = 28 + 273   
+            self.bounds = np.array([-18, -13, -8, -3, 2, 7, 10, 13, 16, 19, 22, 25, 28]) + 273
+        
+        
         self.label = f"{self.name} ({self.units})"
+
         self.COLORS = np.array([
             '#3b2204', '#543005', '#8c520a', '#bf812d',
             '#cca854', '#dfc27d', '#e6d9b5', '#d3ebe7',
             '#a9dbd3', '#72b8ad', '#318c85', '#01665f',
             '#003c30', '#002921'
         ])
-        self.bounds = np.array([-10, 0, 10, 20, 30, 40, 45, 50, 
-                                 55, 60, 65, 70, 75, 80])
-        if levels is None:
-            self.cmap = mcolors.LinearSegmentedColormap.from_list(self.name, 
+        
+        if self.levels is None:
+            self.cmap = mcolors.LinearSegmentedColormap.from_list(self.name,
                                                                   self.COLORS)
             self.norm = mcolors.Normalize(self.vmin, self.vmax)
         else:
-            logic = np.logical_and(self.bounds >=vmin, self.bounds <= vmax)
-            self.COLORS = self.COLORS[logic]
-            self.bounds = self.bounds[logic]
-            self.cmap = mcolors.LinearSegmentedColormap.from_list(self.name, 
+            self.levels = np.maximum(self.levels, len(self.bounds)+1)
+            self.cmap = mcolors.LinearSegmentedColormap.from_list(self.name,
                                                                   self.COLORS,
-                                                                  N=len(self.COLORS)+1)
+                                                                  N=self.levels)
             self.norm = mcolors.BoundaryNorm(boundaries=self.bounds,
-                                             ncolors=len(self.bounds))
+                                             ncolors=self.cmap.N, extend='both')        
+        
         self.cmap_kwargs = dict(cmap=self.cmap, norm=self.norm)
-        self.cbar_kwargs = dict(label=self.label, extend='both', ticks=self.bounds, spacing='proportional')
+        self.cbar_kwargs = dict(label=self.label, extend='both', spacing='proportional', ticks=self.bounds[::tick_interval])
 
     def display(self, ax=None, ticklabels=None, fig_kw={}, **kwargs):
         cbar = _display_cmap(ax, ticklabels=ticklabels, fig_kw=fig_kw, **kwargs, **self.cmap_kwargs, **self.cbar_kwargs)
         return cbar
 
+    def colors_to_rgb(self, mpl_rgb=False):
+        """
+        Parameters
+        ----------
+        mpl_rgb : bool
+            If True, return colors as a matplotlib RGB, range [0-1]
+            if False, return colors as a regular RGB, range [0-255]
+        """
+        if mpl_rgb:
+            return [np.array(mcolors.to_rgb(i))*255 for i in self.COLORS]
+        else:
+            return [np.array(mcolors.to_rgb(i))*255 for i in self.COLORS]
+
 class cm_rh:
-    def __init__(self, vmin=0, vmax=100, levels=15):
+    def __init__(self, vmin=0, vmax=100, levels=14):
         self.levels = levels
         self.vmin = vmin
         self.vmax = vmax
@@ -177,36 +250,70 @@ class cm_rh:
             '#910022', '#a61122', '#bd2e24', '#d44e33',
             '#e36d42', '#fa8f43', '#fcad58', '#fed884',
             '#fff2aa', '#e6f49d', '#bce378', '#71b55c',
-            '#26914b', '#00572e',  'k'])
-        self.bounds = np.array([0,5,10,15,
-                                20,25,30,35,
-                                40,50,60,70,
+            '#26914b', '#00572e'])
+        self.bounds = np.array([ 0,  5, 10, 15,
+                                20, 25, 30, 35,
+                                40, 50, 60, 70,
                                 80, 90, 100])
         
         if levels is None:
-            self.cmap = mcolors.LinearSegmentedColormap.from_list(self.name, 
-                                                                  self.COLORS)
+            self.cmap = mcolors.LinearSegmentedColormap.from_list(self.name, self.COLORS)
             self.norm = mcolors.Normalize(self.vmin, self.vmax)
         else:
-            logic = np.logical_and(self.bounds >=vmin, self.bounds <= vmax)
-            self.COLORS = self.COLORS[logic]
-            self.bounds = self.bounds[logic]
-            self.cmap = mcolors.LinearSegmentedColormap.from_list(self.name, 
-                                                                  self.COLORS,
-                                                                  N=len(self.COLORS)+1)
-            self.norm = mcolors.BoundaryNorm(boundaries=self.bounds,
-                                             ncolors=len(self.bounds))
+            #logic = np.logical_and(self.bounds >=vmin, self.bounds <= vmax)
+            #self.COLORS = self.COLORS[logic]
+            #self.bounds = self.bounds[logic]
+            self.cmap = mcolors.LinearSegmentedColormap.from_list(self.name, self.COLORS, N=len(self.COLORS))
+            self.norm = mcolors.BoundaryNorm(boundaries=self.bounds, ncolors=self.cmap.N)
+            
         self.cmap_kwargs = dict(cmap=self.cmap, norm=self.norm)
-        self.cbar_kwargs = dict(label=self.label, ticks=self.bounds, spacing='proportional')
+        self.cbar_kwargs = dict(label=self.label, ticks=self.bounds,  spacing='proportional')
 
     def display(self, ax=None, ticklabels=None, fig_kw={}, **kwargs):
         cbar = _display_cmap(ax, ticklabels=ticklabels, fig_kw=fig_kw, **kwargs, **self.cmap_kwargs, **self.cbar_kwargs)
         return cbar
         
+    def colors_to_rgb(self, mpl_rgb=False):
+        """
+        Parameters
+        ----------
+        mpl_rgb : bool
+            If True, return colors as a matplotlib RGB, range [0-1]
+            if False, return colors as a regular RGB, range [0-255]
+        """
+        if mpl_rgb:
+            return [np.array(mcolors.to_rgb(i))*255 for i in self.COLORS]
+        else:
+            return [np.array(mcolors.to_rgb(i))*255 for i in self.COLORS]
+        
 class cm_wind:
-    def __init__(self, vmin=0, vmax=140, levels=18, units='m/s'):
+    """Wind Speed/Gust Colormap"""
+    def __init__(self, vmin=None, vmax=None, levels=18,
+                 units='m/s', convert='approximate', tick_interval=2):
+        """
+        Parameters
+        ----------
+        vmin, vmax : None or number
+            lower and upper bounds of the colorbar in the units specified.
+        levels : int
+            Number of descrite levels. If None, will be a continuous color map.
+        units : {'m/s', 'kn', 'km/h', 'mph'}
+            Specify units of the wind speed to be used.
+        convert : {'approximate', 'exact'}
+            Specify how to convert the units bounds. Exact will result
+            in many decimals (e.g., converting MPH to m/s). Approximate
+            gives some nicer round numbers.
+        tick_interval : int
+            Interval for ticks labels
+        """
+        if units == 'kph': units = 'km/h'
+        if units == 'knots': units = 'kn'
+
         _units = ['m/s', 'kn', 'km/h', 'mph']
+        _convert = ['approximate', 'exact']
         assert units in _units, f"units must be one of {_units}"
+        assert convert in _convert , f"unit_contert must be one of {_convert}"
+        
         self.levels = levels
         self.vmin = vmin
         self.vmax = vmax
@@ -219,31 +326,46 @@ class cm_wind:
             '#ff73df'
         ])
         
-        # These are in m/s
+        # NWS bounds are in are in mph
         self.bounds = np.array([0, 5, 10, 15, 
                                 20, 25, 30, 35, 
                                 40, 45, 50, 60, 
                                 70, 80, 100, 120, 
                                 140], dtype=float)
+        self.ticks = self.bounds[::tick_interval]
         
         if units == 'm/s':
+            if convert == 'exact':
+                scale = 0.44704
+            else:
+                scale = .5
             self.units = r'm s$\mathregular{^{-1}}$'
+            if vmin is None: self.vmin = self.bounds.min()/scale
+            if vmax is None: self.vmax = self.bounds.max()/scale
+            self.bounds *= scale
         elif units == 'mph':
             self.units = 'mph'
-            self.bounds *= 2.23693629
-            self.vmin *= 2.23693629
-            self.vmax *= 2.23693629
+            if vmin is None: self.vmin = self.bounds.min()
+            if vmax is None: self.vmax = self.bounds.max()
+            # self.bounds is already in mph. No scaling needed
         elif units == 'km/h':
+            if convert == 'exact':
+                scale = 1.609344
+            else:
+                scale = 1.5
             self.units = r'km h$\mathregular{^{-1}}$'
-            self.bounds *= 3.6
-            self.vmin *= 3.6
-            self.vmax *= 3.6
+            if vmin is None: self.vmin = self.bounds.min()/scale
+            if vmax is None: self.vmax = self.bounds.max()/scale
+            self.bounds *= scale
         elif units == 'kn':
+            if convert == 'exact':
+                scale = 0.86897624
+            else:
+                scale = 1
             self.units = 'kn'
-            self.bounds *= 1.94384449
-            self.vmin *= 1.94384449
-            self.vmax *= 1.94384449
-            
+            if vmin is None: self.vmin = self.bounds.min()/scale
+            if vmax is None: self.vmax = self.bounds.max()/scale
+            self.bounds *= scale
             
         self.label = f"{self.name} ({self.units})"
         
@@ -252,21 +374,35 @@ class cm_wind:
                                                                   self.COLORS)
             self.norm = mcolors.Normalize(self.vmin, self.vmax)
         else:
-            logic = np.logical_and(self.bounds >=vmin, self.bounds <= vmax)
+            logic = np.logical_and(self.bounds >= self.vmin, self.bounds <= self.vmax)
             self.COLORS = self.COLORS[logic]
             self.bounds = self.bounds[logic]
             self.cmap = mcolors.LinearSegmentedColormap.from_list(self.name, 
                                                                   self.COLORS,
-                                                                  N=len(self.COLORS)+1)
+                                                                  N=len(self.COLORS))
             self.norm = mcolors.BoundaryNorm(boundaries=self.bounds,
-                                             ncolors=len(self.bounds))
+                                             ncolors=self.cmap.N, extend='max')
+                
         self.cmap_kwargs = dict(cmap=self.cmap, norm=self.norm)
-        self.cbar_kwargs = dict(label=self.label, extend='max', ticks=self.bounds, spacing='proportional')
+        self.cbar_kwargs = dict(label=self.label, extend='max', ticks=self.ticks, spacing='proportional')
 
     def display(self, ax=None, ticklabels=None, fig_kw={}, **kwargs):
         cbar = _display_cmap(ax, ticklabels=ticklabels, fig_kw=fig_kw, **kwargs, **self.cmap_kwargs, **self.cbar_kwargs)
         return cbar
-        
+
+    def colors_to_rgb(self, mpl_rgb=False):
+        """
+        Parameters
+        ----------
+        mpl_rgb : bool
+            If True, return colors as a matplotlib RGB, range [0-1]
+            if False, return colors as a regular RGB, range [0-255]
+        """
+        if mpl_rgb:
+            return [np.array(mcolors.to_rgb(i))*255 for i in self.COLORS]
+        else:
+            return [np.array(mcolors.to_rgb(i))*255 for i in self.COLORS]
+
 class cm_cloud:
     def __init__(self, vmin=0, vmax=100, levels=15):
         self.levels = levels
@@ -277,24 +413,20 @@ class cm_cloud:
         self.label = f"{self.name} ({self.units})"
         self.COLORS = np.array([
             '#24a0f2', '#4eb0f2', '#80b7f8', '#a0c8ff', '#d2e1ff',
-            '#e1e1e1', '#c9c9c9', '#a5a5a5', '#6e6e6e', '#505050', 'k'])
+            '#e1e1e1', '#c9c9c9', '#a5a5a5', '#6e6e6e', '#505050'])
         self.bounds = np.arange(0,101,10)
         
         if levels is None:
-            self.cmap = mcolors.LinearSegmentedColormap.from_list(self.name, 
-                                                                  self.COLORS)
+            self.cmap = mcolors.LinearSegmentedColormap.from_list(self.name, self.COLORS)
             self.norm = mcolors.Normalize(self.vmin, self.vmax)
         else:
-            logic = np.logical_and(self.bounds >=vmin, self.bounds <= vmax)
-            self.COLORS = self.COLORS[logic]
-            self.bounds = self.bounds[logic]
-            self.cmap = mcolors.LinearSegmentedColormap.from_list(self.name, 
-                                                                  self.COLORS,
-                                                                  N=len(self.COLORS)+1)
-            self.norm = mcolors.BoundaryNorm(boundaries=self.bounds,
-                                             ncolors=len(self.bounds))
+            #logic = np.logical_and(self.bounds >=vmin, self.bounds <= vmax)
+            #self.COLORS = self.COLORS[logic]
+            #self.bounds = self.bounds[logic]
+            self.cmap = mcolors.LinearSegmentedColormap.from_list(self.name, self.COLORS, N=len(self.COLORS))
+            self.norm = mcolors.BoundaryNorm(boundaries=self.bounds, ncolors=self.cmap.N)
         self.cmap_kwargs = dict(cmap=self.cmap, norm=self.norm)
-        self.cbar_kwargs = dict(label=self.label, ticks=self.bounds, spacing='proportional')
+        self.cbar_kwargs = dict(label=self.label, ticks=self.bounds,  spacing='proportional')
 
     def display(self, ax=None, ticklabels=None, fig_kw={}, **kwargs):
         cbar = _display_cmap(ax, ticklabels=ticklabels, fig_kw=fig_kw, **kwargs, **self.cmap_kwargs, **self.cbar_kwargs)
@@ -332,11 +464,11 @@ class cm_pcp:
             self.bounds = self.bounds[logic]
             self.cmap = mcolors.LinearSegmentedColormap.from_list(self.name, 
                                                                   self.COLORS,
-                                                                  N=len(self.COLORS)+1)
+                                                                  N=len(self.COLORS))
             self.norm = mcolors.BoundaryNorm(boundaries=self.bounds,
-                                             ncolors=len(self.bounds))
+                                             ncolors=self.cmap.N, extend='max')
         self.cmap_kwargs = dict(cmap=self.cmap, norm=self.norm)
-        self.cbar_kwargs = dict(label=self.label, ticks=self.bounds, spacing='proportional')
+        self.cbar_kwargs = dict(label=self.label, ticks=self.bounds, extend='max', spacing='uniform')
 
     def display(self, ax=None, ticklabels=None, fig_kw={}, **kwargs):
         cbar = _display_cmap(ax, ticklabels=ticklabels, fig_kw=fig_kw, **kwargs, **self.cmap_kwargs, **self.cbar_kwargs)
@@ -355,17 +487,17 @@ class cm_pop:
             self.name = 'Probability of Snow'
             self.COLORS = np.array(['#f5f5f5', '#e3ebff','#bdd6ff', '#94b8ff',
                                     '#66a3ff', '#3690ff', '#0a7afa', '#006bd6',
-                                    '#004ead', '#002487', 'k'])
+                                    '#004ead', '#002487'])
         elif ptype.lower() == 'ice':
             self.name = 'Probability of Ice'
             self.COLORS = np.array(['#f5f5f5', '#ffd9ed', '#ffaafa', '#ff83f9',
                                     '#ff57f7', '#ff37f5', '#e619f9', '#d500fd',
-                                    '#a200ad', '#640087', 'k'])
+                                    '#a200ad', '#640087'])
         else:
             # Rain
             self.COLORS = np.array(['#f5f5f5', '#e2f6da', '#d5f2ca', '#c0ebaf',
                                     '#98df7b', '#6fd349', '#43c634', '#23b70b',
-                                    '#139e07', '#0b8403', 'k'])
+                                    '#139e07', '#0b8403'])
 
         self.label = f"{self.name} ({self.units})"
 
@@ -380,11 +512,11 @@ class cm_pop:
             self.bounds = self.bounds[logic]
             self.cmap = mcolors.LinearSegmentedColormap.from_list(self.name, 
                                                                   self.COLORS,
-                                                                  N=len(self.COLORS)+1)
+                                                                  N=len(self.COLORS))
             self.norm = mcolors.BoundaryNorm(boundaries=self.bounds,
-                                             ncolors=len(self.bounds))
+                                             ncolors=self.cmap.N)
         self.cmap_kwargs = dict(cmap=self.cmap, norm=self.norm)
-        self.cbar_kwargs = dict(label=self.label, ticks=self.bounds, spacing='proportional')
+        self.cbar_kwargs = dict(label=self.label, ticks=self.bounds,  spacing='proportional')
 
     def display(self, ax=None, ticklabels=None, fig_kw={}, **kwargs):
         cbar = _display_cmap(ax, ticklabels=ticklabels, fig_kw=fig_kw, **kwargs, **self.cmap_kwargs, **self.cbar_kwargs)
@@ -405,7 +537,7 @@ class cm_snow:
                                 '#db1400', '#9e0000', '#690000', '#360000'])
         
         # These are in inches
-        self.bounds = np.array([0, .1, 1, 2, 3, 4, 6, 8, 12, 18, 24, 30, 36, 42])
+        self.bounds = np.array([0, .1, 1, 2, 3, 4, 6, 8, 12, 18, 24, 30, 36])
         
         if levels is None:
             self.cmap = mcolors.LinearSegmentedColormap.from_list(self.name, 
@@ -415,13 +547,10 @@ class cm_snow:
                                      vcenter=8,
                                      vmax=self.vmax)
         else:
-            self.cmap = mcolors.ListedColormap(self.COLORS, 
-                                               self.name,
-                                               N=len(self.COLORS))
-            self.norm = mcolors.BoundaryNorm(boundaries=self.bounds,
-                                             ncolors=len(self.bounds))
+            self.cmap = mcolors.ListedColormap(self.COLORS, self.name, N=len(self.COLORS))
+            self.norm = mcolors.BoundaryNorm(boundaries=self.bounds, ncolors=self.cmap.N, extend='max')
         self.cmap_kwargs = dict(cmap=self.cmap, norm=self.norm)
-        self.cbar_kwargs = dict(label=self.label, ticks=self.bounds, extend='max', spacing='proportional')
+        self.cbar_kwargs = dict(label=self.label, ticks=self.bounds, extend='max',  spacing='uniform')
 
     def display(self, ax=None, ticklabels=None, fig_kw={}, **kwargs):
         cbar = _display_cmap(ax, ticklabels=ticklabels, fig_kw=fig_kw, **kwargs, **self.cmap_kwargs, **self.cbar_kwargs)
@@ -452,17 +581,25 @@ class cm_wave_height:
                                                                   self.COLORS)
             self.norm = mcolors.Normalize(self.vmin, self.vmax)
         else:
-            logic = np.logical_and(self.bounds >=vmin, self.bounds <= vmax)
-            self.COLORS = self.COLORS[logic]
-            self.bounds = self.bounds[logic]
-            self.cmap = mcolors.LinearSegmentedColormap.from_list(self.name, 
-                                                                  self.COLORS,
-                                                                  N=len(self.COLORS)+1)
-            self.norm = mcolors.BoundaryNorm(boundaries=self.bounds,
-                                             ncolors=len(self.bounds))
+            self.cmap = mcolors.LinearSegmentedColormap.from_list(self.name, self.COLORS, N=len(self.COLORS))
+            self.norm = mcolors.BoundaryNorm(boundaries=self.bounds, ncolors=self.cmap.N, extend='max')
+        
         self.cmap_kwargs = dict(cmap=self.cmap, norm=self.norm)
-        self.cbar_kwargs = dict(label=self.label, extend='max', ticks=self.bounds, spacing='proportional')
+        self.cbar_kwargs = dict(label=self.label, extend='max',  ticks=self.bounds, spacing='proportional')
 
     def display(self, ax=None, ticklabels=None, fig_kw={}, **kwargs):
         cbar = _display_cmap(ax, ticklabels=ticklabels, fig_kw=fig_kw, **kwargs, **self.cmap_kwargs, **self.cbar_kwargs)
         return cbar
+        
+    def colors_to_rgb(self, mpl_rgb=False):
+        """
+        Parameters
+        ----------
+        mpl_rgb : bool
+            If True, return colors as a matplotlib RGB, range [0-1]
+            if False, return colors as a regular RGB, range [0-255]
+        """
+        if mpl_rgb:
+            return [np.array(mcolors.to_rgb(i))*255 for i in self.COLORS]
+        else:
+            return [np.array(mcolors.to_rgb(i))*255 for i in self.COLORS]

@@ -239,7 +239,7 @@ def border(array, *, corner=0, direction='cw'):
     if corner > 0:
         # Rotate the array so we start on a different corner
         array = np.rot90(array, k=corner)
-    if direction is 'ccw':
+    if direction == 'ccw':
         # Transpose the array so we march around counter-clockwise
         array = array.T
 
@@ -305,7 +305,7 @@ def corners(array, *, corner=0, direction='cw'):
         # Rotate the array so we start on a different corner
         array = np.rot90(array, k=corner)
     
-    if direction is 'ccw':
+    if direction == 'ccw':
         # Transpose the array so we march around counter-clockwise
         array = array.T
     

@@ -7,11 +7,12 @@ Matplotlib Helpers
 ==================
 
 Some helpers for plotting
-    
-    - _infer_interval_breaks : this helper is for pcolormesh
-    - center : center an axes xlim and ylim by a value.
+
+This was a good primer on Matplotlib: 
+https://dev.to/skotaro/artist-in-matplotlib---something-i-wanted-to-know-before-spending-tremendous-hours-on-googling-how-tos--31oo
 
 """
+import pickle
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -23,6 +24,14 @@ import matplotlib.dates as mdates
 # format the date axis formatting.
 # - plt.rcParams['date.autoformatter.day'] = '%b %d\n%H:%M'
 # - plt.rcParams['date.autoformatter.hour'] = '%b %d\n%H:%M'
+
+def copy_fig(fig):
+    """
+    Copy a figure
+    
+    See comment by jmetz: https://stackoverflow.com/a/45812071/2383070
+    """
+    return pickle.loads(pickle.dumps(fig))
 
 def date_axis_ticks(ax=None, locator='day', major=3, minor=1):
     """

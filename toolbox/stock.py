@@ -132,7 +132,7 @@ def full_path(p, must_exist=True, mkdir=False, verbose=True):
     
     # Make Directory if it doesn't exist
     if not p.exists() and mkdir:
-        if p.suffix is '':
+        if p.suffix == '':
             p.mkdir(parents=True)
         else:
             p.parent.mkdir(parents=True)  # because p is a file.
