@@ -14,8 +14,8 @@ Standardized colormaps from National Weather Service
 - Document: ./NWS Standard Color Curve Summary.pdf
 
 TODO
+- [ ] Truncated colormap doesn't work as expected yet.
 - [ ] General clean-up. These are far from perfect. They need some clean up and organization.
-
 """
 
 import matplotlib as mpl
@@ -138,7 +138,8 @@ class cm_tmp:
         self.vmin = vmin
         self.vmax = vmax
         self.levels = levels
-        self.name = 'Temperature'   
+        self.name = 'Temperature' 
+        self.tick_interval = tick_interval  
 
         if units == 'C':
             self.units = f'$\degree${units}'
@@ -179,7 +180,26 @@ class cm_tmp:
             self.cmap, self.norm = _segmented_cmap(self.name, self.COLORS, self.bounds, extend=self.extend)
             
         self.cmap_kwargs = dict(cmap=self.cmap, norm=self.norm)
-        self.cbar_kwargs = dict(label=self.label, extend=self.extend, extendfrac='auto', ticks=self.bounds[::tick_interval])
+        self.cbar_kwargs = dict(label=self.label, extend=self.extend, extendfrac='auto', ticks=self.bounds[::self.tick_interval])
+
+    def truncate(self, cmin, cmax):
+        normalized = _normalize(self.bounds, self.bounds.min(), self.bounds.max())
+        logic = np.all([self.bounds >= cmin, self.bounds <= cmax], axis=0)
+        bounds2 = self.bounds[logic]
+        normalized2 = normalized[logic]
+        new_colors = self.cmap(np.linspace(normalized2.min(), normalized2.max(), len(normalized2)))
+        over = self.cmap(normalized2.max()+.01)
+        under = self.cmap(normalized2.min()-.01)
+        new_cmap = mcolors.ListedColormap(new_colors)
+        new_cmap.set_over(over)
+        new_cmap.set_under(under)
+        new_norm = mcolors.BoundaryNorm(bounds2, len(bounds2))
+        self.bounds = bounds2
+        self.cmap = new_cmap
+        self.norm = new_norm
+        self.cmap_kwargs = dict(cmap=self.cmap, norm=self.norm)
+        self.cbar_kwargs = dict(label=self.label, extend=self.extend, extendfrac='auto', ticks=self.bounds[::self.tick_interval])
+        return self
 
     def display(self, ax=None, ticklabels=None, fig_kw={}, **kwargs):
         cbar = _display_cmap(ax, ticklabels=ticklabels, fig_kw=fig_kw, **kwargs, **self.cmap_kwargs, **self.cbar_kwargs)
@@ -342,6 +362,7 @@ class cm_wind:
         self.levels = levels
         self.vmin = vmin
         self.vmax = vmax
+        self.tick_interval = tick_interval
         self.name = 'Wind Speed'
         self.COLORS = np.array([
             '#103f78', '#225ea8', '#1d91c0', '#41b6c4',
@@ -394,6 +415,8 @@ class cm_wind:
             
         self.label = f"{self.name} ({self.units})"
         
+        self.extend = 'max'
+
         if levels is None:
             self.cmap = mcolors.LinearSegmentedColormap.from_list(self.name, 
                                                                   self.COLORS)
@@ -406,14 +429,33 @@ class cm_wind:
                                                                   self.COLORS,
                                                                   N=len(self.COLORS))
             self.norm = mcolors.BoundaryNorm(boundaries=self.bounds,
-                                             ncolors=self.cmap.N, extend='max')
+                                             ncolors=self.cmap.N, extend=self.extend)
                 
         self.cmap_kwargs = dict(cmap=self.cmap, norm=self.norm)
-        self.cbar_kwargs = dict(label=self.label, extend='max', ticks=self.ticks, spacing='proportional')
+        self.cbar_kwargs = dict(label=self.label, extend=self.extend, ticks=self.ticks, spacing='proportional')
 
     def display(self, ax=None, ticklabels=None, fig_kw={}, **kwargs):
         cbar = _display_cmap(ax, ticklabels=ticklabels, fig_kw=fig_kw, **kwargs, **self.cmap_kwargs, **self.cbar_kwargs)
         return cbar
+
+    def truncate(self, cmin, cmax):
+        normalized = _normalize(self.bounds, self.bounds.min(), self.bounds.max())
+        logic = np.all([self.bounds >= cmin, self.bounds <= cmax], axis=0)
+        bounds2 = self.bounds[logic]
+        normalized2 = normalized[logic]
+        new_colors = self.cmap(np.linspace(normalized2.min(), normalized2.max(), len(normalized2)))
+        over = self.cmap(normalized2.max()+.01)
+        under = self.cmap(normalized2.min()-.01)
+        new_cmap = mcolors.ListedColormap(new_colors)
+        new_cmap.set_over(over)
+        new_cmap.set_under(under)
+        new_norm = mcolors.BoundaryNorm(bounds2, len(bounds2))
+        self.bounds = bounds2
+        self.cmap = new_cmap
+        self.norm = new_norm
+        self.cmap_kwargs = dict(cmap=self.cmap, norm=self.norm)
+        self.cbar_kwargs = dict(label=self.label, extend=self.extend, extendfrac='auto', ticks=self.bounds[::self.tick_interval])
+        return self
 
     def colors_to_rgb(self, mpl_rgb=False):
         """
