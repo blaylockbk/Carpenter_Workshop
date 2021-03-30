@@ -14,8 +14,7 @@ Standardized colormaps from National Weather Service
 - Document: ./NWS Standard Color Curve Summary.pdf
 
 TODO
-- [ ] Units are a bit messed up. Units not factored into vmax/vmin args 
-- [ ] General clean-up. These are far from perfect. They need some clean up.
+- [ ] General clean-up. These are far from perfect. They need some clean up and organization.
 
 """
 
@@ -92,8 +91,46 @@ def _display_cmap(ax=None, ticks=None, ticklabels=None,
     
     return cbar
 
+def _continuous_cmap(name, colors, vmin, vmax):
+    cmap = mcolors.LinearSegmentedColormap.from_list(name, colors)
+    norm = mcolors.Normalize(vmin, vmax)
+    return cmap, norm
+
+def _segmented_cmap(name, colors, bounds, extend='neither'):
+    cmap = mcolors.LinearSegmentedColormap.from_list(name, colors, N=len(bounds)+1)
+    norm = mcolors.BoundaryNorm(bounds, cmap.N, extend=extend)
+    return cmap, norm
+
+def _normalize(value, lower_limit, upper_limit, clip=True):
+    """
+    Normalize values between 0 and 1.
+            
+    Parameters
+    ----------
+    value :
+        The original value. A single value, vector, or array.
+    upper_limit :
+        The upper limit. 
+    lower_limit :
+        The lower limit.
+    clip : bool
+        - True: Clips values between 0 and 1.
+        - False: Retain the numbers that extends outside 0-1 range.
+    Output:
+        Values normalized between the upper and lower limit.
+    """
+    norm = (value-lower_limit)/(upper_limit-lower_limit)
+    if clip:
+        norm = np.clip(norm, 0, 1)
+    return norm
+
 class cm_tmp:
-    def __init__(self, levels=38, vmin=None, vmax=None, units='C', tick_interval=5):
+    def __init__(self, levels=-1, vmin=None, vmax=None, units='C', tick_interval=5):
+        """
+        tick_interval : int
+            put a tick label every X number of bins
+        clip_cmap : None or tuple
+        """
         units = units.upper()
         _units = {'C', 'F', 'K'}
         assert units in _units, f'units must be one of {_units}'
@@ -107,18 +144,17 @@ class cm_tmp:
             self.units = f'$\degree${units}'
             if vmin is None: self.vmin = -50
             if vmax is None: self.vmax = 50
-            self.bounds = np.arange(self.vmin, self.vmax+1, 2)
+            self.bounds = np.linspace(self.vmin, self.vmax, 51)
         elif units == 'F':
             self.units = f'$\degree${units}'
             if vmin is None: self.vmin = -60
             if vmax is None: self.vmax = 120
-            self.bounds = np.arange(self.vmin, self.vmax+1, 5)
+            self.bounds = np.linspace(self.vmin, self.vmax, 37)
         elif units == 'K':
             self.units = f'{units}'
             if vmin is None: self.vmin = -50 + 273  # Don't need to be exact for a color scale
             if vmax is None: self.vmax = 50 + 273   
-            self.bounds = np.arange(self.vmin, self.vmax+1, 2)
-        
+            self.bounds = np.linspace(self.vmin, self.vmax, 51)
         
         self.label = f"{self.name} ({self.units})"
 
@@ -135,22 +171,15 @@ class cm_tmp:
             '#590042', '#280028'
         ])
         
+        self.extend = 'both'
         
-    
         if self.levels is None:
-            self.cmap = mcolors.LinearSegmentedColormap.from_list(self.name,
-                                                                  self.COLORS)
-            self.norm = mcolors.Normalize(self.vmin, self.vmax)
+            self.cmap, self.norm = _continuous_cmap(self.name, self.COLORS, self.vmin, self.vmax)
         else:
-            self.levels = np.maximum(self.levels, len(self.bounds)+1)
-            self.cmap = mcolors.LinearSegmentedColormap.from_list(self.name,
-                                                                  self.COLORS,
-                                                                  N=self.levels)
-            self.norm = mcolors.BoundaryNorm(boundaries=self.bounds,
-                                             ncolors=self.cmap.N, extend='both')        
-        
+            self.cmap, self.norm = _segmented_cmap(self.name, self.COLORS, self.bounds, extend=self.extend)
+            
         self.cmap_kwargs = dict(cmap=self.cmap, norm=self.norm)
-        self.cbar_kwargs = dict(label=self.label, extend='both', extendfrac='auto', ticks=self.bounds[::tick_interval])
+        self.cbar_kwargs = dict(label=self.label, extend=self.extend, extendfrac='auto', ticks=self.bounds[::tick_interval])
 
     def display(self, ax=None, ticklabels=None, fig_kw={}, **kwargs):
         cbar = _display_cmap(ax, ticklabels=ticklabels, fig_kw=fig_kw, **kwargs, **self.cmap_kwargs, **self.cbar_kwargs)
@@ -207,8 +236,7 @@ class cm_dpt:
         ])
         
         if self.levels is None:
-            self.cmap = mcolors.LinearSegmentedColormap.from_list(self.name,
-                                                                  self.COLORS)
+            self.cmap = mcolors.LinearSegmentedColormap.from_list(self.name, self.COLORS)
             self.norm = mcolors.Normalize(self.vmin, self.vmax)
         else:
             self.levels = np.maximum(self.levels, len(self.bounds)+1)
@@ -234,7 +262,7 @@ class cm_dpt:
             if False, return colors as a regular RGB, range [0-255]
         """
         if mpl_rgb:
-            return [np.array(mcolors.to_rgb(i))*255 for i in self.COLORS]
+            return [np.array(mcolors.to_rgb(i)) for i in self.COLORS]
         else:
             return [np.array(mcolors.to_rgb(i))*255 for i in self.COLORS]
 
@@ -260,9 +288,6 @@ class cm_rh:
             self.cmap = mcolors.LinearSegmentedColormap.from_list(self.name, self.COLORS)
             self.norm = mcolors.Normalize(self.vmin, self.vmax)
         else:
-            #logic = np.logical_and(self.bounds >=vmin, self.bounds <= vmax)
-            #self.COLORS = self.COLORS[logic]
-            #self.bounds = self.bounds[logic]
             self.cmap = mcolors.LinearSegmentedColormap.from_list(self.name, self.COLORS, N=len(self.COLORS))
             self.norm = mcolors.BoundaryNorm(boundaries=self.bounds, ncolors=self.cmap.N)
             

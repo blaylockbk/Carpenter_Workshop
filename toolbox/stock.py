@@ -567,5 +567,39 @@ def str_operator(left, operator_str, right):
     return op_list[operator_str](left, right)
 
 
+def normalize(value, lower_limit, upper_limit, clip=True):
+    """
+    Normalize values between 0 and 1.
+    
+    Normalize between a lower and upper limit. In other words, it 
+    converts your number to a value in the range between 0 and 1. 
+    Follows `normalization formula 
+    <https://stats.stackexchange.com/a/70807/220885>`_
+    
+    This is the same concept as `contrast or histogram stretching 
+    <https://staff.fnwi.uva.nl/r.vandenboomgaard/IPCV20162017/LectureNotes/IP/PointOperators/ImageStretching.html>`_
+    
 
+    .. code:: python
+    
+        NormalizedValue = (OriginalValue-LowerLimit)/(UpperLimit-LowerLimit)
+            
+    Parameters
+    ----------
+    value :
+        The original value. A single value, vector, or array.
+    upper_limit :
+        The upper limit. 
+    lower_limit :
+        The lower limit.
+    clip : bool
+        - True: Clips values between 0 and 1 for RGB.
+        - False: Retain the numbers that extends outside 0-1 range.
+    Output:
+        Values normalized between the upper and lower limit.
+    """
+    norm = (value-lower_limit)/(upper_limit-lower_limit)
+    if clip:
+        norm = np.clip(norm, 0, 1)
+    return norm
 
