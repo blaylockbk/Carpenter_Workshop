@@ -207,8 +207,12 @@ def common_features(scale='110m', counties_scale='20m', figsize=None, *,
     
     kwargs.setdefault('linewidth', .75)
     
+    # Seems like there was a reason why I can't use setdefault here, something
+    # to do with the defaults not being reset next call to the function???
+    # Or maybe it had to do with not being able to reset the default for dark theme.
     COASTLINES_kwargs = {**dict(zorder=100, facecolor='none'), **COASTLINES_kwargs}
     COUNTIES_kwargs = {**{'linewidth': .5}, **COUNTIES_kwargs}
+    STATES_kwargs = {**{'alpha': .15}, **STATES_kwargs}
     LAND_kwargs = {**{'edgecolor': 'none'}, **LAND_kwargs}
     OCEAN_kwargs = {**{'edgecolor': 'none'}, **OCEAN_kwargs}
     LAKES_kwargs = {**{'linewidth': 0}, **LAKES_kwargs}

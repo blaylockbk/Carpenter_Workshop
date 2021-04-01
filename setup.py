@@ -21,7 +21,7 @@ setup(
     package_data = {
         "": ['*.cfg'],
     },
-    install_requires = ['curl', 'numpy', 'pandas', 'xarray', 'cfgrib'],
+    install_requires = ['curl', 'numpy', 'pandas', 'xarray'],
     keywords = ['xarray', 'meteorology', 'weather', 'numerical weather prediction', 'forecast'],
     classifiers = [
         "Development Status :: 4 - Beta",
