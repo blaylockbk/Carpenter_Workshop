@@ -3,8 +3,6 @@
 ## February 3, 2021 
 
 """
-Last updated Feb 4, 2021
-
 =============
 Cartopy Tools
 =============
@@ -36,57 +34,55 @@ except Exception as e:
     print('Without geopandas, you cannot subset some'
           'NaturalEarthFeatures, like "Major Highways" from roads.')
 
-
 pc = ccrs.PlateCarree()
 
 ########################################################################
-# Quick Cartopy Creation
+# Quick adn Useful Cartopy Creation
 ########################################################################
 
-def check_cartopy_axes(ax=None, crs=pc, verbose=False):
+def check_cartopy_axes(ax=None, crs=pc, *, verbose=False):
     """
     Check an axes is a cartopy axes, else create a new cartopy axes.
     
     Parameters
     ----------
     ax : {None, cartopy.mpl.geoaxes.GeoAxesSubplot}
-        If None, and plt.gca() is a cartopy axes, use it, 
-        else create a new cartopy axes.
+        If None and plt.gca() is a cartopy axes, then use current axes.
+        Else create a new cartopy axes with specified crs.
     crs : cartopy.crs
         If the axes being check is not a cartopy axes, then create one
         with this coordinate reference system (crs, aka "projection").
         Default is ccrs.PlateCarree()
-    """
+    """    
+    # A cartopy axes should be of type `cartopy.mpl.geoaxes.GeoAxesSubplot`
     if ax is None:
         if hasattr(plt.gca(), 'coastlines'):
             if verbose: print('🌎 Using the current cartopy axes.')
             return plt.gca()  
         else:
             # Create a new cartopy axes
-            if verbose: print('🌎 The current axes is not a cartopy axes. Create a new cartopy axes.')
+            if verbose: print(f'🌎 The current axes is not a cartopy axes. Will create a new cartopy axes with crs={crs.__class__}.')
             return plt.axes(projection=crs)
     else:
         if hasattr(ax, 'coastlines'):
-            if verbose: print('🌎 The provided axes is a cartopy axes.')
+            if verbose: print('🌎 Thanks! It appears the axes you provided is a cartopy axes.')
             return ax
         else:
-            raise TypeError('🌎 The `ax` you gave me is not a cartopy axes')
+            raise TypeError('🌎 Sorry. The `ax` you gave me is not a cartopy axes.')
 
-def common_features(scale='110m', counties_scale='20m', figsize=None, *,
-                    ax=None, crs=pc, verbose=False,
-                    dark=False,                    
-                    COASTLINES=True, BORDERS=False,
-                    STATES=False, COUNTIES=False, 
-                    OCEAN=False, LAND=False,
-                    RIVERS=False, LAKES=False, 
-                    ROADS=False,
-                    STAMEN=False, OSM=False,
-                    COASTLINES_kwargs={}, BORDERS_kwargs={},
-                    STATES_kwargs={}, COUNTIES_kwargs={},
-                    OCEAN_kwargs={}, LAND_kwargs={},
-                    RIVERS_kwargs={}, LAKES_kwargs={},
-                    ROADS_kwargs={},
-                    STAMEN_kwargs={}, OSM_kwargs={},
+def common_features(scale='110m', ax=None, crs=pc, *, figsize=None,
+                    counties_scale='20m', dark=False, verbose=False,                   
+                    COASTLINES=True, COASTLINES_kwargs={},
+                    BORDERS=False,   BORDERS_kwargs={},
+                    STATES=False,    STATES_kwargs={},
+                    COUNTIES=False,  COUNTIES_kwargs={},
+                    OCEAN=False,     OCEAN_kwargs={},
+                    LAND=False,      LAND_kwargs={},
+                    RIVERS=False,    RIVERS_kwargs={},
+                    LAKES=False,     LAKES_kwargs={},
+                    ROADS=False,     ROADS_kwargs={},
+                    STAMEN=False,    STAMEN_kwargs={},
+                    OSM=False,       OSM_kwargs={},             
                     **kwargs):
     """
     Add common features to a cartopy axis. 
@@ -200,38 +196,51 @@ def common_features(scale='110m', counties_scale='20m', figsize=None, *,
     as an argument, but it is useful if you initialize a new map).
 
     """
-    ax = check_cartopy_axes(ax, crs)
+
+    ax = check_cartopy_axes(ax=ax, crs=crs, verbose=verbose)
     
     if (LAND or OCEAN) and scale in ['10m']:
-        warnings.warn('🕖 OCEAN or LAND features at 10m may take a long time (3+ mins) to display on large maps.')
+        if verbose: warnings.warn('🕖 OCEAN or LAND features at 10m may take a long time (3+ mins) to display on large maps.')
     
     kwargs.setdefault('linewidth', .75)
     
-    # Seems like there was a reason why I can't use setdefault here, something
-    # to do with the defaults not being reset next call to the function???
-    # Or maybe it had to do with not being able to reset the default for dark theme.
-    COASTLINES_kwargs = {**dict(zorder=100, facecolor='none'), **COASTLINES_kwargs}
-    COUNTIES_kwargs = {**{'linewidth': .5}, **COUNTIES_kwargs}
-    STATES_kwargs = {**{'alpha': .15}, **STATES_kwargs}
-    LAND_kwargs = {**{'edgecolor': 'none'}, **LAND_kwargs}
-    OCEAN_kwargs = {**{'edgecolor': 'none'}, **OCEAN_kwargs}
-    LAKES_kwargs = {**{'linewidth': 0}, **LAKES_kwargs}
+    COASTLINES_kwargs.setdefault('zorder', 100)
+    COASTLINES_kwargs.setdefault('facecolor', 'none')
     
+    COUNTIES_kwargs.setdefault('linewidth', .5)
+    
+    STATES_kwargs.setdefault('alpha', .15)
+    
+    LAND_kwargs.setdefault('edgecolor', 'none')
+    LAND_kwargs.setdefault('linewidth', 0)
+    
+    OCEAN_kwargs.setdefault('edgecolor', 'none')
+    
+    LAKES_kwargs.setdefault('linewidth', 0)
+
+    # NOTE: I don't use the 'setdefault' method here because it doesn't 
+    # work as expect when switching between dark and normal themes.
+    # The defaults would be set the first time the function is called,
+    # but the next time it is called and `dark=True` the defaults do not
+    # reset. I don't know why this is the behavior.
     if dark:
-        kwargs = {**kwargs, **{'edgecolor':'.5'}}
         land = '#060613'
         water = '#0f2b38'
+        
+        # https://github.com/SciTools/cartopy/issues/880
+        ax.set_facecolor(land)  # requires cartopy >= 0.18
+
+        kwargs = {**{'edgecolor':'.5'}, **kwargs}
         LAND_kwargs = {**{'facecolor': land}, **LAND_kwargs}
         OCEAN_kwargs = {**{'facecolor': water}, **OCEAN_kwargs}
         RIVERS_kwargs = {**{'edgecolor': water}, **RIVERS_kwargs}
         LAKES_kwargs = {**{'facecolor': water}, **LAKES_kwargs}
-        #https://github.com/SciTools/cartopy/issues/880
-        ax.background_patch.set_facecolor(land) # depreciated
-        #ax.set_facecolor(land) # Might work if I update cartopy
+        
     else:
-        kwargs = {**kwargs, **{'edgecolor':'.15'}}
+        kwargs = {**{'edgecolor':'.15'}, **kwargs}
         RIVERS_kwargs = {**{'edgecolor': feature.COLORS['water']}, **RIVERS_kwargs}
-    
+        LAKES_kwargs = {**{'edgecolor': feature.COLORS['water']}, **LAKES_kwargs}
+
     ##------------------------------------------------------------------
     ## Add each element to the plot
     ## When combining kwargs, 
@@ -239,37 +248,45 @@ def common_features(scale='110m', counties_scale='20m', figsize=None, *,
     ##  - FEATURE_kwargs is the overwrite for the feature
     ## For example:
     ##     {**kwargs, **FEATURE_kwargs}
-    ## the kwargs are overwritten by FEATURE kwargs
+    ## the kwargs are overwritten by FEATURE_kwargs
     ##------------------------------------------------------------------
 
     if COASTLINES: 
         #ax.coastlines(scale, **kwargs)  # Nah, use the crs.feature instead
         ax.add_feature(feature.COASTLINE.with_scale(scale),
                        **{**kwargs, **COASTLINES_kwargs})
+        if verbose == 'debug': print('🐛 COASTLINES:', {**kwargs, **COASTLINES_kwargs})
     if BORDERS: 
         ax.add_feature(feature.BORDERS.with_scale(scale),
                        **{**kwargs, **BORDERS_kwargs})
+        if verbose == 'debug': print('🐛 BORDERS:', {**kwargs, **BORDERS_kwargs})
     if STATES: 
         ax.add_feature(feature.STATES.with_scale(scale),
                        **{**kwargs, **STATES_kwargs})
+        if verbose == 'debug': print('🐛 STATES:', {**kwargs, **STATES_kwargs})
     if COUNTIES:
         _counties_scale = {'20m', '5m', '500k'}
         assert counties_scale in _counties_scale, f"counties_scale must be {_counties_scale}"
         ax.add_feature(USCOUNTIES.with_scale(counties_scale),
                        **{**kwargs, **COUNTIES_kwargs})
+        if verbose == 'debug': print('🐛 COUNTIES:', {**kwargs, **COUNTIES_kwargs})
     if OCEAN: 
         ax.add_feature(feature.OCEAN.with_scale(scale),
                        **{**kwargs, **OCEAN_kwargs})
+        if verbose == 'debug': print('🐛 OCEAN:', {**kwargs, **OCEAN_kwargs})
     if LAND and not dark:
         # If `dark=True`, the face_color is the land color.
         ax.add_feature(feature.LAND.with_scale(scale), 
                        **{**kwargs, **LAND_kwargs})
+        if verbose == 'debug': print('🐛 LAND:', {**kwargs, **LAND_kwargs})
     if RIVERS: 
         ax.add_feature(feature.RIVERS.with_scale(scale),
                        **{**kwargs, **RIVERS_kwargs})
+        if verbose == 'debug': print('🐛 RIVERS:', {**kwargs, **RIVERS_kwargs})
     if LAKES: 
         ax.add_feature(feature.LAKES.with_scale(scale),
                        **{**kwargs, **LAKES_kwargs})
+        if verbose == 'debug': print('🐛 LAKES:', {**kwargs, **LAKES_kwargs})
     if ROADS:
         ROADS_kwargs.setdefault('edgecolor', '#b30000')
         ROADS_kwargs.setdefault('facecolor', 'none')
@@ -290,15 +307,14 @@ def common_features(scale='110m', counties_scale='20m', figsize=None, *,
             assert np.all([i in _types for i in road_types]), f"`ROADS_kwargs['type']` must be a list of these: {_types}"
             road_geos = df.loc[df['type'].apply(lambda x: x in road_types)].geometry.values
             ax.add_geometries(road_geos, crs=pc, **ROADS_kwargs)
-
+        if verbose == 'debug': print('🐛 ROADS:', ROADS_kwargs)
     if STAMEN:
-        if verbose: print("Please use `ax.set_extent` before increasing Zoom level.")
+        if verbose: print("😎 Please use `ax.set_extent` before increasing Zoom level for faster plotting.")
         STAMEN_kwargs.setdefault('style', 'terrain-background')
         STAMEN_kwargs.setdefault('zoom', 3)
-        style = STAMEN_kwargs['style']
-        zoom = STAMEN_kwargs['zoom']
-        stamen_terrain = cimgt.Stamen(style)
-        ax.add_image(stamen_terrain, zoom)
+        
+        stamen_terrain = cimgt.Stamen(STAMEN_kwargs['style'])
+        ax.add_image(stamen_terrain, STAMEN_kwargs['zoom'])
         
         if 'alpha' in STAMEN_kwargs:
             # Need to manually put a white layer over the STAMEN terrain
@@ -311,7 +327,7 @@ def common_features(scale='110m', counties_scale='20m', figsize=None, *,
                            color=STAMEN_kwargs['alpha_color'], 
                            alpha=1-STAMEN_kwargs['alpha'], 
                            zorder=1)
-    
+        if verbose == 'debug': print('🐛 STAMEN:', STAMEN_kwargs)
     if OSM:
         image = cimgt.OSM()
         OSM_kwargs.setdefault('zoom', 1)
@@ -327,7 +343,8 @@ def common_features(scale='110m', counties_scale='20m', figsize=None, *,
                            color=OSM_kwargs['alpha_color'], 
                            alpha=1-OSM_kwargs['alpha'], 
                            zorder=1)
-    
+        if verbose == 'debug': print('🐛 OSM:', OSM_kwargs)
+
     if figsize is not None:
         plt.gcf().set_figwidth(figsize[0])
         plt.gcf().set_figheight(figsize[1])
@@ -362,7 +379,7 @@ def center_extent(lon, lat, *, ax=None, pad='auto', crs=pc, verbose=False):
     crs : cartopy coordinate reference system
         Default is ccrs.PlateCarree()
     """
-    ax = check_cartopy_axes(ax, crs)
+    ax = check_cartopy_axes(ax, crs, verbose=verbose)
 
     # Convert input lat/lon in degrees to the crs units
     lon, lat = crs.transform_point(lon, lat, src_crs=pc)
@@ -375,7 +392,7 @@ def center_extent(lon, lat, *, ax=None, pad='auto', crs=pc, verbose=False):
         # for a PlateCarree projection. Pad is similar for other 
         # projections but not exactly 5 degrees.
         xmin, xmax = crs.x_limits
-        default_pad = (xmax-xmin)/72
+        default_pad = (xmax-xmin)/72        # Because 360/72 = 5 degrees
         pad.setdefault('default', default_pad)
         for i in ['top', 'bottom', 'left', 'right']:
             pad.setdefault(i, pad['default'])
@@ -433,7 +450,7 @@ def adjust_extent(ax=None, pad='auto', fraction=.05, verbose=False):
     
     if isinstance(pad, dict):
         xmin, xmax = ax.get_xlim()
-        default_pad = (xmax-xmin)*fraction
+        default_pad = (xmax-xmin) * fraction
         pad.setdefault('default', default_pad)
         for i in ['top', 'bottom', 'left', 'right']:
             pad.setdefault(i, pad['default'])
