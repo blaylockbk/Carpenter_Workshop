@@ -495,7 +495,7 @@ def copy_extent(src_ax, dst_ax):
 
 def domain_border(x, y=None, *, ax=None, text=None,
                   method='cutout', verbose=False,
-                  facealpha=.25,
+                  facealpha=.25, polygon_only=False,
                   text_kwargs={}, **kwargs):
     """
     Add a polygon of the domain boundary to a map.
@@ -523,6 +523,8 @@ def domain_border(x, y=None, *, ax=None, text=None,
         facealpha : float between 0 and 1
             Since there isn't a "facealpha" attribute for plotting,
             this will be it.
+        polygon_only : bool
+            - True: Only return the polygons and don't plot on axes.
 
     Returns
     -------
@@ -589,23 +591,27 @@ def domain_border(x, y=None, *, ax=None, text=None,
     global_polygon = ax.projection.domain  # This is the projection globe polygon
     cutout = global_polygon.difference(domain_polygon)  # This is the differencesbetween the domain and glob polygon
     
-    # Plot
-    kwargs.setdefault('edgecolors', 'k')
-    kwargs.setdefault('linewidths', 1)
-    if method=='fill':
-        kwargs.setdefault('facecolor', (0,0,0,facealpha))
-        artist = ax.add_feature(feature.ShapelyFeature([domain_polygon], ax.projection), **kwargs)
-    elif method=='cutout':
-        kwargs.setdefault('facecolor', (0,0,0,facealpha))
-        artist = ax.add_feature(feature.ShapelyFeature([cutout], ax.projection), **kwargs)
-    elif method=='border':
-        kwargs.setdefault('facecolor', 'none')
-        artist = ax.add_feature(feature.ShapelyFeature([domain_polygon.exterior], ax.projection), **kwargs)
-        
-    if text:
-        text_kwargs.setdefault('verticalalignment', 'bottom')
-        text_kwargs.setdefault('fontsize', 15)
-        xx, yy = outside[0]
-        ax.text(xx+.2, yy+.2, text, transform=pc, **text_kwargs)
+    if polygon_only:
+        plt.close()
+        return domain_polygon, domain_polygon_latlon
+    else:
+        # Plot
+        kwargs.setdefault('edgecolors', 'k')
+        kwargs.setdefault('linewidths', 1)
+        if method=='fill':
+            kwargs.setdefault('facecolor', (0,0,0,facealpha))
+            artist = ax.add_feature(feature.ShapelyFeature([domain_polygon], ax.projection), **kwargs)
+        elif method=='cutout':
+            kwargs.setdefault('facecolor', (0,0,0,facealpha))
+            artist = ax.add_feature(feature.ShapelyFeature([cutout], ax.projection), **kwargs)
+        elif method=='border':
+            kwargs.setdefault('facecolor', 'none')
+            artist = ax.add_feature(feature.ShapelyFeature([domain_polygon.exterior], ax.projection), **kwargs)
+            
+        if text:
+            text_kwargs.setdefault('verticalalignment', 'bottom')
+            text_kwargs.setdefault('fontsize', 15)
+            xx, yy = outside[0]
+            ax.text(xx+.2, yy+.2, text, transform=pc, **text_kwargs)
 
-    return artist, domain_polygon, domain_polygon_latlon
+        return artist, domain_polygon, domain_polygon_latlon
