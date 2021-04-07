@@ -20,3 +20,7 @@ Typical air quality codes for Ozone and PM 2.5.
 **Future Work**
 
 It would be interesting to implement this sort of coloring for high/medium/low clouds using the HSV color scale developed at [ECMWF](https://apps.ecmwf.int/webapps/opencharts/products/medium-clouds).
+
+# Tools and Articles
+- [ColorBrewer Color Advice](https://colorbrewer2.org/)
+- [Color Harmony](https://medium.com/nightingale/harmonic-resolution-18202193f5e5)

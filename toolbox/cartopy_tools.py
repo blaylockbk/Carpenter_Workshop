@@ -70,7 +70,7 @@ def check_cartopy_axes(ax=None, crs=pc, *, verbose=False):
         else:
             raise TypeError('🌎 Sorry. The `ax` you gave me is not a cartopy axes.')
 
-def common_features(scale='110m', ax=None, crs=pc, *, figsize=None,
+def common_features(scale='110m', ax=None, crs=pc, *, figsize=None, dpi=None,
                     counties_scale='20m', dark=False, verbose=False,                   
                     COASTLINES=True, COASTLINES_kwargs={},
                     BORDERS=False,   BORDERS_kwargs={},
@@ -98,12 +98,6 @@ def common_features(scale='110m', ax=None, crs=pc, *, figsize=None,
             The ``'10m'`` scale for OCEAN and LAND takes a *long* time.
             Consider using ``'50m'`` if you need OCEAN and LAND colored.           
     
-    counties_scale: {'20m', '5m', '500k'}
-        Counties are plotted via MetPy and have different resolutions 
-        available than other features.
-        -  20m = 20,000,000 resolution (Ok if you show a large area)
-        -   5m =  5,000,000 resolution (provides good detail)
-        - 500k =    500,000 resolution (high resolution, plots very slow)
     
     ax : plot axes
         The axis to add the feature to.
@@ -117,6 +111,16 @@ def common_features(scale='110m', ax=None, crs=pc, *, figsize=None,
         .. figure:: _static/BB_maps/common_features-1.png
         .. figure:: _static/BB_maps/common_features-2.png
 
+    counties_scale: {'20m', '5m', '500k'}
+        Counties are plotted via MetPy and have different resolutions 
+        available than other features.
+        -  20m = 20,000,000 resolution (Ok if you show a large area)
+        -   5m =  5,000,000 resolution (provides good detail)
+        - 500k =    500,000 resolution (high resolution, plots very slow)
+    figsize : tuple
+        Set the figure size
+    dpi : int
+        Set the figure dpi
     FEATURES : bool
         Toggle on various features. By default, only COASTLINES is
         turned on. Each feature has a cooresponding ``FEATURE_kwargs={}``
@@ -172,24 +176,8 @@ def common_features(scale='110m', ax=None, crs=pc, *, figsize=None,
 
     Examples
     --------
-    https://inversion.nrlmry.navy.mil/confluence/display/~Blaylock/2020/08/07/Cartopy%3A+Add+Common+Features
-    
-    Each feature can be toggled on by setting the argument to ``True``.
-    
-    .. figure:: _static/BB_maps/individual_features.png
-    
-    By default, the COASTLINES=True
-    
-    .. figure:: _static/BB_maps/features_with_coastlines.png
-    .. figure:: _static/BB_maps/features_with_coastlines_DARK.png
-    
-    The next two illustrate the level of detail for ``'50m'`` and ``'10m'``.
-    Note that the OCEAN and LAND features take 3+ minutes to render for the
-    10m resolution the first time you plot it. 
-    
-    .. figure:: _static/BB_maps/features_with_coastlines_10m.png
-    .. figure:: _static/BB_maps/features_with_coastlines_50m.png
-    
+    https://github.com/blaylockbk/Carpenter_Workshop/blob/main/notebooks/demo_cartopy_tools.ipynb
+        
     Returns
     -------
     The cartopy axes (obviously you don't need this if you gave an ax
@@ -348,6 +336,8 @@ def common_features(scale='110m', ax=None, crs=pc, *, figsize=None,
     if figsize is not None:
         plt.gcf().set_figwidth(figsize[0])
         plt.gcf().set_figheight(figsize[1])
+    if dpi is not None:
+        plt.gcf().set_dpi(dpi)
 
     return ax
 
