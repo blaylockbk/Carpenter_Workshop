@@ -3,13 +3,10 @@ channels:
  - conda-forge
  - defaults
 dependencies:
- - python=3.8
+ - python=3.9
  - pip
  - git
  - pylint
- #- rope           # python refactoring library
- #- rstcheck       # restructuredText linter    # Some issues with this linter causing too many jobs
- #- line_profiler  # profile code line by line 
  
  # JupyterLab
  #------------
@@ -29,7 +26,6 @@ dependencies:
  #---------
  - requests
  - matplotlib
- - matplotlib-venn
  - cartopy
  - numpy
  - scipy
@@ -46,10 +42,7 @@ dependencies:
  - h5netcdf
  #- xesmf      # Not available on PC (v0.5.0 only works with xarray 0.16.0, but that has issues)
  #- esmpy      # Not available on PC
- - cf_xarray
  - metpy
- - dask
- - f90nml      # For fortran namelist files
  
  # Access to Amazon AWS S3 and other cloud storage
  - s3fs
@@ -71,8 +64,8 @@ dependencies:
  # Other
  #-------
  - pip:
-   - bootstrapped
-   - git+https://github.com/blaylockbk/HRRR_archive_download
-   - git+https://github.com/blaylockbk/SynopticPy
-   - git+https://github.com/blaylockbk/goes2go
-   - git+https://github.com/blaylockbk/Carptenter_Workshop
+   - highlight-text
+   #- git+https://github.com/blaylockbk/HRRR_archive_download
+   #- git+https://github.com/blaylockbk/SynopticPy
+   #- git+https://github.com/blaylockbk/goes2go
+   #- git+https://github.com/blaylockbk/Carptenter_Workshop
