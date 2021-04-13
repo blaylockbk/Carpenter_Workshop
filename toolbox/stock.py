@@ -75,8 +75,8 @@ def _copy(self, target, verbose=True):
     shutil.copy(self, target)
         
     if verbose: print(f"📄➡📁 Copied [{self}] to [{target}]")
-Path.copy = _copy
 
+Path.copy = _copy
 
 # ======================================================================
 # File paths

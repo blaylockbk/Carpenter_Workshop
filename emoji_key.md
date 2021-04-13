@@ -4,6 +4,7 @@
 |-----------|:---:|
 |Finished| 🏄🏼‍♂️ 🍦 🍨
 |Created Directory| 👷🏻‍♂️ 🔨 🏗 📂
+|Message for you| 👷🏻‍♂️💬
 |Working on task| 💡 ⏳
 |Looking/Searching for| 🔍🔎
 |Couldn't Find| 🕵🏻‍♂️ 🦨

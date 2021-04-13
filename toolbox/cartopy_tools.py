@@ -36,6 +36,116 @@ except Exception as e:
 
 pc = ccrs.PlateCarree()
 
+def _adjust_extent(self, pad='auto', fraction=.05, verbose=False):
+    """
+    Adjust the extent of an existing cartopy axes.
+
+    This is useful to fine-tune the extent of a map after the extent 
+    was automatically made by a cartopy plotting method.    
+    
+    Parameters
+    ----------
+    ax : cartopy axes
+    pad : float or dict
+        If float, pad the map the same on all sides. Default is half a degree.
+        If dict, specify pad on each side.
+            - 'top' - padding north of center point
+            - 'bottom'- padding south of center point
+            - 'left' - padding east of center point
+            - 'right' - padding west of center point
+            - 'default' - padding when pad is unspecified 
+        Example: ``pad=dict(top=.5, default=.2)`` is the same as
+                 ``pad=dict(top=.5, bottom=.2, left=.2, right=.2)``
+        Note: Use negative numbers to remove padding.
+    fraction : float
+        When pad is 'auto', adjust the sides by a set fraction.
+        The default 0.05 will give 5% padding on each side.
+    """
+    # Can't shrink the map extent by more than half in each direction, duh.
+    assert fraction > -.5, "Fraction must be larger than -0.5."
+        
+    crs = self.projection
+    
+    west, east, south, north = self.get_extent(crs=crs)
+
+    if pad == 'auto':
+        pad = {}
+    
+    if isinstance(pad, dict):
+        xmin, xmax = self.get_xlim()
+        default_pad = (xmax-xmin) * fraction
+        pad.setdefault('default', default_pad)
+        for i in ['top', 'bottom', 'left', 'right']:
+            pad.setdefault(i, pad['default'])
+    else:
+        pad = dict(top=pad, bottom=pad, left=pad, right=pad)
+
+    ymin, ymax = crs.y_limits
+    north = np.minimum(ymax, north + pad['top'])
+    south = np.maximum(ymin, south - pad['bottom'])
+    east = east + pad['right']
+    west = west - pad['left']
+
+    self.set_extent([west, east, south, north], crs=crs)
+
+    if verbose: print(f"📐 Adjust Padding for {crs.__class__}: {pad}")
+    
+    return self.get_extent(crs=crs) 
+
+def _center_extent(self, lon, lat, *, pad='auto', verbose=False):
+    """
+    Change the map extent to be centered on a point and adjust padding.
+
+    Parameters
+    ----------
+    lon, lat : float
+        Latitude and Longitude of the center point **in degrees**.
+    pad : float or dict
+        Default is 'auto', which defaults to ~5 degree padding on each side.
+        If float, pad the map the same on all sides (in crs units).
+        If dict, specify pad on each side (in crs units).
+            - 'top' - padding north of center point
+            - 'bottom'- padding south of center point
+            - 'left' - padding east of center point
+            - 'right' - padding west of center point
+            - 'default' - padding when pad is unspecified (default is 5)
+        Example: ``pad=dict(top=5, default=10)`` is the same as
+                 ``pad=dict(top=5, bottom=10, left=10, right=10)``
+    """
+    crs = self.projection
+
+    # Convert input lat/lon in degrees to the crs units
+    lon, lat = crs.transform_point(lon, lat, src_crs=pc)
+
+    if pad == 'auto':
+        pad = dict()
+    
+    if isinstance(pad, dict):
+        # This default gives 5 degrees padding on each side
+        # for a PlateCarree projection. Pad is similar for other 
+        # projections but not exactly 5 degrees.
+        xmin, xmax = crs.x_limits
+        default_pad = (xmax-xmin)/72        # Because 360/72 = 5 degrees
+        pad.setdefault('default', default_pad)
+        for i in ['top', 'bottom', 'left', 'right']:
+            pad.setdefault(i, pad['default'])
+    else:
+        pad = dict(top=pad, bottom=pad, left=pad, right=pad)
+        
+    ymin, ymax = crs.y_limits
+    north = np.minimum(ymax, lat + pad['top'])
+    south = np.maximum(ymin, lat - pad['bottom'])
+    east = lon + pad['right']
+    west = lon - pad['left']
+    
+    self.set_extent([west, east, south, north], crs=crs)
+    
+    if verbose: print(f"📐 Padding from point for {crs.__class__}: {pad}")
+        
+    return self.get_extent(crs=crs) 
+
+
+
 ########################################################################
 # Quick adn Useful Cartopy Creation
 ########################################################################
@@ -339,12 +449,17 @@ def common_features(scale='110m', ax=None, crs=pc, *, figsize=None, dpi=None,
     if dpi is not None:
         plt.gcf().set_dpi(dpi)
 
+    # Add my custom methods
+    ax.__class__.adjust_extent = _adjust_extent
+    ax.__class__.center_extent = _center_extent
+
     return ax
 
 ########################################################################
 # Adjust Map Extent
 ########################################################################
 
+# OLD
 def center_extent(lon, lat, *, ax=None, pad='auto', crs=pc, verbose=False):
     """
     Change the map extent to be centered on a point and adjust padding.
@@ -369,6 +484,7 @@ def center_extent(lon, lat, *, ax=None, pad='auto', crs=pc, verbose=False):
     crs : cartopy coordinate reference system
         Default is ccrs.PlateCarree()
     """
+    warnings.warn("OLD Use the ax.center_extent method added to the axes by common_features")
     ax = check_cartopy_axes(ax, crs, verbose=verbose)
 
     # Convert input lat/lon in degrees to the crs units
@@ -401,6 +517,7 @@ def center_extent(lon, lat, *, ax=None, pad='auto', crs=pc, verbose=False):
         
     return ax.get_extent(crs=crs) 
 
+# OLD
 def adjust_extent(ax=None, pad='auto', fraction=.05, verbose=False):
     """
     Adjust the extent of an existing cartopy axes.
@@ -426,6 +543,7 @@ def adjust_extent(ax=None, pad='auto', fraction=.05, verbose=False):
         When pad is 'auto', adjust the sides by a set fraction.
         The default 0.05 will give 5% padding on each side.
     """
+    warnings.warn("OLD Use the ax.center_extent method added to the axes by common_features")
     # Can't shrink the map extent by more than half in each direction, duh.
     assert fraction > -.5, "Fraction must be larger than -0.5."
     
@@ -458,6 +576,8 @@ def adjust_extent(ax=None, pad='auto', fraction=.05, verbose=False):
     if verbose: print(f"📐 Adjust Padding for {crs.__class__}: {pad}")
     
     return ax.get_extent(crs=crs) 
+
+
 
 def copy_extent(src_ax, dst_ax):
     """

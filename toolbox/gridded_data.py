@@ -81,7 +81,7 @@ def pluck_points(ds, points, names=None, dist_thresh=10_000, verbose=False):
     xs = []  # x index values
     ys = []  # y index values 
     for point in points:
-        assert len(point) == 2, "``points`` should be a tuple or list of tuples (lat, lon)"
+        assert len(point) == 2, "``points`` should be a tuple or list of tuples (lon, lat)"
         
         p_lon, p_lat = point
 
@@ -103,6 +103,7 @@ def pluck_points(ds, points, names=None, dist_thresh=10_000, verbose=False):
             x, y = np.where(c == np.min(c))
         else:
             raise ValueError(f"Sorry, I do not understand dimensions {ds.latitude.dims}. Expected ('y', 'x')" )
+        
         xs.append(x[0])
         ys.append(y[0])
 
@@ -130,8 +131,8 @@ def pluck_points(ds, points, names=None, dist_thresh=10_000, verbose=False):
     # requested point.
     # Based on https://andrew.hedges.name/experiments/haversine/
     #-------------------------------------------------------------------
-    lat1 = np.deg2rad([i[0] for i in points])
-    lon1 = np.deg2rad([i[1] for i in points])
+    lat1 = np.deg2rad([i[1] for i in points])
+    lon1 = np.deg2rad([i[0] for i in points])
     
     lat2 = np.deg2rad(ds.latitude.data)
     lon2 = np.deg2rad(ds.longitude.data)
@@ -161,10 +162,15 @@ def pluck_points(ds, points, names=None, dist_thresh=10_000, verbose=False):
     
     ## Print some info about each point:
     if verbose:
-        zipped = zip([i[0] for i in points], [i[1] for i in points],
-                     ds.latitude.data, ds.longitude.data, ds.distance.data, ds.point.data)
-        for plat, plon, glat, glon, d, name in zipped:
-            print(f"🔎 Matched requested point [{name}] ({plat:.3f}, {plon:.3f}) to grid point ({glat:.3f}, {glon:.3f})...distance of {d/1000:,.2f} km.")
+        p_lons = [i[0] for i in points]
+        p_lats = [i[1] for i in points]
+        g_lons = ds.longitude.data
+        g_lats = ds.latitude.data
+        distances = ds.distance.data
+        p_names = ds.point.data
+        zipped = zip(p_lons, p_lats, g_lons, g_lats, distances, p_names)
+        for plon, plat, glon, glat, d, name in zipped:
+            print(f"🔎 Matched requested point [{name}] ({plat:.3f}, {plon:.3f}) to grid point ({glat:.3f}, {glon:.3f}). Distance of {d/1000:,.2f} km.")
             if d > dist_thresh:
                 print(f'   💀 Point [{name}] Failed distance threshold')
     
@@ -174,7 +180,7 @@ def pluck_points(ds, points, names=None, dist_thresh=10_000, verbose=False):
     ds.attrs['y_index'] = ys
     
     # Drop points that do not meet the dist_thresh criteria
-    failed = ds.distance < dist_thresh
+    failed = ds.distance > dist_thresh
     if np.sum(failed).data >= 1:
         warnings.warn(f' 💀 Dropped {np.sum(failed).data} point(s) that exceeded dist_thresh.')
         ds = ds.where(~failed, drop=True)  
