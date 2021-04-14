@@ -44,6 +44,8 @@ dependencies:
  #- esmpy      # Not available on PC
  - metpy
  
+ #- alphashape  # needed for concave hulls
+
  # Access to Amazon AWS S3 and other cloud storage
  - s3fs
 

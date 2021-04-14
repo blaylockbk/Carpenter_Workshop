@@ -144,7 +144,30 @@ def _center_extent(self, lon, lat, *, pad='auto', verbose=False):
         
     return self.get_extent(crs=crs) 
 
+def _copy_extent(self, src_ax):
+    """
+    Copy the extent from an axes. 
+    
+    .. note:: 
+        Copying extent from different projections might not result in
+        what you expect.
 
+    Parameters
+    ----------
+    dst_ax : cartopy axes
+        A source cartopy axes to copy extent from onto the existing axes.
+
+    Example
+    -------
+    # Copy extent of ax2 to ax1
+    ``ax1.copy_extent(ax2)``
+
+    """
+    src_ax = check_cartopy_axes(src_ax)
+
+    self.set_extent(src_ax.get_extent(crs=pc), crs=pc)
+
+    return self.get_extent(crs=pc)
 
 ########################################################################
 # Quick adn Useful Cartopy Creation
@@ -170,6 +193,8 @@ def check_cartopy_axes(ax=None, crs=pc, *, verbose=False):
             if verbose: print('🌎 Using the current cartopy axes.')
             return plt.gca()  
         else:
+            # Close the axes we just opened in our test
+            plt.close() 
             # Create a new cartopy axes
             if verbose: print(f'🌎 The current axes is not a cartopy axes. Will create a new cartopy axes with crs={crs.__class__}.')
             return plt.axes(projection=crs)
@@ -452,6 +477,7 @@ def common_features(scale='110m', ax=None, crs=pc, *, figsize=None, dpi=None,
     # Add my custom methods
     ax.__class__.adjust_extent = _adjust_extent
     ax.__class__.center_extent = _center_extent
+    ax.__class__.copy_extent = _copy_extent
 
     return ax
 
@@ -577,8 +603,7 @@ def adjust_extent(ax=None, pad='auto', fraction=.05, verbose=False):
     
     return ax.get_extent(crs=crs) 
 
-
-
+# OLD
 def copy_extent(src_ax, dst_ax):
     """
     Copy the extent from an axes. 
@@ -592,6 +617,7 @@ def copy_extent(src_ax, dst_ax):
     src_ax, dst_ax : cartopy axes
         A source cartopy axes to copy extent from onto the destination axes.
     """
+    warnings.warn("OLD Use the ax.copy_extent method added to the axes by common_features")
     src_ax = check_cartopy_axes(src_ax)
     dst_ax = check_cartopy_axes(dst_ax)
 

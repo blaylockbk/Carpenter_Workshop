@@ -21,6 +21,7 @@ from datetime import datetime, timedelta
 import numpy as np
 import pandas as pd 
 import xarray as xr
+import cfgrib
 
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
@@ -30,3 +31,5 @@ import matplotlib.colors as mcolors
 import matplotlib.dates as mdates
 import matplotlib.patheffects as path_effects
 
+from metpy.units import units
+import metpy.calc as mpcalc

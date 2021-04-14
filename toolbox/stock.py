@@ -6,14 +6,13 @@
 Miscellaneous Stock
 ===================
 
-Some miscellaneous function worth something. You might take stock in these.
+"Take stock in these, they might be worth something someday."
 
 Named "stock" for the cattle stock a rancher might have roaming
 around that can be worth something when rounded up.
 
 """
-from datetime import datetime, timedelta
-import numpy as np
+from datetime import datetime
 import inspect
 from pathlib import Path
 import operator
@@ -21,19 +20,25 @@ import os
 import shutil
 import contextlib
 import sys
-import xarray as xr
 import warnings
+
+import multiprocessing
+from multiprocessing import Pool, cpu_count          # Multiprocessing
+from multiprocessing.dummy import Pool as ThreadPool # Multithreading
+
+import numpy as np
 import matplotlib.pyplot as plt
+
 try:
     from dask import delayed, compute
 except Exception as e:
     print(f"WARNING! {e}")
     print('Without dask, you cannot use dask for multiprocessing.')
 
-import multiprocessing
-from multiprocessing import Pool, cpu_count          # Multiprocessing
-from multiprocessing.dummy import Pool as ThreadPool # Multithreading
 
+# ==============
+# Python Version
+# ==============
 python_version = float(f"{sys.version_info.major}.{sys.version_info.minor}")
 
 # ======================================================================
@@ -43,7 +48,7 @@ def _copy(self, target, verbose=True):
     """
     Add this copy method to a Path object.
     
-    For Path objects created by ``BB_utils.stock.ful_path``, there will
+    For Path objects created by ``toolbox.stock.full_path``, there will
     be this copy method added for easy copying the file to other Paths.
     
     .. note:: 
@@ -81,8 +86,6 @@ Path.copy = _copy
 # ======================================================================
 # File paths
 # ======================================================================
-from pathlib import Path
-import os
 def full_path(p, must_exist=True, mkdir=False, verbose=True):
     """
     Convert string to ``pathlib.Path``. Resolve path and environment variables.
@@ -105,7 +108,7 @@ def full_path(p, must_exist=True, mkdir=False, verbose=True):
         
     Returns
     -------
-    The fully resoloved pathlib.Path.
+    The fully resolved pathlib.Path.
     
     Examples
     --------
@@ -565,7 +568,6 @@ def str_operator(left, operator_str, right):
     assert operator_str in list(op_list), f"`operator_str` must be one of {list(op_list)}"
     
     return op_list[operator_str](left, right)
-
 
 def normalize(value, lower_limit, upper_limit, clip=True):
     """
