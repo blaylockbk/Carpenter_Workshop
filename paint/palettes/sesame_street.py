@@ -12,6 +12,8 @@ Style Guide 2001
 https://muppet.fandom.com/wiki/Sesame_Street_style_guide_(2001)
 """
 
+import matplotlib.pyplot as plt
+
 class character:
     def __init__(self, name, catch_phrase=''):
         self.name = name
@@ -42,11 +44,32 @@ class character:
     def add_friend(self, name, description):
         self.friends[name] = description
 
+    def show_colors(self):
+        plt.figure(figsize=[2, len(self.colors)])
+
+        for i, (name, color) in enumerate(self.colors.items()):
+            if color.upper() == '#FFFFFF':
+                txt_color = '.5'
+            else:
+                txt_color = 'w'
+            plt.text(0, i, f'{name:^18}', 
+                    va='center', fontsize=15, fontfamily='monospace', color=txt_color, fontweight='bold', 
+                    bbox=dict(color=color, boxstyle='round'))
+            plt.scatter(0, i, color=color, s=1000, clip_on=False, ec='k')
+        
+        plt.title(f"{self.name}'s Colors")
+        plt.gca().axis('off')
+        plt.tight_layout()
+
+
+################
 # Pantone Colors
+
 P021C = '#FE5000'  # Orange 2
 P032C = '#EF3340'  # Red
 P109C = '#FFD100'  # Yellow
 P116C = '#FFCD00'  # Yellow 2
+P122C = '#FED141'  # Yellow
 P130C = '#F2A900'  # Orange
 P143C = '#F1B434'  # Yellow
 P144C = '#ED8B00'  # Orange
@@ -60,6 +83,7 @@ P185C = '#E4002B'  # Red
 P210C = '#F99FC9'  # Pink 2
 P211C = '#F57EB6'  # Pink
 P212C = '#F04E98'  # Pink
+P219C = '#DA1984'  # Pink
 P239C = '#DB3EB1'  # Dark Pink
 P251C = '#DD9CDF'  # Pink
 P252C = '#C964CF'  # Pink
@@ -90,7 +114,8 @@ WarmGray3 = '#BFB8AF'
 CoolGray5 = '#B1B3B3'  # Gray
 CoolGray3 = '#C8C9C7'  # Gray
 
-
+###########################
+# Seasame Street Characters
 
 bigBird = character('Big Bird', "I'm happy to be me!")
 bigBird.add_friend('Radar', 'Teddy Bear')
@@ -108,16 +133,20 @@ radar.add_color('face', P145C)
 radar.add_color('bandanna', P185C)
 
 ernie = character('Ernie', '')
-arnie.add_friend('Rubber Duckie', 'Duck')
+ernie.add_friend('Rubber Duckie', 'Duck')
 ernie.add_color('body', P151C)
 ernie.add_color('tongue', P212C)
 ernie.add_color('hair', BLACK)
 ernie.add_color('nose', P185C)
 ernie.add_color('mouth', P185C)
-ernie.add_color('shirt', [P293C, WHITE, P185C, P109C])
+ernie.add_color('shirt1', P293C)
+ernie.add_color('shirt2', WHITE)
+ernie.add_color('shirt3', P185C)
+ernie.add_color('shirt4', P109C)
 ernie.add_color('collar, cuffs', P116C)
 ernie.add_color('pants', P279C)
-ernie.add_color('shoes', [WHITE, P185C])
+ernie.add_color('shoes1', WHITE)
+ernie.add_color('shoes2', P185C)
 
 rubberDucky = character('Rubber Duckie', '*squeak!*')
 rubberDucky.add_color('body', P109C)
@@ -132,9 +161,12 @@ bert.add_color('hair', BLACK)
 bert.add_color('nose', P151C)
 bert.add_color('mouth', P185C)
 bert.add_color('tongue', P212C)
-bert.add_color('shirt', [P172C, P293C, P375C])
+bert.add_color('shirt1', P172C)
+bert.add_color('shirt3', P293C)
+bert.add_color('shirt3', P375C)
 bert.add_color('pants', P361C)
-bert.add_color('shoes', [WHITE, P167C])
+bert.add_color('shoes1', WHITE)
+bert.add_color('shoes2', P167C)
 
 bernice = character('Bernice')
 bernice.add_color('body', P2925C)
@@ -152,7 +184,8 @@ count.add_color('tongue', P212C)
 count.add_color('mouth', BLACK)
 count.add_color('cape exterior', P348C)
 count.add_color('cape interior', P239C)
-count.add_color('chest ribbon', [P185C, P116C])
+count.add_color('chest ribbon1', P185C)
+count.add_color('chest ribbon2', P116C)
 count.add_color('shirt', WHITE)
 count.add_color('tuxedo', P432C)
 count.add_color('spats', WarmGray2)
@@ -175,7 +208,9 @@ dorthy.add_color('water', P2995C)
 david = character('David')
 david.add_color('body', P150C)
 david.add_color('mouth', P185C)
-david.add_color('shirt', [P185C, P122C, P252C])
+david.add_color('shirt1', P185C)
+david.add_color('shirt2', P122C)
+david.add_color('shirt3', P252C)
 david.add_color('nose', P252C)
 
 grover = character('Grover', 'Hello Everybodeeeeeeeee!')
@@ -184,7 +219,11 @@ grover.add_color('body', P285C)
 grover.add_color('nose', P212C)
 grover.add_color('lip', P185C)
 grover.add_color('mouth', BLACK)
-grover.add_color('super suite', [CoolGray5, CoolGray3, P291C, P143C, BLUE])
+grover.add_color('super suite1', CoolGray5)
+grover.add_color('super suite2', CoolGray3)
+grover.add_color('super suite3', P291C)
+grover.add_color('super suite4', P143C)
+grover.add_color('super suite5', PBLUE)
 
 oscar = character('Oscar the Grouch', 'Scram!!')
 oscar.add_friend('Slimey', 'worm') 
@@ -223,3 +262,37 @@ mimi.add_color('mouth', P032C)
 mimi.add_color('dress', P265C)
 mimi.add_color('pants', P219C)
 mimi.add_color('shoes', PReflexBlue)
+
+
+class gang:
+    characters = [bigBird, ernie, bert, cookieMonster, count, elmo, grover, oscar, rosita, zoe][::-1]
+    
+    def __init__(self, characters=characters):
+        self.characters = characters
+
+    def get_colors(self, part='body'):
+        cdict = {}
+        for i in self.characters:
+            cdict[i.name] = i.colors.get(part, None)
+        return cdict
+
+    def show_colors(self, part='body'):
+        plt.figure(figsize=[2, 6])
+
+        for i, (name, color) in enumerate(self.get_colors(part=part).items()):
+            
+            if color is not None:
+                plt.scatter(0, i, color=color, s=1000, clip_on=False)
+                plt.text(0, i, f'{name:^18}', 
+                        va='center', fontsize=15, fontfamily='monospace', color='w', fontweight='bold', 
+                        bbox=dict(color=color, boxstyle='round'))
+            else:
+                plt.text(0, i, f'{name:^18}', 
+                        va='center', fontsize=15, fontfamily='monospace', color='.8', fontweight='bold')
+        
+        plt.title(f'{part.capitalize()} Color')
+        plt.gca().axis('off')
+        plt.tight_layout()
+
+        
+
