@@ -26,9 +26,11 @@ import cfgrib
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
 
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 import matplotlib.dates as mdates
+import matplotlib.ticker as mticker
 import matplotlib.patheffects as path_effects
 
 from metpy.units import units

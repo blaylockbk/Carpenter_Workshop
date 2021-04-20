@@ -33,16 +33,27 @@ def copy_fig(fig):
     """
     return pickle.loads(pickle.dumps(fig))
 
-def date_axis_ticks(ax=None, locator='day', major=3, minor=1):
+def date_axis_ticks(ax=None, locator='day', major=3, minor=1, fmt=None, minor_fmt=None):
     """
     Set tick intervals for a date axis.
 
     I always forget how to do this, so I hope this will jog my memory.
     For reference: https://matplotlib.org/stable/api/dates_api.html
+
+    Parameters
+    ----------
+    locator : {'day', 'hour'}
+        Place ticks on every day or every hour.
+    major, minor : int
+        Tick interval for major and minor ticks.
+    fmt : str
+        String format for the dates. Default is None.
+        A popular dateformat is ``"%b %d\n%H:%M"``.
     """
     if ax is None:
         ax = plt.gca()
     
+    # Where ticks should be placed
     if locator.lower() == 'day':
         if major is not None: 
             ax.xaxis.set_major_locator(mdates.DayLocator(interval=major))
@@ -54,6 +65,30 @@ def date_axis_ticks(ax=None, locator='day', major=3, minor=1):
         if minor is not None: 
             ax.xaxis.set_minor_locator(mdates.HourLocator(interval=minor))
     
+    # Format Date Tick String
+    if fmt is not None:
+        ax.xaxis.set_major_formatter(mdates.DateFormatter(fmt))
+    if minor_fmt is not None:
+        ax.xaxis.set_minor_formatter(mdates.DateFormatter(minor_fmt))
+
+def scatter_density(x, y, ax=None, **kwargs):
+    """
+    Plot a scatter density plot
+
+    See example here: https://gist.github.com/blaylockbk/3190e0c21e11b5a25e09731c7ae46ad3
+    """
+    if ax is None:
+        ax = plt.gca()
+    
+    kwargs.setdefault('c', 'tab:blue')
+    kwargs.setdefault('lw', 0)
+    kwargs.setdefault('alpha', .25)
+    kwargs.setdefault('s', 40)
+    kwargs.setdefault('zorder', 10)
+    
+    ax.scatter(x, y, s=kwargs['s'], zorder=kwargs['zorder']-1, color="0.2", lw=1)  # dark grey outline
+    ax.scatter(x, y, s=kwargs['s'], zorder=kwargs['zorder']-1, color="1.0", lw=0)  # cover overlapping edges    
+    ax.scatter(x, y, **kwargs)    # fill color
 
 
 def _infer_interval_breaks(coord):

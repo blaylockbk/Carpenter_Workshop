@@ -125,6 +125,10 @@ def _normalize(value, lower_limit, upper_limit, clip=True):
     return norm
 
 class cm_tmp:
+    """
+    Color map for Temperature
+    """
+    
     def __init__(self, levels=-1, vmin=None, vmax=None, units='C', tick_interval=5):
         """
         tick_interval : int

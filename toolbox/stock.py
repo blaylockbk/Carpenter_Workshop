@@ -327,6 +327,12 @@ def multipro_helper(func, args, kwargs={}, *,
     n = len(args)
     inputs = [(i, n, func, arg, kwargs) for i, arg in enumerate(args, start=1)]
     
+    # If only one task, we don't need multiprocessing
+    if n == 1:
+        cpus = None
+        threads = None
+        dask = None
+
     info = {}
     info['n'] = len(inputs)
 

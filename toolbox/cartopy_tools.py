@@ -36,6 +36,8 @@ except Exception as e:
 
 pc = ccrs.PlateCarree()
 
+########################################################################
+# Methods attached to axes created by `common_features`
 def _adjust_extent(self, pad='auto', fraction=.05, verbose=False):
     """
     Adjust the extent of an existing cartopy axes.
@@ -45,7 +47,6 @@ def _adjust_extent(self, pad='auto', fraction=.05, verbose=False):
     
     Parameters
     ----------
-    ax : cartopy axes
     pad : float or dict
         If float, pad the map the same on all sides. Default is half a degree.
         If dict, specify pad on each side.
@@ -154,13 +155,13 @@ def _copy_extent(self, src_ax):
 
     Parameters
     ----------
-    dst_ax : cartopy axes
+    src_ax : cartopy axes
         A source cartopy axes to copy extent from onto the existing axes.
 
-    Example
-    -------
-    # Copy extent of ax2 to ax1
-    ``ax1.copy_extent(ax2)``
+    Examples
+    --------
+    >>> # Copy extent of ax2 to ax1
+    >>> ax1.copy_extent(ax2)
 
     """
     src_ax = check_cartopy_axes(src_ax)
@@ -170,33 +171,32 @@ def _copy_extent(self, src_ax):
     return self.get_extent(crs=pc)
 
 ########################################################################
-# Quick adn Useful Cartopy Creation
-########################################################################
-
+# Main Functions
 def check_cartopy_axes(ax=None, crs=pc, *, verbose=False):
     """
-    Check an axes is a cartopy axes, else create a new cartopy axes.
+    Check if an axes is a cartopy axes, else create a new cartopy axes.
     
     Parameters
     ----------
     ax : {None, cartopy.mpl.geoaxes.GeoAxesSubplot}
         If None and plt.gca() is a cartopy axes, then use current axes.
-        Else create a new cartopy axes with specified crs.
+        Else, create a new cartopy axes with specified crs.
     crs : cartopy.crs
-        If the axes being check is not a cartopy axes, then create one
+        If the axes being checked is not a cartopy axes, then create one
         with this coordinate reference system (crs, aka "projection").
         Default is ccrs.PlateCarree()
     """    
     # A cartopy axes should be of type `cartopy.mpl.geoaxes.GeoAxesSubplot`
+    # One way to check that is to see if ax has the 'coastlines' attribute.
     if ax is None:
         if hasattr(plt.gca(), 'coastlines'):
             if verbose: print('🌎 Using the current cartopy axes.')
             return plt.gca()  
         else:
+            if verbose: print(f'🌎 The current axes is not a cartopy axes. Will create a new cartopy axes with crs={crs.__class__}.')
             # Close the axes we just opened in our test
             plt.close() 
             # Create a new cartopy axes
-            if verbose: print(f'🌎 The current axes is not a cartopy axes. Will create a new cartopy axes with crs={crs.__class__}.')
             return plt.axes(projection=crs)
     else:
         if hasattr(ax, 'coastlines'):
@@ -222,18 +222,13 @@ def common_features(scale='110m', ax=None, crs=pc, *, figsize=None, dpi=None,
     """
     Add common features to a cartopy axis. 
     
-    .. Tip:: This is a great way to initialize a new cartopy axes.
+    .. tip:: This is a great way to initialize a new cartopy axes.
 
     Parameters
     ----------
     scale : {'10m', '50m' 110m'}
-        The cartopy feature's level of detail
-        
-        .. note:: 
-            The ``'10m'`` scale for OCEAN and LAND takes a *long* time.
-            Consider using ``'50m'`` if you need OCEAN and LAND colored.           
-    
-    
+        The cartopy feature's level of detail.
+        .. note::  The ``'10m'`` scale for OCEAN and LAND takes a *long* time.    
     ax : plot axes
         The axis to add the feature to.
         If None, it will create a new cartopy axes with ``crs``.
@@ -309,6 +304,12 @@ def common_features(scale='110m', ax=None, crs=pc, *, figsize=None, dpi=None,
         call to ``common_features`` to add other features like roads and
         counties. The reason is because, if you add a tile map to  
 
+    Methods
+    -------
+    .adjust_extent
+    .center_extent
+    .copy_extent
+    
     Examples
     --------
     https://github.com/blaylockbk/Carpenter_Workshop/blob/main/notebooks/demo_cartopy_tools.ipynb
