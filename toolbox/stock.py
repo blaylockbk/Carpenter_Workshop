@@ -6,9 +6,9 @@
 Miscellaneous Stock
 ===================
 
-"Take stock in these, they might be worth something someday."
+Take stock in these, they might be worth something someday.
 
-Named "stock" for the cattle stock a rancher might have roaming
+Named "stock" for the cattle livestock a rancher might have roaming
 around that can be worth something when rounded up.
 
 """
@@ -42,7 +42,7 @@ except Exception as e:
 python_version = float(f"{sys.version_info.major}.{sys.version_info.minor}")
 
 # ======================================================================
-# Append copy method to Path module
+# Append methods to Path module
 # ======================================================================
 def _copy(self, target, verbose=True):
     """
@@ -85,11 +85,10 @@ def _tree(self, max_depth=None, *,
           show_hidden=False, 
           show_files=True, 
           show_directories=True,
-          exclude_suffix = ['.pyc']):
+          exclude_suffix = ['.pyc'],
+          exclude_dirs = ['__pycache__']):
     """
-    Print directory contents in a tree.
-
-    Add this copy method to a Path object.
+    Print directory contents in a tree
     
     Unicode Characters: http://xahlee.info/comp/unicode_drawing_shapes.html
     
@@ -106,10 +105,10 @@ def _tree(self, max_depth=None, *,
     BLUE = '\033[34m'
     
     icons = {
-        '.gz'    : '📚',
+        '.gz'    : '🎁',
         '.zip'   : '🤐',
         '.py'    : '🐍',
-        '.ipynb' : '📒',
+        '.ipynb' : '📔',
         '.pdf'   : '📕',
         '.docx'  : '📘',
         '.xlsx'  : '📗',
@@ -128,17 +127,27 @@ def _tree(self, max_depth=None, *,
         '.config': '⚙',
     }
     print(f'📦 {RED}{self}{ENDC}')
-    contents = sorted(self.rglob('*'))
+    
+    if max_depth <= 1:
+        contents = sorted(self.glob('*'))
+    else:
+        contents = sorted(self.rglob('*'))
+    
     n = len(contents)
     for i, path in enumerate(contents):
         
+        # Exclude any paths with a directory in list of exclude_dirs
+        if any(item in path.relative_to(self).parts for item in exclude_dirs):
+            continue
+        
+        # Exclude any path with suffix in exclude_suffix
         if path.suffix in exclude_suffix:
             continue
-            
+        
+        # Exclude hidden directories and files
         if not show_hidden:
             if any([i.startswith('.') for i in path.relative_to(self).parts]):
                 continue
-        
         
         depth = len(path.relative_to(self).parts)
         
@@ -156,7 +165,13 @@ def _tree(self, max_depth=None, *,
         if depth <= 1 :
             spacer = f'{mark}' * depth
         else:
-            spacer = '│    ' * (depth-1) + f'{mark}'
+            if i+1 < n:
+                spacer = '│    ' * (depth-1) + f'{mark}'
+            else:
+                spacer = '┴    ' * (depth-1) + f'{mark}'
+
+            
+
         
         if path.is_dir() and show_directories:
             print(f'{spacer}📂 {BLUE}{path.name}{ENDC}')
@@ -166,6 +181,7 @@ def _tree(self, max_depth=None, *,
                 print(f'{spacer}{icons[path.suffix]} {path.name}')
             else:
                 print(f'{spacer}📄 {path.name}')
+    
     return contents
 
 Path.copy = _copy
@@ -580,6 +596,7 @@ def colored_text(text, color=None, background=None, style=None, *,
     [1] https://ozzmaker.com/add-colour-to-text-in-python/
     [2] https://www.instructables.com/Printing-Colored-Text-in-Python-Without-Any-Module/
     [3] 256 Colors: https://gist.github.com/fnky/458719343aabd01cfb17a3a4f7296797#256-colors
+    [4] 256 Colors: https://jonasjacek.github.io/colors/
     
     Parameters
     ----------
