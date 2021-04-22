@@ -222,6 +222,8 @@ def common_features(scale='110m', ax=None, crs=pc, *, figsize=None, dpi=None,
     """
     Add common features to a cartopy axis. 
     
+    This completes about 95% of my cartopy needs.
+    
     .. tip:: This is a great way to initialize a new cartopy axes.
 
     Parameters

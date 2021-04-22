@@ -81,7 +81,95 @@ def _copy(self, target, verbose=True):
         
     if verbose: print(f"📄➡📁 Copied [{self}] to [{target}]")
 
+def _tree(self, max_depth=None, *, 
+          show_hidden=False, 
+          show_files=True, 
+          show_directories=True,
+          exclude_suffix = ['.pyc']):
+    """
+    Print directory contents in a tree.
+
+    Add this copy method to a Path object.
+    
+    Unicode Characters: http://xahlee.info/comp/unicode_drawing_shapes.html
+    
+    Parameters
+    ----------
+    max_depth : None or int
+        Maximum directory depth to show    
+    """
+    # ASCII escape colors
+    ENDC = '\033[m'
+    RED = '\033[31m'
+    GREEN = '\033[32m'
+    YELLOW = '\033[33m'
+    BLUE = '\033[34m'
+    
+    icons = {
+        '.gz'    : '📚',
+        '.zip'   : '🤐',
+        '.py'    : '🐍',
+        '.ipynb' : '📒',
+        '.pdf'   : '📕',
+        '.docx'  : '📘',
+        '.xlsx'  : '📗',
+        '.pptx'  : '📙',
+        '.avi'   : '🎥',
+        '.mp4'   : '🎥',
+        '.mp3'   : '🎵',
+        '.png'   : '📷',
+        '.jpeg'  : '📷',
+        '.gif'   : '📷',
+        '.css'   : '🎨',
+        '.nc'    : '🌐',
+        '.grib'  : '🌐',
+        '.grib2' : '🌐',
+        '.html'  : '💻',
+        '.config': '⚙',
+    }
+    print(f'📦 {RED}{self}{ENDC}')
+    contents = sorted(self.rglob('*'))
+    n = len(contents)
+    for i, path in enumerate(contents):
+        
+        if path.suffix in exclude_suffix:
+            continue
+            
+        if not show_hidden:
+            if any([i.startswith('.') for i in path.relative_to(self).parts]):
+                continue
+        
+        
+        depth = len(path.relative_to(self).parts)
+        
+        if i+1 < n:
+            depth_next = len(contents[i+1].relative_to(self).parts)
+            if max_depth is not None and depth > max_depth:
+                continue
+            if depth_next < depth:
+                mark = '└── '
+            else:
+                mark = '├── '
+        else:
+            mark = '└── '     
+        
+        if depth <= 1 :
+            spacer = f'{mark}' * depth
+        else:
+            spacer = '│    ' * (depth-1) + f'{mark}'
+        
+        if path.is_dir() and show_directories:
+            print(f'{spacer}📂 {BLUE}{path.name}{ENDC}')
+        
+        if path.is_file() and show_files:
+            if path.suffix in icons:
+                print(f'{spacer}{icons[path.suffix]} {path.name}')
+            else:
+                print(f'{spacer}📄 {path.name}')
+    return contents
+
 Path.copy = _copy
+Path.tree = _tree
 
 # ======================================================================
 # File paths
@@ -474,6 +562,82 @@ def plot_multipro_efficiency(func, args=(), kwargs={},
 # ======================================================================
 # Other
 # ======================================================================
+# ASCII Escape Codes
+_text_color = dict(zip(['black', 'red', 'green', 'yellow', 'blue', 'purple', 'cyan', 'white'],
+                     range(30,38)))
+_text_style = dict(zip(['bold', 'dark', '', 'underline', 'blink', '', 'reverse', 'concealed'],
+                       range(1,9)))
+_color_alias = dict(zip(['k', 'r', 'g', 'y', 'b', 'p', 'c', 'w'],
+                        ['black', 'red', 'green', 'yellow', 'blue', 'purple', 'cyan', 'white']))
+
+def colored_text(text, color=None, background=None, style=None, *,
+                 show_code=False, do_print=True):
+    """
+    Print colored text to the terminal in Python with ASCII escape codes.
+    
+    References
+    ----------
+    [1] https://ozzmaker.com/add-colour-to-text-in-python/
+    [2] https://www.instructables.com/Printing-Colored-Text-in-Python-Without-Any-Module/
+    [3] 256 Colors: https://gist.github.com/fnky/458719343aabd01cfb17a3a4f7296797#256-colors
+    
+    Parameters
+    ----------
+    text : str
+        The string you wish to print
+    color : {'k', 'r', 'g', 'y', 'b', 'p', 'c', 'w'} or int
+        The text color
+    style : list of {'bold', 'dark', 'underline', 'blink', 'reverse', 'concealed'}
+        Text style effects
+    background : {'k', 'r', 'g', 'y', 'b', 'p', 'c', 'w'} or int
+        Background color
+    
+    Examples
+    --------
+    >>> string = 'Color this string :)'
+    >>> colored_text(string, 'blue')
+    >>> colored_text(string, 'blue', 'red')
+    >>> colored_text(string, 'g', 'y', ['underline', 'reverse'])
+    """
+    ENDC = '\033[m'
+    
+    if isinstance(color, int):
+        CODE = f'38;5;{color}'
+    elif isinstance(background, int):
+        CODE = f'48;5;{background}'
+    else:
+        if not isinstance(style, list):
+            style = [style]
+        if color is not None: color = color.lower()
+        style = [i.lower() for i in style if i is not None]
+        
+        if background is not None: 
+            background = background.lower()
+
+        # Apply Color Alias
+        if color in _color_alias:
+            color = _color_alias[color]
+        if background in _color_alias:
+            background = _color_alias[background]
+
+        codes = []
+        if color is not None:
+            codes.append(str(_text_color[color]))
+        for i in style:
+            if i is not None:
+                codes.append(str(_text_style[i]))
+        if background is not None:
+            codes.append(str(_text_color[background]+10))
+
+        CODE = ';'.join(codes)
+
+    string = f'\033[{CODE}m{text}{ENDC}'
+    
+    if do_print:
+        print(string)
+    if show_code:
+        return string
+
 def no_print(func, *args, **kwargs):
     """When a function insists on printing, force it not to.
     
