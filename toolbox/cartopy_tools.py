@@ -22,6 +22,8 @@ import cartopy.feature as feature
 import cartopy.io.img_tiles as cimgt
 from cartopy.io import shapereader
 
+from paint.standard2 import cm_tmp, cm_dpt, cm_wind, cm_rh
+
 try:
     from metpy.plots import USCOUNTIES
 except Exception as e:
@@ -169,6 +171,220 @@ def _copy_extent(self, src_ax):
     self.set_extent(src_ax.get_extent(crs=pc), crs=pc)
 
     return self.get_extent(crs=pc)
+
+
+def _add_cbar(artist, ax=None, labels=None, **cbar_kwargs):
+    """
+    Add a colorbar for an artist to an axis.
+    
+    Parameters
+    ----------
+    artist : object from pcolormesh or with a cmap
+        An pyplot object with a cmap.
+    ax : pyplot.axesis the axes
+        An axes. If none is provided, one will be created.
+    labels : list
+        A list of tick labels for the colorbar.
+    
+    """
+    if ax is None:
+        ax = plt.gca()
+        
+    cbar_kwargs.setdefault('orientation', 'horizontal')
+    cbar_kwargs.setdefault('pad', .02)
+    cbar_kwargs.setdefault('fraction', 0.045)
+        
+    c = plt.colorbar(artist, ax=ax, **cbar_kwargs)
+    
+    if labels is not None:
+        assert 'ticks' in cbar_kwargs, 'You gave me `labels`...Please supply the `ticks` kwarg, too.'
+        
+        if cbar_kwargs['orientation'] == 'horizontal':
+            c.ax.set_xticklabels(labels, rotation=90)
+        else:
+            c.ax.set_yticklabels(labels)
+    
+    return c
+
+@xr.register_dataset_accessor("xmap")
+class xr_to_cartopy:
+    def __init__(self, xarray_obj):
+        self._obj = xarray_obj
+        self._center = None
+
+    def plot_xr(self, variable=None, *, kind='pcolormesh', u='u10', v='v10', cbar=True,
+                ax=None, cbar_kwargs={}, verbose=True, **kwargs):
+        """
+        Plot vector magnitude (wind speed) on cartopy axes.
+        
+        The Dataset should only have 2 dimensions (x and y).
+        
+        Parameters
+        ----------
+        ds : xarrray.Dataset or xarray.DataArray
+            A 2-dimension Dataset or DataArray.
+        variable : {'spd', 'wspd', OTHER VARIABLE in `ds`}
+            The variable from the Dataset `ds` to plot.
+            
+            If 'spd' or 'wspd', will use the u and v args to plot wind speed.
+        """
+        ds = self._obj
+
+        assert len(ds.dims) == 2, "The Dataset should only have 2 dimensions"
+        
+        if variable is None and isinstance(ds, xr.Dataset):
+            if len(ds) == 1:
+                variable = list(ds)[0]
+                if verbose: print(f"This Dataset has one variable, so I will assume you want to plot '{variable}'.")
+            else:
+                raise TypeError(f"Please give me a DataArray or assign `variable` as one of {set(ds)}.")
+            
+        if 'crs' in ds.attrs:
+            ax = check_cartopy_axes(ax, crs=ds.crs)    
+        else:
+            ax = check_cartopy_axes(ax)    
+        
+        if 'latitude' in ds.coords:
+            ds = ds.rename({'latitude': 'lat',
+                            'longitude': 'lon'})
+        
+        
+        kwargs.setdefault('transform', pc)
+        kwargs.setdefault('shading', 'nearest')
+        
+        if hasattr(ds, 'standard_name'):
+            if 'wind' in ds.standard_name:
+                cm = cm_wind()
+                kwargs = {**cm.cmap_kwargs, **kwargs}
+        
+        if variable is not None:
+            if variable.lower() in ['spd', 'wspd', 'speed', 'wind']:
+                if verbose: print(f"Using '{u}' and '{v}' to compute wind speed.")
+                cm = cm_wind()
+                ds = np.sqrt(ds[u]**2 + ds[v]**2)
+                kwargs = {**cm.cmap_kwargs, **kwargs}
+                cbar_kwargs.setdefault('label', cm.label)
+                ax.set_title('Wind', loc='left', fontweight='bold')
+            else:
+                ds = ds[variable]
+        
+        if hasattr(ds, 'standard_name') and hasattr(ds, 'units'):
+            if ds.standard_name == 'air_temperature' and ds.units == 'K':
+                cm = cm_tmp()
+                kwargs = {**cm.cmap_kwargs, **kwargs}
+                cbar_kwargs = {**dict(label=cm.label), **cbar_kwargs}
+                ax.set_title(cm.name, loc='left', fontweight='bold')
+                ds = ds.copy(deep=True) - 273.15
+            elif ds.standard_name == 'relative_humidity' and ds.units == '%':
+                cm = cm_rh()
+                kwargs = {**cm.cmap_kwargs, **kwargs}
+                cbar_kwargs = {**dict(label=cm.label), **cbar_kwargs}
+                ax.set_title(cm.name, loc='left', fontweight='bold')
+        elif hasattr(ds, 'long_name') and hasattr(ds, 'units'):
+            # Not all variables read by cfgrib have standard_name, like DPT
+            if 'dewpoint' in ds.long_name and ds.units == 'K':
+                kwargs = {**cm_dpt(), **kwargs}
+                cbar_kwargs = {**dict(label='Dew Point Temperature (C)'), **cbar_kwargs}
+                ax.set_title('Dew Point', loc='left', fontweight='bold')
+                ds = ds.copy(deep=True) - 273.15
+        
+        if kind.lower() in 'pcolormesh':
+            artist = ax.pcolormesh(ds.lon, ds.lat, ds, **kwargs)
+            if cbar: _add_cbar(artist, ax=ax, **cbar_kwargs)
+        elif kind.lower() in 'contour':
+            kwargs.setdefault('linewidths', 1.7)
+            if ds.GRIB_name == 'Geopotential Height':
+                kwargs.setdefault('levels', range(0, 12000, 60))
+            artist = ax.contour(ds.lon, ds.lat, ds, **kwargs)      # Don't use inferred interval
+            plt.clabel(artist, inline=1, fmt='%2.f')
+            
+        if hasattr(ds, 'valid_time'):
+            date_str = ds.valid_time.dt.strftime('%H:%M UTC %d %b %Y').item()
+            if hasattr(ds, 'step'):
+                hours = ds.step.dt.seconds.item()/3600 + ds.step.dt.days.item()*24
+                ax.set_title(f'F{hours:02.0f}  Valid: {date_str}', loc='right')
+            else:
+                ax.set_title(f'Valid:{date_str}', loc='right')
+        
+        return ax
+
+    def plot_xr_vector(self, *, u='u10', v='v10', marker='barbs',
+                    thin='auto', ax=None, rotate_winds=True, verbose=True,
+                    **kwargs):
+        """
+        Plot vector barbs or quiver on cartopy axes.
+        
+        The Dataset should only have 2 dimensions (x and y).
+        
+        Parameters
+        ----------
+        ds : xarray.Dataset
+        u, v : str
+            variable names for the u and v vector components
+        marker : {'barbs', 'quiver'}
+            Add either barbs or quivers to the cartopy axes.
+        thin : {int, 'auto'}
+            If 'auto', then will only plot a maximum of 10x10 barbs.
+        rotate_winds : bool
+            Rotate wind vectors. Sometimes this can cause an issue if the
+            data isn't exactly how it is suppoed to be, so 
+            you can turn it off, just not that the vectors will be off.
+            
+        """
+        ds = self._obj
+
+        assert len(ds.dims) == 2, "The Dataset should only have 2 dimensions"
+        
+        if 'crs' in ds.attrs:
+            ax = check_cartopy_axes(ax, crs=ds.crs)    
+        else:
+            ax = check_cartopy_axes(ax)
+        
+        # Thin the data
+        if thin == 'auto':
+            thin = int(np.max(ds[u].shape)/10)
+        ds = ds.thin(thin)
+        
+        ## Convert vectors from grid-relative to earth-relative.
+        ## (Requires a cartopy.crs object in the `ds`)
+        if 'crs' in ds.attrs and rotate_winds:
+            _, ds = grid_and_earth_relative_vectors(ds, u=u, v=v)
+            if verbose:
+                print('!! NOTICE: Vectors have been rotated from grid- to earth-relative')
+                print('!! NOTICE: because the xarray.Dataset has a crs attribute.')
+                print('!! NOTICE: Vector rotation is only important if plotting vectors on ')
+                print('!! NOTICE: a map other than the domain projection ')
+        else:
+            if verbose: 
+                warnings.warn('Vectors have not been rotated from grid- to earth-relative. Vectors will be wrong if plotted on a map different from the domain projection.')
+        
+        if 'latitude' in ds.coords:
+            ds = ds.rename({'latitude': 'lat',
+                            'longitude': 'lon'})
+        
+        kwargs.setdefault('transform', pc)
+        
+        if marker == 'barbs':
+            kwargs.setdefault('barb_increments', dict(half=2.5, full=5, flag=25))
+            kwargs.setdefault('linewidth', 0.5)
+            kwargs.setdefault('length', 5)
+            artist = ax.barbs(ds.lon.data, ds.lat.data, ds[u].data, ds[v].data, **kwargs)
+        elif marker == 'quiver':
+            kwargs.setdefault('scale', 100)
+            kwargs.setdefault('units', 'height')  # or us 'xy' units
+            #kwargs.setdefault('width', .01)
+            artist = ax.quiver(ds.lon.data, ds.lat.data, ds[u].data, ds[v].data, **kwargs)
+        
+        ax.set_title('Wind', loc='left', fontweight='bold')
+        if 'valid_time' in ds:
+            date_str = ds.valid_time.dt.strftime('%H:%M UTC %d %b %Y').item()
+            if 'step' in ds:
+                hours = ds.step.dt.seconds.item()/3600 + ds.step.dt.days.item()*24
+                ax.set_title(f'F{hours:02.0f}  Valid: {date_str}', loc='right')
+            else:
+                ax.set_title(f'Valid:{date_str}', loc='right')
+        
+        return ax
 
 ########################################################################
 # Main Functions
@@ -483,6 +699,119 @@ def common_features(scale='110m', ax=None, crs=pc, *, figsize=None, dpi=None,
     ax.__class__.copy_extent = _copy_extent
 
     return ax
+
+def grid_and_earth_relative_vectors(srcData, *,
+                                    srcProj=None, 
+                                    u='u10', v='v10'):
+    """
+    Rotate vector quantities from grid-relative to earth-relative orientation.
+    
+    NOTE: When plotting vector data on a map, be aware of which projection 
+    system should be used. Cartopy's `transform_vectors` method should be 
+    used to rotate vectors between different coordinate systems.
+    
+    Often, model data provides latitude and longitude in decimal degrees
+    and the u, and v component are oriented "grid-relative." This
+    function will return two copies of the data with correctly 
+    rotated vectors:
+    
+    1. Latitude and longitude points in the *projection coordinates* 
+       with *grid-relative* vectors.
+    2. Latitude and longitude in *decimal degrees* with *earth-relative* 
+       vectors.
+    
+    Parameters
+    ----------
+    srcData : xarray.Dataset
+        xarray.Dataset that contains variables for 
+            'latitude' and 'longitude' in decimal degrees
+            and u and v vector components. (Note: u and v variable 
+            names are specified by the `u` and `v` argument).
+    srcProj : {None, cartopy.crs}
+        The projection of the data (i.e, grid-relative projection).
+        If None (default), this will attempt to determine the projection
+        from the variable attributes if it was read in by the cfgrib
+        engine for xarray.open_dataset.
+        Else, you need to provide a projection coordinate system for
+        the data you provide.
+    u, v: str
+        The name of the u and v component in the srcData Dataset.
+        Default is 'u10' and 'v10' for 10 meter v-component wind.
+    
+    Returns
+    -------
+    Two copies of the provided xarray.Dataset 
+        grid_relative: the original dataset with the latitude and
+                       longitude points transformed to map coordinates.
+        earth_relative: the original dataset with u and v components
+                        rotated from grid to earth relative values.
+    The cooresponding coordinate projection system is also included.
+    """
+    if 'lat' in srcData.coords:
+        srcData = srcData.rename({'lat': 'latitude',
+                                  'lon': 'longitude'})
+    
+    # Plate Carree is an earth-relative projection system 
+    # i.e, map gridlines align with the left-right/down-up directions.
+    pc = ccrs.PlateCarree()
+    
+    # Determine the source projection. This works if the dataset was
+    # opened with xarray.open_dataset('file.grib2', engine='cfgrib') and
+    # the dataset is in lambert projection.
+    if srcProj is None:
+        var_attrs = srcData[u].attrs
+        if var_attrs['GRIB_gridType'] == 'lambert':
+            lc_HRRR_kwargs = {'central_latitude'   : var_attrs['GRIB_LaDInDegrees'],
+                              'central_longitude'  : var_attrs['GRIB_LoVInDegrees'],
+                              'standard_parallels' : (var_attrs['GRIB_Latin1InDegrees'],\
+                                                      var_attrs['GRIB_Latin2InDegrees'])}
+            srcProj = ccrs.LambertConformal(**lc_HRRR_kwargs)
+        else:
+            raise TypeError(f"I'm not programmed to decode the {var_attrs['GRIB_gridType']} grid type yet.\
+            \nTry giving me a specific cartopy.projection object to `srcProj` kwarg.")
+
+    
+    # Transform Latitude and Longitude coordinate points (PlateCarree) 
+    # to the source projection coordinates. We need the lat/lon in the
+    # projection coordinate space before we do the vector transform.
+    srcProj_coords = srcProj.transform_points(pc, 
+                                              srcData.longitude.data,
+                                              srcData.latitude.data)
+    
+    # Extract the X and Y coordinate arrays for the src projection.
+    X = srcProj_coords[:,:,0]
+    Y = srcProj_coords[:,:,1]
+
+    # Transform the U and V vectors to the earth-relative orientation
+    U_t, V_t = pc.transform_vectors(srcProj, X, Y, srcData[u].data, srcData[v].data)
+
+    ####################################################################
+    # Return two copies of the data (earth and grid relative)
+    ####################################################################
+    dims = srcData['latitude'].dims  # For HRRR data, this is ('y', 'x')
+    
+    # Grid-relative orientation:
+    # The U and V values are the same as the data supplied, but return 
+    # the latitude and longitude values as map projection coordinate.
+    grid_relative = srcData.copy(deep=True)
+    grid_relative['latitude'] = (dims, Y)   # lat in the map coordinates
+    grid_relative['longitude'] = (dims, X)  # lon in the map coordinates
+    grid_relative[u] = (dims, srcData[u].data)
+    grid_relative[v] = (dims, srcData[v].data)
+    grid_relative.attrs['crs'] = srcProj
+    grid_relative.attrs['vector direction'] = 'grid relative'
+    
+    # Earth-relative orientation:
+    # The latitude and longitude values are the same as the data 
+    # supplied (in decimal degrees), but return the rotated U and V
+    # values expressed in earth-relative orientation.
+    earth_relative = srcData.copy(deep=True)
+    earth_relative[u] = (dims, U_t)
+    earth_relative[v] = (dims, V_t)
+    earth_relative.attrs['crs'] = pc
+    earth_relative.attrs['vector direction'] = 'earth relative'
+    
+    return grid_relative, earth_relative
 
 ########################################################################
 # Adjust Map Extent
