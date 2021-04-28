@@ -18,6 +18,37 @@ Functions to convert various units
     - Pa_to_hPa
 
 """
+########################################################################
+# Longitude
+def to_180(lon):
+    """
+    Wrap longitude from degrees [0, 360] to degrees [-180, 180].
+
+    Parameters
+    ----------
+    lon : array_like
+        Longitude values
+    """
+    if isinstance(lon, list):
+        np.array(lon)
+    lon = (lon + 180) % 360 - 180
+    return lon
+
+def to_360(lon):
+    """
+    Wrap longitude from degrees [-180, 180] to degrees [0, 360].
+    
+    Parameters
+    ----------
+    lon : array_like
+        Longitude values
+    """
+    if isinstance(lon, list):
+        np.array(lon)
+    lon = (lon - 360) % 360
+    return lon
+
+
 
 # --- Temperature -------------------------------------------------------------
 def K_to_C(K):
