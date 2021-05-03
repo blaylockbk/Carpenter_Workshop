@@ -15,6 +15,7 @@ around that can be worth something when rounded up.
 from datetime import datetime
 import inspect
 from pathlib import Path
+from functools import wraps
 import operator
 import os
 import shutil
@@ -792,3 +793,38 @@ def normalize(value, lower_limit, upper_limit, clip=True):
         norm = np.clip(norm, 0, 1)
     return norm
 
+def timer(func):
+    """
+    A decorator to time a functions execution length.
+
+    Based on https://twitter.com/pybites/status/1387691670658068481?s=20
+
+    Parameters
+    ----------
+    func : function
+        The function you wish to time.
+    
+    Usage
+    -----
+    >>> from toolbox.stock import timer
+    >>> from time import sleep
+    >>> @timer
+    >>> def snooze(x):
+    >>>     print('I am a sleeping giant...💤')
+    >>>     sleep(x)
+    >>>     return "AWAKE! 👹"
+    >>> snooze(3) 
+    >>> #
+    >>> #out: I am a sleeping giant...💤
+    >>> #out: ⏱ Timer [snooze]:  0:00:03.004211
+    >>> #out: 'AWAKE! 👹'
+
+    """
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        start = datetime.now()
+        ret = func(*args, **kwargs)
+        duration = datetime.now() - start
+        print(f"⏱ Timer [{func.__name__}]:  {duration}")
+        return ret
+    return wrapper
