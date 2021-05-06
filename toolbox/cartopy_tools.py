@@ -27,14 +27,11 @@ from paint.standard2 import cm_tmp, cm_dpt, cm_wind, cm_rh
 try:
     from metpy.plots import USCOUNTIES
 except Exception as e:
-    print(f"WARNING! {e}")
-    print('Without metpy, you cannot draw USCOUNTIES on the map.')
+    warnings.warn(f'{e} Without metpy, you cannot draw USCOUNTIES on the map.')
 try:
     import geopandas
 except Exception as e:
-    print(f"WARNING! {e}")
-    print('Without geopandas, you cannot subset some'
-          'NaturalEarthFeatures, like "Major Highways" from roads.')
+    warnings.warn(f'{e} Without geopandas, you cannot subset some NaturalEarthFeatures, like "Major Highways" from roads.')
 
 pc = ccrs.PlateCarree()
 
