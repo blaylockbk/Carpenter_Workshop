@@ -3,14 +3,31 @@
 I have a lot of useful python tools. Instead of letting them be strewn across the garage, I want to organize them into this "workshop" and make them more useful. I enjoy woodworking and think there are a lot of analogies between carpentry and programing.
 
 - A workman can't have too many tools.
-- "If it an't broke, you're not tryin'" - Uncle Red
+- "If it ain't broke, you're not tryin'" - Uncle Red
 
-<br><br><br><br><br>
+<br><br><br>
 ---
 
 # Quick Reference
 I am tired of re-searching for these snippets on the internet. If I put them here, maybe I'll remember they are here.
 
+## Conda
+Update from yaml file
+
+```bash
+conda env update -f myenv.yml
+conda env update -f myenv.yml --prune  # removes dependencies not needed
+```
+
+Search for package versions
+```bash
+conda search packageName
+```
+
+Search for package and list dependency info
+```bash
+conda search packageName=<version> --info
+```
 
 ### Matplotlib: Jupyter Figure Transparency
 Use Jupyter Magic to give transparency to the figure displayed in the notebook
@@ -30,6 +47,9 @@ plt.rcParams['date.autoformatter.hour'] = '%b %d\n%H:%M'
 
 # Put grid lines behind patches (i.e., bar plots)
 plt.rcParams["axes.axisbelow"] = True  
+
+# Needed this to modify fonts in Adobe Illustrator
+plt.rcParams['svg.fonttype'] = 'none'
 ```
 
 ### Matplotlib: Discrete Colormap and Norm
