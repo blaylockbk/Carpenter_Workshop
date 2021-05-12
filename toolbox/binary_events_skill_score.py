@@ -30,8 +30,14 @@ Forecast Verification
 
     http://www.cawcr.gov.au/projects/verification/
 
-    You might also consider using `xskillscore's contingency table methods
-    <https://xskillscore.readthedocs.io/en/latest/quick-start.html#Contingency-Based>`_.
+.. note:: **Other Verification Tools**
+    - `xskillscore <https://xskillscore.readthedocs.io/>`_ is a Python
+    package for verification of forecsts using xarray.
+    - `Model Evaluation Tools (MET) 
+    <http://dtcenter.org/community-code/model-evaluation-tools-met>`_.
+    is very powerful verification software developed by the
+    Developmental Testbed Center (DTC).
+
 """
 
 import numpy as np
@@ -138,8 +144,8 @@ class Contingency:
     def frequency_bias(self):
         """
         Total events forecasted divided by the total events observed. Bias Score.
-        "How did the forecast frequency of "yes" events compare to the observed
-        frequency of "yes" events?"
+        "How did the forecast frequency of 'yes' events compare to the observed
+        frequency of 'yes' events?"
         - Perfect Score: B = 1
         - Underforecast: B < 1
         - Overforcast  : B > 1
@@ -154,13 +160,13 @@ class Contingency:
     def hit_rate(self):
         """
         Also known as Probability of Detection (POD).
-        "What fraction of the observed "yes" events were correctly forecast?"
+        "What fraction of the observed 'yes' events were correctly forecast?"
         - Range [0,1]; 
         - Perfect Score = 1
         
         Sensitive to hits, but ignores false alarms. Very sensitive to the
         climatological frequency of the event. Good for rare events. Can be
-        artificially improved by issuing more "yes" forecasts to increase the
+        artificially improved by issuing more 'yes' forecasts to increase the
         number of hits. Should be used in conjunction with the false alarm ratio.
         """
         H = self.a/(self.a+self.c)
@@ -173,17 +179,17 @@ class Contingency:
     def false_alarm_rate(self):
         """
         Also known as Probability of False Detection (POFD)
-        "What fraction of the observed "no" events were incorrectly forecast as
-        "yes"?"
+        "What fraction of the observed 'no' events were incorrectly forecast as
+        'yes'?"
         - Perfect Score = 0
         
         Sensitive to false alarms, but ignores misses. Can be artificially improved
-        by issuing fewer "yes" forecasts to reduce the number of false alarms. 
+        by issuing fewer 'yes' forecasts to reduce the number of false alarms. 
         Not often reported for deterministic forecasts, but is an important 
         component of the Relative Operating Characteristic (ROC) used widely for 
         probabilistic forecasts.
 
-        .. warning:: Do not confuse with false_alarm_ratio
+        .. warning:: Do not confuse with false_alarm_ratio (FAR)
         """
         F = self.b/(self.b+self.d)
         return F
@@ -194,8 +200,8 @@ class Contingency:
     
     def false_alarm_ratio(self):
         """
-        "What fraction of the predicted "yes" events actually did not occur
-        (i.e., were false alarms)?"
+        Often abbreviated as FAR. "What fraction of the predicted 'yes' 
+        events actually did not occur (i.e., were false alarms)?"
         - Perfect Score = 0
         
         Sensitive to false alarms, but ignores misses. Very sensitive to the
@@ -209,8 +215,8 @@ class Contingency:
 
     def success_ratio(self):
         """
-        The same as 1-FAR.
-        "What fraction of the forecast "yes" events were correctly observed?"
+        The same as 1-FAR (false alarm ratio). "What fraction of the 
+        forecast 'yes' events were correctly observed?"
         - Perfect Score = 1
         
         Gives information about the likelihood of an observed event, given that it
@@ -233,7 +239,7 @@ class Contingency:
     def critical_success_index(self):
         """
         Also known as Threat Score (TS) or Gilbert Score (GS). 
-        "How well did the forecast "yes" events correspond to the observed "yes"
+        "How well did the forecast 'yes' events correspond to the observed 'yes'
         events?"
         - Perfect Score = 1
 
@@ -259,7 +265,7 @@ class Contingency:
         Widely used for the verification of deterministic forecasts of rare events
         such as precipitation above a large threshold. However, the score is not
         "equitable."
-        "How well did the forecast "yes" events correspond to the observed "yes" 
+        "How well did the forecast 'yes' events correspond to the observed 'yes' 
         events (accounting for hits due to chance)?"
         - Range: [-1/3, 1]
         - Zero is no skill
@@ -309,7 +315,7 @@ class Contingency:
         Also known as the Hanssen and Kuipers discriminant or True Skill Statistic.
         Ratio of hits to total number of events observed minus the ratio of false
         alarms to total number of non-events observed (i.e. PSS = H-F).
-        "How well did the forecast separate the "yes" events from the "no" events?"
+        "How well did the forecast separate the 'yes' events from the 'no' events?"
         - Range [-1,1]
         - Perfect Score = 1
 
