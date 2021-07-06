@@ -30,6 +30,9 @@ Forecast Verification
 
     http://www.cawcr.gov.au/projects/verification/
 
+    For "machine learning" terminology, refer to 
+    https://en.wikipedia.org/wiki/Confusion_matrix
+
 .. note:: **Other Verification Tools**
     - `xskillscore <https://xskillscore.readthedocs.io/>`_ is a Python
     package for verification of forecsts using xarray.
@@ -37,6 +40,35 @@ Forecast Verification
     <http://dtcenter.org/community-code/model-evaluation-tools-met>`_.
     is very powerful verification software developed by the
     Developmental Testbed Center (DTC).
+
+
+Contingency Table of Binary Events (following Jolliffe and Stephenson)
+
+
+                       Event Observed
+Event           ------------------------------------
+Forecasted      |   Yes      |     No               |
+----------------------------------------------------
+Yes             |  Hit  (a)  | False Alarm  (b)     |
+No              |  Miss (c)  | Correct Rejection (d)|
+----------------------------------------------------
+
+
+================ ========= =====================
+Event                 Event Observed
+---------------- -------------------------------
+Forecasted          Yes            No
+================ ========= =====================
+Yes              (a) Hit   (b) False Alarm
+No               (c) Miss  (d) Correct Rejection
+================ ========= =====================
+
+
+
+- Hit = True Positive
+- False Alarm = False Positive
+- Miss = False Negative
+- Correct Rejection = True Negative
 
 """
 
@@ -159,7 +191,7 @@ class Contingency:
 
     def hit_rate(self):
         """
-        Also known as Probability of Detection (POD).
+        Also known as Probability of Detection (POD) or recall.
         "What fraction of the observed 'yes' events were correctly forecast?"
         - Range [0,1]; 
         - Perfect Score = 1
@@ -215,8 +247,9 @@ class Contingency:
 
     def success_ratio(self):
         """
-        The same as 1-FAR (false alarm ratio). "What fraction of the 
-        forecast 'yes' events were correctly observed?"
+        The same as 1-FAR (false alarm ratio) or precision. 
+        "What fraction of the forecast 'yes' events were correctly 
+        observed?"
         - Perfect Score = 1
         
         Gives information about the likelihood of an observed event, given that it
@@ -224,6 +257,19 @@ class Contingency:
         """
         SR = self.a/(self.a+self.b)
         return SR
+
+    def f1_score(self):
+        """
+        F1 Score is the harmonic mean of the precision and recall (success ratio and hit rate)
+        It is a measure of performance for the positive cases.
+        https://en.wikipedia.org/wiki/F-score
+        - Perfect Score = 1 (perfect success ratio and hit rate)
+        - Lowest value = 0        
+        """
+        precision = self.success_ratio()
+        recall = self.hit_rate()
+        f1_score = 2 * (precision * recall) / (precision + recall)
+        return f1_score
 
     def proportion_correct(self):
         """

@@ -5,6 +5,11 @@ I have a lot of useful python tools. Instead of letting them be strewn across th
 - A workman can't have too many tools.
 - "If it ain't broke, you're not tryin'" - Uncle Red
 
+
+> **Other packages or tools I want to remember that might come in use later**
+> - [Thermofeel](https://github.com/ecmwf-projects/thermofeel) calculate human thermal comfort indexes
+> -
+
 <br><br><br>
 ---
 
