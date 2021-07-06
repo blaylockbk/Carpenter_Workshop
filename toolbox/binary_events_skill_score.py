@@ -72,6 +72,7 @@ No               (c) Miss  (d) Correct Rejection
 
 """
 
+import warnings
 import numpy as np
 import xarray as xr
 
@@ -387,7 +388,16 @@ class Contingency:
         return CSS
 
     def doolittle_skill_score(self):
-        """Dolittle Skill Score"""
+        """
+        Doolittle Skill Score
+        
+        Also known as the Matthews correlation coefficient??
+
+        The doolittle skill score may be wrong. 
+        Consult https://stats.stackexchange.com/a/485796/220885 and
+        https://doi.org/10.1080/00031305.2015.1086686
+        """
+        warnings.warn("The doolittle skill score may be wrong. Consult https://stats.stackexchange.com/a/485796/220885 and https://doi.org/10.1080/00031305.2015.1086686")
         DSS = (self.a*self.d - self.b*self.c)/np.sqrt((self.a+self.b)(self.c+self.d)(self.a+self.c)(self.b+self.d))
         return DSS
 
