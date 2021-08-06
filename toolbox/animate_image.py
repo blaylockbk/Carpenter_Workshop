@@ -14,11 +14,12 @@ Functions to animate images
 
 import imageio
 
-def as_gif(png_files, fname='new_gif', fps=8):
+
+def as_gif(png_files, fname="new_gif", fps=8):
     """
     Turn a list of image files into an animated gif.
 
-    From Andrew Huang: 
+    From Andrew Huang:
 
     Parameters
     ----------
@@ -33,12 +34,11 @@ def as_gif(png_files, fname='new_gif', fps=8):
     -------
     The file name of the new animated gif file.
     """
-    gif_file = f'{fname}.gif'
+    gif_file = f"{fname}.gif"
     # Note: mode 'I' means multiple images.
-    with imageio.get_writer(gif_file, mode='I', fps=fps) as writer:
+    with imageio.get_writer(gif_file, mode="I", fps=fps) as writer:
         for png_file in png_files:
             if isinstance(png_file, str):
                 image = imageio.imread(png_file)
                 writer.append_data(image)
     return gif_file
-
