@@ -11,6 +11,7 @@ I have a lot of useful python tools. Instead of letting them be strewn across th
 - "If the wine is sour, throw it out!" Well, I'd never know if wine was sour because I don't drink wine. But this saying means if the script you are writing is giving you trouble and just isn't working, toss it and start over. You'll have better luck starting with a clean slate and fresh mind. 
 - "If It Ain't Broke, You're Not Trying" – Uncle Red (The Red Green Show). To me, this means that it's ok to have broken code. Don't be too dissapointed in yourself. There is nothing a little duct tape can't repair. It can be fixed, and that is the joy of coding.
 - A workman can't have too many tools. Everything has its place.
+    - Use a code formatter; it helps you write cleaner code. (I'm using Black to format my python code.)
 
 <br><br>
 
