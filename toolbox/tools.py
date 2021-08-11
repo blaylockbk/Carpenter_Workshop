@@ -19,7 +19,7 @@ from toolbox.stock import Path  # This has a copy method added to the Path objec
 from datetime import datetime, timedelta
 
 import numpy as np
-import pandas as pd 
+import pandas as pd
 import xarray as xr
 import cfgrib
 

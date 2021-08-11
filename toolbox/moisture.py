@@ -14,7 +14,8 @@ Calculations for moisture variables
 
 import numpy as np
 
-def TMP_RH_to_DPT(Tc, RH, method='Bolton'):
+
+def TMP_RH_to_DPT(Tc, RH, method="Bolton"):
     """
     Convert Temperature (Celsius) and RH (%) to Dew Point (Celsius).
 
@@ -44,18 +45,23 @@ def TMP_RH_to_DPT(Tc, RH, method='Bolton'):
     - http://irtfweb.ifa.hawaii.edu/~tcs3/tcs3/Misc/Dewpoint_Calculation_Humidity_Sensor_E.pdf
     """
     assert np.all(RH <= 101), "Found RH > 101 %. All RH values must be 0-100%"
-    assert RH.max() > 1, "All RH are < 1. Check your units: All RH values must be 0-100%"
-    assert np.all(Tc < 273.15), "Found a temperature > 273.15. `Tc` must be in degrees Celisus, not Kelvin"
-    assert np.all(Tc < 50), "Found a temperature > 50. `Tc` must be in degrees Celisus, not Farhenheit"
+    assert (
+        RH.max() > 1
+    ), "All RH are < 1. Check your units: All RH values must be 0-100%"
+    assert np.all(
+        Tc < 273.15
+    ), "Found a temperature > 273.15. `Tc` must be in degrees Celisus, not Kelvin"
+    assert np.all(
+        Tc < 50
+    ), "Found a temperature > 50. `Tc` must be in degrees Celisus, not Farhenheit"
 
     # Constants are in order (b, c)
     # Where b is unitless, and c is in degrees C
     constants = {}
-    constants['Bolton'] = (17.67, 243.5)    # Bolton 1980, Monthly Weather Review
-    constants['Sonntag'] = (17.62, 243.12)  # Sonntag 1990
+    constants["Bolton"] = (17.67, 243.5)  # Bolton 1980, Monthly Weather Review
+    constants["Sonntag"] = (17.62, 243.12)  # Sonntag 1990
 
     b, c = constants[method]
     gamma = np.log(RH / 100) + (b * Tc) / (c + Tc)
     Td = c * gamma / (b - gamma)
     return Td
-    
