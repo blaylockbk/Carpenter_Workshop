@@ -67,7 +67,7 @@ dependencies:
  #-------
  - pip:
    - highlight-text
-   #- git+https://github.com/blaylockbk/HRRR_archive_download
+   #- git+https://github.com/blaylockbk/Herbie
    #- git+https://github.com/blaylockbk/SynopticPy
    #- git+https://github.com/blaylockbk/goes2go
    #- git+https://github.com/blaylockbk/Carptenter_Workshop

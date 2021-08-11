@@ -88,10 +88,13 @@ def _expand(self, *, strict=True):
 def _expand(self):
     """
     Fully expand and resolve the Path with the given environment variables.
+    
+    Example
+    -------
+    >>> Path('$HOME').expand()
+    >>> PosixPath('/p/home/blaylock')
     """
-    full_path = Path(os.path.expandvars(self))
-    full_path = full_path.expanduser().resolve()
-    return full_path
+    return Path(os.path.expandvars(self)).expanduser().resolve()
 
 def _copy(self, target, verbose=True):
     """
@@ -252,7 +255,9 @@ def full_path(p, must_exist=True, mkdir=False, verbose=True):
     ----------
     p : {str, pathlib.Path}
         The file path that may include '~', '..', or environment 
-        variables, (i.e., $HOME, $PWD, $WORKDIR, $HOME).
+        variables, (i.e., ``$HOME``, ``$PWD``, ``$WORKDIR``, ``${HOME}``).
+        One Windows, may use both ``$USERPROFILE``, ``${USERPROFILE}``, or
+        ``%USERPROFILE%`` because os.path.expandvars can handle both syntax.
     must_exist : bool
         True, the resolved Path must exist, or else an assert error is raised.
         False, the resolved Path does not have to exist.
@@ -276,17 +281,9 @@ def full_path(p, must_exist=True, mkdir=False, verbose=True):
     if isinstance(p, str):
         p = Path(p)
     
-    # Replace environment variables values (platform dependent)
+    # Replace environment variables values (with my custom method above)
+    p = p.expand()   
         
-    # PosixPath (linux and mac):  Environment variables look like $HOME
-    if '$' in str(p):
-        split_path = str(p).split(os.sep)
-        environ = [os.environ[i[1:]] if '$' in i else i for i in split_path]
-        p = Path('/'.join(environ))
-        
-    # Resolve path for `~`, `~blaylock`, `..`, `//`, and `.` 
-    p = p.expanduser().resolve()
-    
     # Make Directory if it doesn't exist
     if not p.exists() and mkdir:
         if p.suffix == '':
