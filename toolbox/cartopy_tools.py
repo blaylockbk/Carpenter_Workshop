@@ -15,6 +15,7 @@ import matplotlib.pyplot as plt
 from shapely.geometry import Polygon
 import xarray as xr
 import numpy as np
+import pandas as pd
 
 import cartopy.crs as ccrs
 import cartopy.feature as feature
@@ -95,14 +96,17 @@ def _adjust_extent(self, pad="auto", fraction=0.05, verbose=False):
     return self.get_extent(crs=crs)
 
 
-def _center_extent(self, lon, lat, *, pad="auto", verbose=False):
+def _center_extent(self, lon=None, lat=None, city=None, *, pad="auto", verbose=False):
     """
     Change the map extent to be centered on a point and adjust padding.
 
     Parameters
     ----------
-    lon, lat : float
+    lon, lat : float or None
         Latitude and Longitude of the center point **in degrees**.
+        If None, must give argument for ``city``.
+    city : str or None
+        If string, center over city location.
     pad : float or dict
         Default is 'auto', which defaults to ~5 degree padding on each side.
         If float, pad the map the same on all sides (in crs units).
@@ -116,6 +120,14 @@ def _center_extent(self, lon, lat, *, pad="auto", verbose=False):
                  ``pad=dict(top=5, bottom=10, left=10, right=10)``
     """
     crs = self.projection
+
+    if city is not None:
+        places = shapereader.natural_earth("10m", "cultural", "populated_places")
+        df = geopandas.read_file(places)
+        point = df[df.NAME == city]
+        assert len(point) > 0, f"🏙 Sorry, the city '{city}' was not found."
+        lat = point.LATITUDE.item()
+        lon = point.LONGITUDE.item()
 
     # Convert input lat/lon in degrees to the crs units
     lon, lat = crs.transform_point(lon, lat, src_crs=pc)
@@ -497,6 +509,8 @@ def common_features(
     LAKES_kwargs={},
     ROADS=False,
     ROADS_kwargs={},
+    PLACES=False,
+    PLACES_kwargs={},
     STAMEN=False,
     STAMEN_kwargs={},
     OSM=False,
@@ -555,6 +569,7 @@ def common_features(
         RIVERS     Lines where rivers exist
         LAKES      Colored lake area
         ROADS      All major roads. Can break filter by road type.
+        PLACES     Points and labels for major cities (filter by rank).
         ========== =========================================================
 
         ========== =========================================================
@@ -736,6 +751,34 @@ def common_features(
             ax.add_geometries(road_geos, crs=pc, **ROADS_kwargs)
         if verbose == "debug":
             print("🐛 ROADS:", ROADS_kwargs)
+    if PLACES:
+        PLACES_kwargs.setdefault("country", "United States")
+        PLACES_kwargs.setdefault("rank", 2)
+        PLACES_kwargs.setdefault("scatter_kw", {"marker": "."})
+        PLACES_kwargs.setdefault("label_kw", dict(fontweight="bold", alpha=0.5))
+
+        country = PLACES_kwargs.pop("country")
+        rank = PLACES_kwargs.pop("rank")
+        scatter_kw = PLACES_kwargs.pop("scatter_kw")
+        label_kw = PLACES_kwargs.pop("label_kw")
+
+        places = shapereader.natural_earth("10m", "cultural", "populated_places")
+        df = geopandas.read_file(places)
+
+        df = df[df.SOV0NAME == country]
+        df = df[df.SCALERANK <= rank]
+
+        xs = df.geometry.values.x
+        ys = df.geometry.values.y
+        names = df.NAME
+
+        if scatter_kw is not None:
+            ax.scatter(xs, ys, transform=pc, **scatter_kw)
+
+        if label_kw is not None:
+            for x, y, name in zip(xs, ys, names):
+                plt.text(x, y, name, clip_on=True, **label_kw)
+
     if STAMEN:
         if verbose:
             print(

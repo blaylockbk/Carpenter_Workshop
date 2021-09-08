@@ -50,14 +50,14 @@ OLD METHOD, NOT NEEDED. USE THE SIMPLE CODE
 def _expand(self, *, strict=True):
     """
     Fully expand and resolve the Path with the given environment variables.
-    
+
     Parameters
     ----------
     strict : bool
         If True, must use the operating system syntax to find environment variables.
         - On Linux/Mac, environment variables look like ``${NAME}`` or ``$NAME``
         - On Windows, environment variables look like ``%NAME%``
-        If False, just look for the path part in the os.environ dict 
+        If False, just look for the path part in the os.environ dict
         (i.e., HOME without symbols)
     """
     full_path = Path()
@@ -75,13 +75,13 @@ def _expand(self, *, strict=True):
                 warnings.warn(f'🦨 Sorry, [{i}] is not an environment variable.')
             else:
                 i = os.getenv(envar)
-        
+
         # Note: When you append to a path with a root, that path overwrites
         # the old path.
-        # Example: Path('this/dir/') / Path('/p/home/') ==> Path(/p/home/) 
+        # Example: Path('this/dir/') / Path('/p/home/') ==> Path(/p/home/)
         # and not Path(this/dir//p/home/)
         full_path = full_path / i
-    # Resolve path for `~`, `~blaylock`, `..`, `//`, and `.` 
+    # Resolve path for `~`, `~blaylock`, `..`, `//`, and `.`
     full_path = full_path.expanduser().resolve()
     return full_path
 '''
@@ -238,11 +238,7 @@ def _tree(
 
     return contents
 
-<<<<<<< HEAD
-
-=======
 Path.expand = _expand
->>>>>>> 618d69fceb0251f44dd92eaade121833110c68ab
 Path.copy = _copy
 Path.tree = _tree
 

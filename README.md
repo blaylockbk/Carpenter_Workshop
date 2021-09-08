@@ -45,6 +45,16 @@ Search for package and list dependency info
 conda search packageName=<version> --info
 ```
 
+### Matplotlib: Jupyter magic
+Enable interactive figure manipulation in Jupyter.
+https://github.com/matplotlib/ipympl
+(Doesn't always behave the way I think it should.)
+```python
+%matplotlib widget
+
+import matplotlib.pyplot as plt
+```
+
 ### Matplotlib: Jupyter Figure Transparency
 Use Jupyter Magic to give transparency to the figure displayed in the notebook
 ```python
