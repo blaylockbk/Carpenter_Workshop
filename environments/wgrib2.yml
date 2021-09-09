@@ -1,0 +1,6 @@
+name: conda_wgrib2
+channels:
+ - conda-forge
+dependencies:
+ - wgrib2
+ - wgrib

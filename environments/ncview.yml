@@ -1,0 +1,5 @@
+name: conda_ncview
+channels:
+ - conda-forge
+dependencies:
+ - ncview

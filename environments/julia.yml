@@ -1,0 +1,21 @@
+name: julia
+channels:
+ - conda-forge
+ - defaults
+dependencies:
+  - git
+  - julia
+ 
+# Add the Julia kernel to Jupyter with the following:
+# 1) Activate this environment and run 
+#
+# $ julia
+#
+# 2) Run these too lines to install the IJulia package
+#
+# julia> using Pkg
+# julia> Pkg.add("IJulia")
+#
+# 3) In your other environment, open Jupyter Lab
+#    and 
+

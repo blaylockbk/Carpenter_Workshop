@@ -1,0 +1,32 @@
+name: fortran-kernel
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.8
+  - pip
+  - git
+
+  # JupyterLab
+  - jupyter
+  - jupyterlab
+  - nodejs
+  
+  # Toolbox
+  - requests
+  - matplotlib
+  - numpy
+  - scipy
+  - pandas
+  - xarray
+  - netcdf4
+  - eccodes
+  - cfgrib
+  - pygrib
+  - h5py
+  - h5netcdf
+  - f90nml      # For fortran namelist files
+
+  - pip:
+    # https://github.com/ZedThree/jupyter-fortran-kernel
+    - jupyter-fortran-kernel   ## Install with ``jupyter-kernelspec install fortran_spec/``

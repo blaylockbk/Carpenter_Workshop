@@ -1,0 +1,31 @@
+name: lfortran
+channels:
+ - conda-forge
+ - defaults
+dependencies:
+ - python=3.8
+ - pip
+ - git
+
+# Fortran Kernel: https://docs.lfortran.org/
+ - fortran_kernel
+
+ # JupyterLab
+ - jupyter
+ - jupyterlab=2
+ - nodejs
+ 
+ # Toolbox
+ - requests
+ - matplotlib
+ - numpy
+ - scipy
+ - pandas
+ - xarray
+ - netcdf4
+ - eccodes
+ - cfgrib
+ - pygrib
+ - h5py
+ - h5netcdf
+ - f90nml      # For fortran namelist files

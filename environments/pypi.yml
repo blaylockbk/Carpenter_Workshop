@@ -1,0 +1,8 @@
+name: pypi
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - python=3
+  - twine
+  - pip

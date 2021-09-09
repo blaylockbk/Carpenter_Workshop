@@ -1,0 +1,5 @@
+name: tldr
+dependencies:
+  - pip
+  - pip:
+      - tldr

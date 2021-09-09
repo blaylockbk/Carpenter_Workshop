@@ -1,0 +1,5 @@
+name: conda_git
+channels:
+ - conda-forge
+dependencies:
+ - git

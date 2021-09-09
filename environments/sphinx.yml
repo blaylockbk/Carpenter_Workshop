@@ -1,0 +1,14 @@
+name: sphinx
+channels:
+  - conda-forge
+dependencies:
+  - sphinx=4.0.3
+  - nbsphinx
+  - sphinx_rtd_theme
+  - pydata-sphinx-theme # PyData Sphinx Theme (i.e, Numpy, Pandas, MetPy)
+  - recommonmark
+  - sphinxcontrib-jsmath
+  - sphinx-markdown-tables
+  - autodocsumm
+  - latexmk
+  - sphinx-autosummary-accessors # pandas and xarray accessor docs

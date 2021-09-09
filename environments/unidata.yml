@@ -1,0 +1,27 @@
+name: unidata
+channels:
+  - conda-forge
+dependencies:
+  - python=3
+  - numpy
+  - matplotlib
+  - cartopy
+  - jupyter=1.0.0
+  - jupyter_client=5.3.4
+  - jupyter_console=6.1.0
+  - jupyter_core=4.6.1
+  - jupyterlab=1.2.6
+  - jupyterlab_server=1.0.6
+  - netcdf4
+  - imageio
+  - keras
+  - numba
+  - pandas
+  - scipy
+  - scikit-image
+  - scikit-learn
+  - tensorflow
+  - tensorflow-gpu
+  - metpy
+  - siphon
+  - xarray

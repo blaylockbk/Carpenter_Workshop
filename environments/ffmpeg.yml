@@ -1,0 +1,5 @@
+name: conda_ffmpeg
+channels:
+ - conda-forge
+dependencies:
+ - ffmpeg

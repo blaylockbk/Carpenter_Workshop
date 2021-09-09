@@ -1,0 +1,37 @@
+name: era5
+channels:
+ - conda-forge
+ - defaults
+dependencies:
+ - python=3.7
+ - pip
+ - git
+ - pylint
+ 
+ # JupyterLab
+ - jupyter
+ - jupyterlab
+ 
+ # Toolbox
+ - requests
+ - matplotlib
+ - cartopy
+ - numpy
+ - scipy
+ - pandas
+ - xarray
+ - rasterio
+ - netcdf4
+ - eccodes
+ - cfgrib
+ - pygrib
+ - h5py
+ - h5netcdf
+ - metpy
+ - dask
+ 
+ # Access to Amazon AWS S3 and other cloud storage
+ - s3fs
+
+# Access to ECMWF Copernicus ERA5 data: 
+ - cdsapi

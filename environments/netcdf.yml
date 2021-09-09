@@ -1,0 +1,10 @@
+name: conda_netcdf
+channels:
+ - conda-forge
+ - defaults
+dependencies:
+ - libnetcdf
+ - ncview
+ - netcdf-cxx4
+ - netcdf-fortran
+ - hdf5

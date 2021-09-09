@@ -1,0 +1,9 @@
+name: vscode
+channels:
+  - conda-forge
+dependencies:
+  - code-server >=3.11.1
+  - pip
+
+  - pip:
+    - fortran-language-server
