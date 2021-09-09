@@ -12,10 +12,11 @@ General helpers for cartopy plots.
 import warnings
 
 import matplotlib.pyplot as plt
-from shapely.geometry import Polygon
+from shapely.geometry import Polygon, shape, GeometryCollection
 import xarray as xr
 import numpy as np
 import pandas as pd
+import requests
 
 import cartopy.crs as ccrs
 import cartopy.feature as feature
@@ -96,7 +97,16 @@ def _adjust_extent(self, pad="auto", fraction=0.05, verbose=False):
     return self.get_extent(crs=crs)
 
 
-def _center_extent(self, lon=None, lat=None, city=None, *, pad="auto", verbose=False):
+def _center_extent(
+    self,
+    lon=None,
+    lat=None,
+    city=None,
+    state=None,
+    *,
+    pad="auto",
+    verbose=False,
+):
     """
     Change the map extent to be centered on a point and adjust padding.
 
@@ -128,6 +138,10 @@ def _center_extent(self, lon=None, lat=None, city=None, *, pad="auto", verbose=F
         assert len(point) > 0, f"🏙 Sorry, the city '{city}' was not found."
         lat = point.LATITUDE.item()
         lon = point.LONGITUDE.item()
+    elif state is not None:
+        state_center = state_polygon(state).centroid
+        lon = state_center.x
+        lat = state_center.y
 
     # Convert input lat/lon in degrees to the crs units
     lon, lat = crs.transform_point(lon, lat, src_crs=pc)
@@ -839,7 +853,13 @@ def common_features(
     return ax
 
 
-def grid_and_earth_relative_vectors(srcData, *, srcProj=None, u="u10", v="v10"):
+def grid_and_earth_relative_vectors(
+    srcData,
+    *,
+    srcProj=None,
+    u="u10",
+    v="v10",
+):
     """
     Rotate vector quantities from grid-relative to earth-relative orientation.
 
@@ -956,11 +976,193 @@ def grid_and_earth_relative_vectors(srcData, *, srcProj=None, u="u10", v="v10"):
 
 
 ########################################################################
-# Adjust Map Extent
+# Useful tools
+def domain_border(
+    x,
+    y=None,
+    *,
+    ax=None,
+    text=None,
+    method="cutout",
+    verbose=False,
+    facealpha=0.25,
+    polygon_only=False,
+    text_kwargs={},
+    **kwargs,
+):
+    """
+    Add a polygon of the domain boundary to a map.
+
+    The border is drawn from the outside values of the latitude and
+    longitude xarray coordinates or numpy array.
+    Lat/lon values should be given as degrees.
+
+    Parameters
+    ----------
+        x : xarray.Dataset or numpy.ndarray
+            If xarray, then should contain 'latitude' and 'longitude' coordinate.
+            If numpy, then 2D numpy array for longitude and `y` arg is required.
+        y : numpy.ndarray
+            Only required if x is a numpy array.
+            A numpy array of latitude values.
+        ax : cartopy axis
+            The axis to add the border to.
+            Default None and will get the current axis (will create one).
+        text : str
+            If not None, puts the string in the bottom left.
+        method : {'fill', 'cutout', 'border'}
+            Plot the domain as a filled area Polygon, a Cutout from the
+            map, or as a simple border.
+        facealpha : float between 0 and 1
+            Since there isn't a "facealpha" attribute for plotting,
+            this will be it.
+        polygon_only : bool
+            - True: Only return the polygons and don't plot on axes.
+
+    Returns
+    -------
+    Adds a border around domain to the axis and returns the artist,
+    a polygon in the crs coordinates and crs in lat/lon coordinates.
+    """
+    if hasattr(x, "crs"):
+        ax = check_cartopy_axes(ax, crs=x.crs)
+        if verbose:
+            print(f"crs is {x.crs}")
+    else:
+        print("crs is not in the xarray.Dataset")
+        ax = check_cartopy_axes(ax)
+
+    _method = {"cutout", "fill", "border"}
+    assert method in _method, f"Method must be one of {_method}."
+
+    ####################################################################
+    # Determine how to handle output...xarray or numpy
+    if isinstance(x, (xr.core.dataset.Dataset, xr.core.dataarray.DataArray)):
+        if verbose:
+            print("process input as xarray")
+
+        if "latitude" in x.coords:
+            x = x.rename({"latitude": "lat", "longitude": "lon"})
+        LON = x.lon.data
+        LAT = x.lat.data
+
+    elif isinstance(x, np.ndarray):
+        assert y is not None, "Please supply a value for x and y"
+        if verbose:
+            print("process input as numpy array")
+        LON = x
+        LAT = y
+    else:
+        raise ValueError("Review your input")
+    ####################################################################
+
+    # Path of array outside border starting from the lower left corner
+    # and going around the array counter-clockwise.
+    outside = (
+        list(zip(LON[0, :], LAT[0, :]))
+        + list(zip(LON[:, -1], LAT[:, -1]))
+        + list(zip(LON[-1, ::-1], LAT[-1, ::-1]))
+        + list(zip(LON[::-1, 0], LAT[::-1, 0]))
+    )
+    outside = np.array(outside)
+
+    ## Polygon in latlon coordinates
+    ## -----------------------------
+    x = outside[:, 0]
+    y = outside[:, 1]
+    domain_polygon_latlon = Polygon(zip(x, y))
+
+    ## Polygon in projection coordinates
+    ## ----------------------------------
+    transform = ax.projection.transform_points(pc, x, y)
+
+    # Remove any points that run off the projection map (i.e., point's value is `inf`).
+    transform = transform[~np.isinf(transform).any(axis=1)]
+
+    # These are the x and y points we need to create the Polygon for
+    x = transform[:, 0]
+    y = transform[:, 1]
+
+    domain_polygon = Polygon(
+        zip(x, y)
+    )  # This is the boundary of the LAT/LON array supplied.
+    global_polygon = ax.projection.domain  # This is the projection globe polygon
+    cutout = global_polygon.difference(
+        domain_polygon
+    )  # This is the differencesbetween the domain and glob polygon
+
+    if polygon_only:
+        plt.close()
+        return domain_polygon, domain_polygon_latlon
+    else:
+        # Plot
+        kwargs.setdefault("edgecolors", "k")
+        kwargs.setdefault("linewidths", 1)
+        if method == "fill":
+            kwargs.setdefault("facecolor", (0, 0, 0, facealpha))
+            artist = ax.add_feature(
+                feature.ShapelyFeature([domain_polygon], ax.projection), **kwargs
+            )
+        elif method == "cutout":
+            kwargs.setdefault("facecolor", (0, 0, 0, facealpha))
+            artist = ax.add_feature(
+                feature.ShapelyFeature([cutout], ax.projection), **kwargs
+            )
+        elif method == "border":
+            kwargs.setdefault("facecolor", "none")
+            artist = ax.add_feature(
+                feature.ShapelyFeature([domain_polygon.exterior], ax.projection),
+                **kwargs,
+            )
+
+        if text:
+            text_kwargs.setdefault("verticalalignment", "bottom")
+            text_kwargs.setdefault("fontsize", 15)
+            xx, yy = outside[0]
+            ax.text(xx + 0.2, yy + 0.2, text, transform=pc, **text_kwargs)
+
+        return artist, domain_polygon, domain_polygon_latlon
+
+
+def state_polygon(state):
+    """
+    Return a shapely polygon of US state boundaries.
+
+    GeoJSON Data: https://raw.githubusercontent.com/johan/world.geo.json
+    Helpful tip: https://medium.com/@pramukta/recipe-importing-geojson-into-shapely-da1edf79f41d
+
+    Parameters
+    ----------
+    state : str
+        Abbreviated state
+    """
+    URL = (
+        "https://raw.githubusercontent.com/johan/world.geo.json/master/countries/USA/%s.geo.json"
+        % state.upper()
+    )
+    f = requests.get(URL)
+
+    features = f.json()["features"]
+    poly = GeometryCollection(
+        [shape(feature["geometry"]).buffer(0) for feature in features]
+    )
+    return poly
+
+
+########################################################################
+# ⚰ Dead code. Do not use. This is dead code.
 ########################################################################
 
 # OLD
-def center_extent(lon, lat, *, ax=None, pad="auto", crs=pc, verbose=False):
+def center_extent(
+    lon,
+    lat,
+    *,
+    ax=None,
+    pad="auto",
+    crs=pc,
+    verbose=False,
+):
     """
     Change the map extent to be centered on a point and adjust padding.
 
@@ -1108,155 +1310,3 @@ def copy_extent(src_ax, dst_ax):
     dst_ax.set_extent(src_ax.get_extent(crs=pc), crs=pc)
 
     return dst_ax.get_extent(crs=pc)
-
-
-########################################################################
-# Other
-########################################################################
-
-
-def domain_border(
-    x,
-    y=None,
-    *,
-    ax=None,
-    text=None,
-    method="cutout",
-    verbose=False,
-    facealpha=0.25,
-    polygon_only=False,
-    text_kwargs={},
-    **kwargs,
-):
-    """
-    Add a polygon of the domain boundary to a map.
-
-    The border is drawn from the outside values of the latitude and
-    longitude xarray coordinates or numpy array.
-    Lat/lon values should be given as degrees.
-
-    Parameters
-    ----------
-        x : xarray.Dataset or numpy.ndarray
-            If xarray, then should contain 'latitude' and 'longitude' coordinate.
-            If numpy, then 2D numpy array for longitude and `y` arg is required.
-        y : numpy.ndarray
-            Only required if x is a numpy array.
-            A numpy array of latitude values.
-        ax : cartopy axis
-            The axis to add the border to.
-            Default None and will get the current axis (will create one).
-        text : str
-            If not None, puts the string in the bottom left.
-        method : {'fill', 'cutout', 'border'}
-            Plot the domain as a filled area Polygon, a Cutout from the
-            map, or as a simple border.
-        facealpha : float between 0 and 1
-            Since there isn't a "facealpha" attribute for plotting,
-            this will be it.
-        polygon_only : bool
-            - True: Only return the polygons and don't plot on axes.
-
-    Returns
-    -------
-    Adds a border around domain to the axis and returns the artist,
-    a polygon in the crs coordinates and crs in lat/lon coordinates.
-    """
-    if hasattr(x, "crs"):
-        ax = check_cartopy_axes(ax, crs=x.crs)
-        if verbose:
-            print(f"crs is {x.crs}")
-    else:
-        print("crs is not in the xarray.Dataset")
-        ax = check_cartopy_axes(ax)
-
-    _method = {"cutout", "fill", "border"}
-    assert method in _method, f"Method must be one of {_method}."
-
-    ####################################################################
-    # Determine how to handle output...xarray or numpy
-    if isinstance(x, (xr.core.dataset.Dataset, xr.core.dataarray.DataArray)):
-        if verbose:
-            print("process input as xarray")
-
-        if "latitude" in x.coords:
-            x = x.rename({"latitude": "lat", "longitude": "lon"})
-        LON = x.lon.data
-        LAT = x.lat.data
-
-    elif isinstance(x, np.ndarray):
-        assert y is not None, "Please supply a value for x and y"
-        if verbose:
-            print("process input as numpy array")
-        LON = x
-        LAT = y
-    else:
-        raise ValueError("Review your input")
-    ####################################################################
-
-    # Path of array outside border starting from the lower left corner
-    # and going around the array counter-clockwise.
-    outside = (
-        list(zip(LON[0, :], LAT[0, :]))
-        + list(zip(LON[:, -1], LAT[:, -1]))
-        + list(zip(LON[-1, ::-1], LAT[-1, ::-1]))
-        + list(zip(LON[::-1, 0], LAT[::-1, 0]))
-    )
-    outside = np.array(outside)
-
-    ## Polygon in latlon coordinates
-    ## -----------------------------
-    x = outside[:, 0]
-    y = outside[:, 1]
-    domain_polygon_latlon = Polygon(zip(x, y))
-
-    ## Polygon in projection coordinates
-    ## ----------------------------------
-    transform = ax.projection.transform_points(pc, x, y)
-
-    # Remove any points that run off the projection map (i.e., point's value is `inf`).
-    transform = transform[~np.isinf(transform).any(axis=1)]
-
-    # These are the x and y points we need to create the Polygon for
-    x = transform[:, 0]
-    y = transform[:, 1]
-
-    domain_polygon = Polygon(
-        zip(x, y)
-    )  # This is the boundary of the LAT/LON array supplied.
-    global_polygon = ax.projection.domain  # This is the projection globe polygon
-    cutout = global_polygon.difference(
-        domain_polygon
-    )  # This is the differencesbetween the domain and glob polygon
-
-    if polygon_only:
-        plt.close()
-        return domain_polygon, domain_polygon_latlon
-    else:
-        # Plot
-        kwargs.setdefault("edgecolors", "k")
-        kwargs.setdefault("linewidths", 1)
-        if method == "fill":
-            kwargs.setdefault("facecolor", (0, 0, 0, facealpha))
-            artist = ax.add_feature(
-                feature.ShapelyFeature([domain_polygon], ax.projection), **kwargs
-            )
-        elif method == "cutout":
-            kwargs.setdefault("facecolor", (0, 0, 0, facealpha))
-            artist = ax.add_feature(
-                feature.ShapelyFeature([cutout], ax.projection), **kwargs
-            )
-        elif method == "border":
-            kwargs.setdefault("facecolor", "none")
-            artist = ax.add_feature(
-                feature.ShapelyFeature([domain_polygon.exterior], ax.projection),
-                **kwargs,
-            )
-
-        if text:
-            text_kwargs.setdefault("verticalalignment", "bottom")
-            text_kwargs.setdefault("fontsize", 15)
-            xx, yy = outside[0]
-            ax.text(xx + 0.2, yy + 0.2, text, transform=pc, **text_kwargs)
-
-        return artist, domain_polygon, domain_polygon_latlon
