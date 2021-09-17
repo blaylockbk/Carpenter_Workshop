@@ -8,17 +8,16 @@ Matplotlib Helpers
 
 Some helpers for plotting
 
-This was a good primer on Matplotlib: 
+This was a good primer on Matplotlib:
 https://dev.to/skotaro/artist-in-matplotlib---something-i-wanted-to-know-before-spending-tremendous-hours-on-googling-how-tos--31oo
 
 """
 import pickle
 
-import numpy as np
-import matplotlib.pyplot as plt
-
-from matplotlib.ticker import MultipleLocator
 import matplotlib.dates as mdates
+import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib.ticker import MultipleLocator
 
 # Sometimes it is useful to put this at the top of your scripts to
 # format the date axis formatting.
@@ -182,12 +181,23 @@ def center_axis_on_zero(x=True, y=False, ax=None):
         ax.set_ylim(-du_max, du_max)
 
 
-def add_fig_letters(axes, offset=0.03, facecolor="#f9ecd2", **kwargs):
+def add_fig_letters(axes, offset=0.03, facecolor="#f9ecd2", labels=None, **kwargs):
     """
     Add a figure letter to top-left corner for all axes
 
     Like is done in a publication figure, all axes are labeled with a
     letter so individual axes can be referred to from the text.
+
+    Parameters
+    ----------
+    axes : list of matplotlib axes
+        maplotlib axes to label
+    offset : float or tuple of float
+        Either a float or tuple of floats (x-offset, y-offset)
+    facecolor : color
+        a color
+    labels : None or str
+        If none, the default is to cycle the axes with lables, 'a', 'b', 'c', etc.
 
     Example
     -------
@@ -201,20 +211,26 @@ def add_fig_letters(axes, offset=0.03, facecolor="#f9ecd2", **kwargs):
     if not hasattr(offset, "__len__"):
         offset = (offset, offset)
 
+    if not hasattr(axes, "__len__"):
+        axes = [axes]
+
     assert len(offset) == 2, "Offset must be a number or tuple"
 
     if not hasattr(axes, "flat"):
         np.array(axes)
 
     ### Add letters to plots
-    import string
+    if labels is None:
+        import string
+
+        labels = string.ascii_letters
 
     try:
         axes = axes.flat
     except:
         pass
 
-    for i, (ax, letter) in enumerate(zip(axes, string.ascii_lowercase)):
+    for i, (ax, letter) in enumerate(zip(axes, labels)):
         plt.sca(ax)
 
         # Add figure letter
