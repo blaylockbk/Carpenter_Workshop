@@ -37,6 +37,7 @@ except Exception as e:
     )
 
 pc = ccrs.PlateCarree()
+pc._threshold = 0.01  # https://github.com/SciTools/cartopy/issues/8
 
 ########################################################################
 # Methods attached to axes created by `common_features`
