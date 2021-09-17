@@ -45,6 +45,19 @@ Search for package and list dependency info
 conda search packageName=<version> --info
 ```
 
+### Matplotlib: Subplot Mosaic
+
+[See documentation](https://matplotlib.org/stable/tutorials/provisional/mosaic.html)
+
+```python
+axd = plt.figure(constrained_layout=True).subplot_mosaic(
+    """
+    ABD
+    CCD
+    """
+)
+```
+
 ### Matplotlib: Jupyter magic
 Enable interactive figure manipulation in Jupyter.
 https://github.com/matplotlib/ipympl
