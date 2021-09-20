@@ -12,19 +12,17 @@ General helpers for cartopy plots.
 """
 import warnings
 
-import matplotlib.pyplot as plt
-from shapely.geometry import Polygon, shape, GeometryCollection
-import xarray as xr
-import numpy as np
-import pandas as pd
-import requests
-
 import cartopy.crs as ccrs
 import cartopy.feature as feature
 import cartopy.io.img_tiles as cimgt
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import requests
+import xarray as xr
 from cartopy.io import shapereader
-
-from paint.standard2 import cm_tmp, cm_dpt, cm_wind, cm_rh
+from paint.standard2 import cm_dpt, cm_rh, cm_tmp, cm_wind
+from shapely.geometry import GeometryCollection, Polygon, shape
 
 try:
     from metpy.plots import USCOUNTIES
@@ -36,6 +34,8 @@ except Exception as e:
     warnings.warn(
         f'{e} Without geopandas, you cannot subset some NaturalEarthFeatures shapefiles, like "Major Highways" from roads.'
     )
+
+warnings.warn("Migrate to `cartopy_tools2` for latest updates and features.")
 
 pc = ccrs.PlateCarree()
 pc._threshold = 0.01  # https://github.com/SciTools/cartopy/issues/8
@@ -279,16 +279,30 @@ def check_cartopy_axes(ax=None, crs=pc, *, verbose=False):
         else:
             raise TypeError("🌎 Sorry. The `ax` you gave me is not a cartopy axes.")
 
+
 class common_features:
     """
     Build a matplotlib/cartopy axes with common map elements.
 
-    This does about 95% of my Cartopy needs.
+    This class does about 95% of my Cartopy needs.
 
+    Feature elements from https://www.naturalearthdata.com/features/
     """
-    def __init__(self, scale='10m', ax=None, crs=pc,*,
-                 figsize=None, dpi=None, dark=False, verbose=False,
-                 COASTLINES=True, **kwargs):
+
+    def __init__(
+        self,
+        scale="110m",
+        ax=None,
+        crs=pc,
+        *,
+        figsize=None,
+        dpi=None,
+        dark=False,
+        verbose=False,
+        add_coastlines=True,
+        coastlines_kw={},
+        **kwargs,
+    ):
         """
         Initialize a Cartopy axes
 
@@ -320,6 +334,13 @@ class common_features:
             .. figure:: _static/BB_maps/common_features-1.png
             .. figure:: _static/BB_maps/common_features-2.png
 
+        add_coastlines : bool
+            For convince, the coastlines are added to the axes by default.
+            This can be turned off and instead controlled with the COASTLINES
+            method.
+        coastlines_kw : dict
+            kwargs for the default COASTLINES method.
+
         figsize : tuple
             Set the figure size
         dpi : int
@@ -348,18 +369,6 @@ class common_features:
 
         self.kwargs.setdefault("linewidth", 0.75)
 
-        if COASTLINES:
-            COASTLINES_kwargs = dict()
-            COASTLINES_kwargs.setdefault("zorder", 100)
-            COASTLINES_kwargs.setdefault("facecolor", "none")
-            COASTLINES_kwargs = {**kwargs, **COASTLINES_kwargs}
-            ax.add_feature(
-                feature.COASTLINE.with_scale(self.scale),
-                **COASTLINES_kwargs
-            )
-            if verbose == "debug":
-                print("🐛 COASTLINES:", **COASTLINES_kwargs)
-
         # NOTE: I don't use the 'setdefault' method here because it doesn't
         # work as expect when switching between dark and normal themes.
         # The defaults would be set the first time the function is called,
@@ -374,6 +383,9 @@ class common_features:
         else:
             self.kwargs = {**{"edgecolor": ".15"}, **self.kwargs}
 
+        if add_coastlines:
+            self.COASTLINES(**coastlines_kw)
+
         if figsize is not None:
             plt.gcf().set_figwidth(self.figsize[0])
             plt.gcf().set_figheight(self.figsize[1])
@@ -385,7 +397,6 @@ class common_features:
         self.ax.__class__.center_extent = _center_extent
         self.ax.__class__.copy_extent = _copy_extent
 
-        return self.ax
     ##------------------------------------------------------------------
     ## Add each element to the plot
     ## When combining kwargs,
@@ -396,12 +407,23 @@ class common_features:
     ## the kwargs are overwritten by FEATURE_kwargs
     ##------------------------------------------------------------------
 
+    def COASTLINES(self, **kwargs):
+        kwargs.setdefault("zorder", 100)
+        kwargs.setdefault("facecolor", "none")
+        kwargs = {**self.kwargs, **kwargs}
+        self.ax.add_feature(feature.COASTLINE.with_scale(self.scale), **kwargs)
+        if self.verbose == "debug":
+            print("🐛 COASTLINES:", kwargs)
+        return self
+
     def BORDERS(self, **kwargs):
         """Borders between countries. *Excludes coastlines*"""
+        kwargs.setdefault("linewidth", 0.5)
         kwargs = {**self.kwargs, **kwargs}
         self.ax.add_feature(feature.BORDERS.with_scale(self.scale), **kwargs)
-        if verbose == "debug":
+        if self.verbose == "debug":
             print("🐛 BORDERS:", kwargs)
+        return self
 
     def STATES(self, **kwargs):
         """US state borders. *Includes coastlines*"""
@@ -409,22 +431,23 @@ class common_features:
 
         kwargs = {**self.kwargs, **kwargs}
         self.ax.add_feature(feature.STATES.with_scale(self.scale), **kwargs)
-        if verbose == "debug":
+        if self.verbose == "debug":
             print("🐛 STATES:", kwargs)
+        return self
 
-    def COUNTIES(self, counties_scale='20m', **kwargs):
+    def COUNTIES(self, counties_scale="20m", **kwargs):
         """US counties. *Includes coastslines*"""
         _counties_scale = {"20m", "5m", "500k"}
         assert (
             counties_scale in _counties_scale
         ), f"counties_scale must be {_counties_scale}"
-
+        kwargs.setdefault("linewidth", 0.33)
+        kwargs.setdefault("alpha", 0.15)
         kwargs = {**self.kwargs, **kwargs}
-        self.ax.add_feature(
-            USCOUNTIES.with_scale(counties_scale), **kwargs}
-        )
-        if verbose == "debug":
+        self.ax.add_feature(USCOUNTIES.with_scale(counties_scale), **kwargs)
+        if self.verbose == "debug":
             print("🐛 COUNTIES:", kwargs)
+        return self
 
     def OCEAN(self, **kwargs):
         """Color-filled ocean area"""
@@ -432,11 +455,12 @@ class common_features:
         kwargs = {**self.kwargs, **kwargs}
 
         if self.dark:
-            kwargs = {**{"facecolor": water}, **kwargs}
+            kwargs = {**{"facecolor": self.water}, **kwargs}
 
         self.ax.add_feature(feature.OCEAN.with_scale(self.scale), **kwargs)
-        if verbose == "debug":
+        if self.verbose == "debug":
             print("🐛 OCEAN:", kwargs)
+        return self
 
     def LAND(self, **kwargs):
         """Color-filled land area"""
@@ -448,34 +472,52 @@ class common_features:
             # and we don't need to draw it.
             kwargs = {**self.kwargs, **kwargs}
             self.ax.add_feature(feature.LAND.with_scale(self.scale), **kwargs)
-            if verbose == "debug":
+            if self.verbose == "debug":
                 print("🐛 LAND:", kwargs)
+        return self
 
     def RIVERS(self, **kwargs):
         """Rivers"""
         kwargs = {**self.kwargs, **kwargs}
 
         if self.dark:
-            kwargs = {**{"edgecolor": self.water}, **kwargs}
+            kwargs = {**{"color": self.water}, **kwargs}
         else:
-            kwargs = {**{"edgecolor": feature.COLORS["water"]}, **kwargs}
+            kwargs = {**{"color": feature.COLORS["water"]}, **kwargs}
 
         self.ax.add_feature(feature.RIVERS.with_scale(self.scale), **kwargs)
-        if verbose == "debug":
+        if self.verbose == "debug":
             print("🐛 RIVERS:", kwargs)
+        return self
 
     def LAKES(self, **kwargs):
         """Coler-filled lake area"""
+        kwargs.setdefault("linewidth", 0)
         kwargs = {**self.kwargs, **kwargs}
 
         if self.dark:
+            kwargs = {**{"facecolor": self.water}, **kwargs}
             kwargs = {**{"edgecolor": self.water}, **kwargs}
         else:
+            kwargs = {**{"facecolor": feature.COLORS["water"]}, **kwargs}
             kwargs = {**{"edgecolor": feature.COLORS["water"]}, **kwargs}
 
         self.ax.add_feature(feature.LAKES.with_scale(self.scale), **kwargs)
-        if verbose == "debug":
+        if self.verbose == "debug":
             print("🐛 LAKES:", kwargs)
+        return self
+
+    def TIMEZONE(self, **kwargs):
+        """Timezone boundaries"""
+        kwargs.setdefault("linewidth", 0.2)
+        kwargs.setdefault("facecolor", "none")
+        kwargs.setdefault("linestyle", ":")
+        kwargs = {**self.kwargs, **kwargs}
+        tz = feature.NaturalEarthFeature("cultural", "time_zones", "10m")
+        self.ax.add_feature(tz, **kwargs)
+        if self.verbose == "debug":
+            print("🐛 TIMEZONE:", kwargs)
+        return self
 
     def ROADS(self, road_types=None, **kwargs):
         """
@@ -501,11 +543,9 @@ class common_features:
 
         kwargs = {**self.kwargs, **kwargs}
 
-        if road_type is None:
+        if road_types is None:
             # Plot all roadways
-            roads = feature.NaturalEarthFeature(
-                "cultural", "roads", "10m", **kwargs
-            )
+            roads = feature.NaturalEarthFeature("cultural", "roads", "10m", **kwargs)
             self.ax.add_feature(roads)
         else:
             # Specify the type of road to include in plot
@@ -522,10 +562,19 @@ class common_features:
             ].geometry.values
             self.ax.add_geometries(road_geom, crs=pc, **kwargs)
 
-        if verbose == "debug":
+        if self.verbose == "debug":
             print("🐛 ROADS:", kwargs)
+        return self
 
-    def PLACES(self, country="United States", rank=2, scatter=True, labels=True, label_kw={}, scatter_kw={}):
+    def PLACES(
+        self,
+        country="United States",
+        rank=2,
+        scatter=True,
+        labels=True,
+        label_kw={},
+        scatter_kw={},
+    ):
         """
         Points and labels for major cities
 
@@ -534,15 +583,16 @@ class common_features:
         country : str
             Country to filter
         rank : int
-            City rank threshold
+            City rank threshold. Large cities have small rank. Small
+            cities have large rank.
         scatter : bool
             Add scatter points
         labels : bool
             Add city name labels
         """
         scatter_kw.setdefault("marker", ".")
-        label_kw.setdefault('fontweight', 'bold')
-        label_kw.setdefault(alpha, 0.5)
+        label_kw.setdefault("fontweight", "bold")
+        label_kw.setdefault("alpha", 0.5)
 
         places = shapereader.natural_earth("10m", "cultural", "populated_places")
         df = geopandas.read_file(places)
@@ -555,13 +605,14 @@ class common_features:
         names = df.NAME
 
         if scatter:
-            self.ax.scatter(xs, ys, transform=pc, *scatter_kw)
+            self.ax.scatter(xs, ys, transform=pc, **scatter_kw)
 
         if labels:
             for x, y, name in zip(xs, ys, names):
                 self.ax.text(x, y, name, clip_on=True, **label_kw)
+        return self
 
-    def STAMEN(self, style='terrain-background', zoom=10, alpha=1):
+    def STAMEN(self, style="terrain-background", zoom=10, alpha=1):
         """
         Add Stamen map tiles to background.
 
@@ -581,20 +632,19 @@ class common_features:
             Alpha value (transparency); a value between 0 and 1.
         """
 
-
-        if verbose:
+        if self.verbose:
             print(
                 "😎 Please use `ax.set_extent` before increasing Zoom level for faster plotting."
             )
         stamen_terrain = cimgt.Stamen(style)
-        ax.add_image(stamen_terrain, zoom)
+        self.ax.add_image(stamen_terrain, zoom)
 
         if alpha < 1:
             # Need to manually put a white layer over the STAMEN terrain
             if dark:
-                alpha_color = 'k'
+                alpha_color = "k"
             else:
-                alpha_color = 'w'
+                alpha_color = "w"
             poly = self.ax.projection.domain
             self.ax.add_feature(
                 feature.ShapelyFeature([poly], self.ax.projection),
@@ -602,8 +652,10 @@ class common_features:
                 alpha=1 - alpha,
                 zorder=1,
             )
-        if verbose == "debug":
-            print("🐛 STAMEN:", f'{style=}, {zoom=}, {alpha=}')
+        if self.verbose == "debug":
+            print("🐛 STAMEN:", f"{style=}, {zoom=}, {alpha=}")
+
+        return self
 
     def OSM(self, zoom=1, alpha=1):
         """
@@ -624,13 +676,13 @@ class common_features:
         """
 
         image = cimgt.OSM()
-        ax.add_image(image, zoom)
+        self.ax.add_image(image, zoom)
         if alpha < 1:
             # Need to manually put a white layer over the STAMEN terrain
             if dark:
-                alpha_color = 'k'
+                alpha_color = "k"
             else:
-                alpha_color = 'w'
+                alpha_color = "w"
             poly = self.ax.projection.domain
             self.ax.add_feature(
                 feature.ShapelyFeature([poly], self.ax.projection),
@@ -638,14 +690,22 @@ class common_features:
                 alpha=1 - alpha,
                 zorder=1,
             )
-        if verbose == "debug":
-            print("🐛 OSM:", f'{zoom=}, {alpha=}')
+        if self.verbose == "debug":
+            print("🐛 OSM:", f"{zoom=}, {alpha=}")
 
-    def DOMAIN(self, x, y=None, *,
-               text=None, mehtod='cutout',
-               facealpha=0.25, polygon_only=False,
-               text_kwargs={},
-               **kwargs):
+        return self
+
+    def DOMAIN(
+        self,
+        x,
+        y=None,
+        *,
+        text=None,
+        method="cutout",
+        facealpha=0.25,
+        text_kwargs={},
+        **kwargs,
+    ):
         """
         Add a polygon of the domain boundary to a map.
 
@@ -672,21 +732,13 @@ class common_features:
         polygon_only : bool
             - True: Only return the polygons and don't plot on axes.
         """
-        if hasattr(x, "crs"):
-            ax = check_cartopy_axes(ax, crs=x.crs)
-            if verbose:
-                print(f"crs is {x.crs}")
-        else:
-            print("crs is not in the xarray.Dataset")
-            ax = check_cartopy_axes(ax)
-
         _method = {"fill", "cutout", "border"}
         assert method in _method, f"Method must be one of {_method}."
 
         ####################################################################
         # Determine how to handle output...xarray or numpy
         if isinstance(x, (xr.core.dataset.Dataset, xr.core.dataarray.DataArray)):
-            if verbose:
+            if self.verbose:
                 print("process input as xarray")
 
             if "latitude" in x.coords:
@@ -696,7 +748,7 @@ class common_features:
 
         elif isinstance(x, np.ndarray):
             assert y is not None, "Please supply a value for x and y"
-            if verbose:
+            if self.verbose:
                 print("process input as numpy array")
             LON = x
             LAT = y
@@ -734,42 +786,44 @@ class common_features:
         domain_polygon = Polygon(
             zip(x, y)
         )  # This is the boundary of the LAT/LON array supplied.
-        global_polygon = self.ax.projection.domain  # This is the projection globe polygon
+        global_polygon = (
+            self.ax.projection.domain
+        )  # This is the projection globe polygon
         cutout = global_polygon.difference(
             domain_polygon
         )  # This is the difference between the domain and glob polygon
 
-        if polygon_only:
-            plt.close()
-            return domain_polygon, domain_polygon_latlon
-        else:
-            # Plot
-            kwargs.setdefault("edgecolors", "k")
-            kwargs.setdefault("linewidths", 1)
-            if method == "fill":
-                kwargs.setdefault("facecolor", (0, 0, 0, facealpha))
-                artist = self.ax.add_feature(
-                    feature.ShapelyFeature([domain_polygon], self.ax.projection), **kwargs
-                )
-            elif method == "cutout":
-                kwargs.setdefault("facecolor", (0, 0, 0, facealpha))
-                artist = self.ax.add_feature(
-                    feature.ShapelyFeature([cutout], self.ax.projection), **kwargs
-                )
-            elif method == "border":
-                kwargs.setdefault("facecolor", "none")
-                artist = self.ax.add_feature(
-                    feature.ShapelyFeature([domain_polygon.exterior], self.ax.projection),
-                    **kwargs,
-                )
+        # Plot
+        kwargs.setdefault("edgecolors", "k")
+        kwargs.setdefault("linewidths", 1)
+        if method == "fill":
+            kwargs.setdefault("facecolor", (0, 0, 0, facealpha))
+            artist = self.ax.add_feature(
+                feature.ShapelyFeature([domain_polygon], self.ax.projection),
+                **kwargs,
+            )
+        elif method == "cutout":
+            kwargs.setdefault("facecolor", (0, 0, 0, facealpha))
+            artist = self.ax.add_feature(
+                feature.ShapelyFeature([cutout], self.ax.projection), **kwargs
+            )
+        elif method == "border":
+            kwargs.setdefault("facecolor", "none")
+            artist = self.ax.add_feature(
+                feature.ShapelyFeature([domain_polygon.exterior], self.ax.projection),
+                **kwargs,
+            )
 
-            if text:
-                text_kwargs.setdefault("verticalalignment", "bottom")
-                text_kwargs.setdefault("fontsize", 15)
-                xx, yy = outside[0]
-                self.ax.text(xx + 0.2, yy + 0.2, text, transform=pc, **text_kwargs)
+        if text:
+            text_kwargs.setdefault("verticalalignment", "bottom")
+            text_kwargs.setdefault("fontsize", 15)
+            xx, yy = outside[0]
+            self.ax.text(xx + 0.2, yy + 0.2, text, transform=pc, **text_kwargs)
 
-            return artist, domain_polygon, domain_polygon_latlon
+        self.domain_polygon = domain_polygon
+        self.domain_polygon_latlon = domain_polygon_latlon
+        return self
+
 
 ########################################################################
 # Useful tools
@@ -894,6 +948,7 @@ def grid_and_earth_relative_vectors(
 
     return grid_relative, earth_relative
 
+
 def state_polygon(state):
     """
     Return a shapely polygon of US state boundaries.
@@ -917,6 +972,7 @@ def state_polygon(state):
         [shape(feature["geometry"]).buffer(0) for feature in features]
     )
     return poly
+
 
 @xr.register_dataset_accessor("xmap")
 class xr_to_cartopy:
