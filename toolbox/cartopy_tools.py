@@ -350,11 +350,6 @@ class common_features:
         --------
         https://github.com/blaylockbk/Carpenter_Workshop/blob/main/notebooks/demo_cartopy_tools.ipynb
 
-        Returns
-        -------
-        The cartopy axes (obviously you don't need this if you gave an ax
-        as an argument, but it is useful if you initialize a new map).
-
         """
         self.scale = scale
         self.ax = ax
