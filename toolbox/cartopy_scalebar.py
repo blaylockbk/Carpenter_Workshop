@@ -8,9 +8,9 @@
 
 import warnings
 
-import numpy as np
 import cartopy.crs as ccrs
 import cartopy.geodesic as cgeo
+import numpy as np
 
 
 def _axes_to_lonlat(ax, coords):
@@ -121,9 +121,15 @@ def _point_along_line(ax, start, distance, angle=0, tol=0.01):
         a_phys = _axes_to_lonlat(ax, a_axes)
         b_phys = _axes_to_lonlat(ax, b_axes)
 
-        # Geodesic().inverse returns a NumPy MemoryView like [[distance,
-        # start azimuth, end azimuth]].
-        return geodesic.inverse(a_phys, b_phys).base[0, 0]
+        import cartopy
+        cartopy_version = float(".".join(cartopy.__version__.split(".")[0:2]))
+        if cartopy_version >= 0.2:
+            return geodesic.inverse(a_phys, b_phys)[0, 0]
+        else:
+            # Cartopy <= 0.19
+            # Geodesic().inverse returns a NumPy MemoryView like [[distance,
+            # start azimuth, end azimuth]].
+            return geodesic.inverse(a_phys, b_phys).base[0, 0]
 
     end = _upper_bound(start, direction, distance, dist_func)
 
