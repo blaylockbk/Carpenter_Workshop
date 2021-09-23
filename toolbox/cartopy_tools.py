@@ -40,6 +40,22 @@ warnings.warn("Migrate to `cartopy_tools2` for latest updates and features.")
 pc = ccrs.PlateCarree()
 pc._threshold = 0.01  # https://github.com/SciTools/cartopy/issues/8
 
+def _to_180(lon):
+    """
+    Wrap longitude from degrees [0, 360] to degrees [-180, 180].
+
+    An alternative method is
+        lon[lon>180] -= 360
+
+    Parameters
+    ----------
+    lon : array_like
+        Longitude values
+    """
+    lon = np.array(lon)
+    lon = (lon + 180) % 360 - 180
+    return lon
+
 ########################################################################
 # Methods attached to axes created by `common_features`
 def _adjust_extent(self, pad="auto", fraction=0.05, verbose=False):
