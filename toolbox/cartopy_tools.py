@@ -40,6 +40,7 @@ warnings.warn("Migrate to `cartopy_tools2` for latest updates and features.")
 pc = ccrs.PlateCarree()
 pc._threshold = 0.01  # https://github.com/SciTools/cartopy/issues/8
 
+
 def _to_180(lon):
     """
     Wrap longitude from degrees [0, 360] to degrees [-180, 180].
@@ -55,6 +56,7 @@ def _to_180(lon):
     lon = np.array(lon)
     lon = (lon + 180) % 360 - 180
     return lon
+
 
 ########################################################################
 # Methods attached to axes created by `common_features`
@@ -489,6 +491,7 @@ class common_features:
 
     def RIVERS(self, **kwargs):
         """Rivers"""
+        kwargs.setdefault('linewidth', 0.3)
         kwargs = {**self.kwargs, **kwargs}
 
         if self.dark:
@@ -502,7 +505,7 @@ class common_features:
         return self
 
     def LAKES(self, **kwargs):
-        """Coler-filled lake area"""
+        """Color-filled lake area"""
         kwargs.setdefault("linewidth", 0)
         kwargs = {**self.kwargs, **kwargs}
 
@@ -516,6 +519,24 @@ class common_features:
         self.ax.add_feature(feature.LAKES.with_scale(self.scale), **kwargs)
         if self.verbose == "debug":
             print("🐛 LAKES:", kwargs)
+        return self
+
+    def PLAYAS(self, **kwargs):
+        """Color-filled playa area"""
+        kwargs.setdefault("linewidth", 0)
+        kwargs = {**self.kwargs, **kwargs}
+
+        if self.dark:
+            kwargs = {**{"facecolor": "#4D311A73"}, **kwargs}
+            kwargs = {**{"edgecolor": "none"}, **kwargs}
+        else:
+            kwargs = {**{"facecolor": "#FDA65473"}, **kwargs}
+            kwargs = {**{"edgecolor": "none"}, **kwargs}
+
+        playa = feature.NaturalEarthFeature("physical", "playas", "10m")
+        self.ax.add_feature(playa, **kwargs)
+        if self.verbose == "debug":
+            print("🐛 PLAYAS:", kwargs)
         return self
 
     def TIMEZONE(self, **kwargs):
