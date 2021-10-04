@@ -1,0 +1,89 @@
+name: basic38
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.8
+  - pip
+  - git
+  - toml
+  - pylint
+  - rope # python refactoring library
+
+  # JupyterLab
+  # ----------
+  - jupyter
+  - jupyterlab>=3
+  - nodejs
+  - ipympl # matplotlib widget for jupyter
+  - line_profiler # profile code line by line
+  - jupyterlab_code_formatter
+
+  # Toolbox
+  # -------
+  - requests
+  - matplotlib
+  - hvplot
+  - cartopy
+  - numpy
+  - scipy
+  - pandas
+  - geopandas
+  - xarray
+  - rasterio
+  - netcdf4
+  - eccodes
+  - cfgrib
+  - pygrib
+  - h5py
+  - h5netcdf
+  #- xesmf # Not available on PC
+  #- esmpy # Not available on PC
+  - cf_xarray
+  - metpy
+  - dask
+  - f90nml # For fortran namelist files
+  - openpyxl
+
+  # Data Acquisition
+  # ----------------
+  - zarr
+  - s3fs # AWS S3 buckets and other cloud storage
+  - siphon # Unidata Catalog and THREDDS Data Servers
+  - cdsapi # ECMWF Copernicus ERA5 data
+
+  # Formatter
+  # ---------
+  - black # * I prefer Black at the moment
+  - autopep8
+
+  # Documentation
+  # -------------
+  - sphinx=4.0.3 # ? Issues with 4.1.2
+  #- rstcheck      # restructuredText linter    # ! Some issues with this linter causing too many jobs
+  - nbsphinx
+  - sphinx_rtd_theme # ReadTheDocs Sphinx Theme
+  - pydata-sphinx-theme # PyData Sphinx Theme (i.e, Numpy, Pandas, MetPy)
+  - recommonmark
+  - sphinxcontrib-jsmath
+  - sphinx-markdown-tables
+  - autodocsumm
+  - sphinx-autosummary-accessors # pandas and xarray accessor docs
+  - latexmk
+
+  # Other
+  # -----
+  #- matplotlib-venn
+  #- scikit-learn
+  #- alphashape
+
+  - pip:
+      - SynopticPy
+      - herbie-data
+      - goes2go
+      - git:https://github.com/blaylockbk/Carpenter_Workshop.git
+
+      - bootstrapped
+      - highlight-text # Matplotlib Text Highlighting: https://github.com/znstrider/highlight_text
+      - jupyter-fortran-kernel
+      - tldr # better help pages. https://github.com/tldr-pages/tldr
