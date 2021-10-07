@@ -19,7 +19,7 @@ BYU = dict(navy="#002E5D", white="#FFFFFF", royal="#0062B8")
 
 # Naval Research Lab
 # <url source>
-naval_research_lab = dict(blue="#152A55")
+naval_research_lab = dict(blue="#152A55", blue2='#223A5',. blue3='#6488BE')
 
 # NASA
 # https://w3.cs.jmu.edu/bernstdh/web/common/policies/NASA_StyleGuide_Nov06.pdf
