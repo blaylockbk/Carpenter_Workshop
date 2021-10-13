@@ -18,13 +18,14 @@ dependencies:
   - ipympl # matplotlib widget for jupyter
   - line_profiler # profile code line by line
   - jupyterlab_code_formatter
+  - xeus-python # python debugger for jupyter
 
   # Toolbox
   # -------
   - requests
   - matplotlib
   - hvplot
-  - cartopy
+  - cartopy>=0.20.0
   - numpy
   - scipy
   - pandas
@@ -53,16 +54,22 @@ dependencies:
 
   # Formatter
   # ---------
-  - black # * I prefer Black at the moment
-  - autopep8
+  - black
+  - isort
+
+  # Testing
+  # -------
+  - pytest
+  - icecream
 
   # Documentation
   # -------------
   - sphinx=4.0.3 # ? Issues with 4.1.2
-  #- rstcheck      # restructuredText linter    # ! Some issues with this linter causing too many jobs
+  #- rstcheck      # restructuredText linter    # ! Some issues with this linter causing too many jobs?
   - nbsphinx
-  - sphinx_rtd_theme # ReadTheDocs Sphinx Theme
   - pydata-sphinx-theme # PyData Sphinx Theme (i.e, Numpy, Pandas, MetPy)
+  - ablog # Turn Sphinx into a blog
+  - sphinx-panels # Add bootstrap elements to Sphinx
   - recommonmark
   - sphinxcontrib-jsmath
   - sphinx-markdown-tables
@@ -77,9 +84,11 @@ dependencies:
   #- alphashape
 
   - pip:
-      - SynopticPy
-      - herbie-data
-      - goes2go
+      #- SynopticPy
+      #- herbie-data
+      #- goes2go
+      - windrose
+      - git+https://inversion.nrlmry.navy.mil/bitbucket/scm/nrlt/xnrl.git
       - bootstrapped
       - highlight-text # Matplotlib Text Highlighting: https://github.com/znstrider/highlight_text
       - jupyter-fortran-kernel
