@@ -9,6 +9,25 @@ Cartopy Tools
 
 General helpers for cartopy plots.
 
+Does projection matter? YES!
+(https://www.joaoleitao.com/different-world-map-projections/)
+
+You've looked at maps with distortion that show Greenland the size of
+South America. For the same reason, you should show data on appropriate
+projection globes. For global plots, consider using Mollweide projetion
+over Mercator or Robinson. From the website above,
+
+    [Mollweide] sacrifices the precision of some of the angles and
+    shapes, in exchange for a better representation of the planet’s
+    proportions when that is an important consideration.
+
+    [Robinson] represented the continents more accurately than the
+    Mercator Projection, the poles are highly distorted.
+
+This may better help you interpret results. The Winkel Tripel Projection
+may also be more appropriate than Robinson, but not yet supported by
+Cartopy.
+
 """
 import warnings
 
@@ -491,7 +510,7 @@ class common_features:
 
     def RIVERS(self, **kwargs):
         """Rivers"""
-        kwargs.setdefault('linewidth', 0.3)
+        kwargs.setdefault("linewidth", 0.3)
         kwargs = {**self.kwargs, **kwargs}
 
         if self.dark:
@@ -520,6 +539,21 @@ class common_features:
         if self.verbose == "debug":
             print("🐛 LAKES:", kwargs)
         return self
+
+    def BATHYMETRY(self, **kwargs):
+        """
+        See tweet: https://twitter.com/DanJonesOcean/status/1448597935508369411?s=20
+
+        TODO: Implement the example from here:
+        https://github.com/mattphysics/plot_bathymetry/blob/master/plot_bathymetry.ipynb
+
+        Any better methods for adding Bathymetry?
+        Could get data from:
+        - https://topex.ucsd.edu/WWW_html/mar_topo.html
+        - https://www.gebco.net/data_and_products/gridded_bathymetry_data/
+        - https://ngdc.noaa.gov/mgg/global/
+        """
+        raise NotImplementedError("Bathemetry not yet supported")
 
     def PLAYAS(self, **kwargs):
         """Color-filled playa area"""
