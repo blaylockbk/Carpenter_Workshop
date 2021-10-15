@@ -29,6 +29,7 @@ may also be more appropriate than Robinson, but not yet supported by
 Cartopy.
 
 """
+import urllib.request
 import warnings
 
 import cartopy.crs as ccrs
@@ -42,6 +43,8 @@ import xarray as xr
 from cartopy.io import shapereader
 from paint.standard2 import cm_dpt, cm_rh, cm_tmp, cm_wind
 from shapely.geometry import GeometryCollection, Polygon, shape
+
+from toolbox.stock import Path
 
 try:
     from metpy.plots import USCOUNTIES
@@ -317,6 +320,53 @@ def check_cartopy_axes(ax=None, crs=pc, *, verbose=False):
             raise TypeError("🌎 Sorry. The `ax` you gave me is not a cartopy axes.")
 
 
+def get_ETOPO1(top="ice"):
+    """
+    Return path to the ETOPO1 NetCDF file.
+
+    The ETOPO1 dataset is huge (446 MB).
+
+    Download the data from http://iridl.ldeo.columbia.edu/SOURCES/.NOAA/.NGDC
+    because it doesn't require a password.
+
+    An alternatvie source is https://rda.ucar.edu/datasets/ds759.4/
+
+    Parameters
+    ----------
+    top : {'bedrock', 'ice'}
+
+    """
+
+    def _reporthook(a, b, c):
+        """
+        Print download progress in megabytes.
+
+        Parameters
+        ----------
+        a : Chunk number
+        b : Maximum chunk size
+        c : Total size of the download
+        """
+        chunk_progress = a * b / c * 100
+        total_size_MB = c / 1000000.0
+        print(
+            f"\r🚛💨  Download ETOPO1 {top} Progress: {chunk_progress:.2f}% of {total_size_MB:.1f} MB\r",
+            end="",
+        )
+
+    # If the dataset does not exists, then download it.
+    src = f"http://iridl.ldeo.columbia.edu/SOURCES/.NOAA/.NGDC/.ETOPO1/.z_{top}/data.nc"
+    dst = Path(f"$HOME/.local/share/ETOPO1/ETOPO1_{top}.nc").expand()
+
+    if not dst.exists():
+        if not dst.parent.exists():
+            dst.parent.mkdir(parents=True)
+        urllib.request.urlretrieve(src, dst, _reporthook)
+        print(f"{' ':70}", end="")
+
+    return xr.open_dataset(dst)
+
+
 class common_features:
     """
     Build a matplotlib/cartopy axes with common map elements.
@@ -540,20 +590,104 @@ class common_features:
             print("🐛 LAKES:", kwargs)
         return self
 
-    def BATHYMETRY(self, **kwargs):
+    def TERRAIN(
+        self,
+        minute_resolution=30,
+        top="ice",
+        kind="pcolormesh",
+        **kwargs,
+    ):
         """
-        See tweet: https://twitter.com/DanJonesOcean/status/1448597935508369411?s=20
+        Plot terrain data from ETOPO1 dataset.
 
-        TODO: Implement the example from here:
-        https://github.com/mattphysics/plot_bathymetry/blob/master/plot_bathymetry.ipynb
-
-        Any better methods for adding Bathymetry?
-        Could get data from:
-        - https://topex.ucsd.edu/WWW_html/mar_topo.html
-        - https://www.gebco.net/data_and_products/gridded_bathymetry_data/
-        - https://ngdc.noaa.gov/mgg/global/
+        Parameters
+        ----------
+        minute_resolution : int
+            ETOPO1 data is a 1-minute arc dataset. This is huge.
+            For global plots, you don't need this resolution, and can
+            be happy with a 60-minute arch resolution.
+            If you are transforming to a projection other than
+            PlateCarree you should use a larger number (>100) if you
+            don't want to take too long.
+        top : {"ice", "bedrock"}
+            Top of the elevation model. "ice" is top of ice sheets in
+            Greenland and Antarctica and "bedrock" is elevation of
+            of ground under the ice.
+        kind : {'contourf', 'pcolormesh'}
         """
-        raise NotImplementedError("Bathemetry not yet supported")
+        ds = get_ETOPO1(top=top)
+
+        if minute_resolution not in [1, None]:
+            # Thin the dataset to improve performance.
+            ds = ds.thin(minute_resolution)
+
+        ds = ds.where(ds[f"z_{top}"] >= 0)
+
+        kwargs.setdefault("zorder", 0)
+        kwargs.setdefault("cmap", "YlOrBr")
+        kwargs.setdefault("levels", range(0, 8000, 500))
+        kwargs.setdefault("vmin", 0)
+        kwargs.setdefault("vmax", 8000)
+
+        if kind == "contourf":
+            _ = kwargs.pop("vmax")
+            _ = kwargs.pop("vmin")
+            self.ax.contourf(ds.lon, ds.lat, ds[f"z_{top}"], transform=pc, **kwargs)
+        elif kind == "pcolormesh":
+            _ = kwargs.pop("levels")
+            self.ax.pcolormesh(ds.lon, ds.lat, ds[f"z_{top}"], transform=pc, **kwargs)
+
+        return self
+
+    def BATHYMETRY(
+        self,
+        minute_resolution=30,
+        top="ice",
+        kind="pcolormesh",
+        **kwargs,
+    ):
+        """
+        Plot bathymetry data from ETOPO1 dataset.
+
+        Parameters
+        ----------
+        minute_resolution : int
+            ETOPO1 data is a 1-minute arc dataset. This is huge.
+            For global plots, you don't need this resolution, and can
+            be happy with a 60-minute arch resolution.
+            If you are transforming to a projection other than
+            PlateCarree you should use a larger number (>100) if you
+            don't want to take too long.
+        top : {"ice", "bedrock"}
+            Top of the elevation model. "ice" is top of ice sheets in
+            Greenland and Antarctica and "bedrock" is elevation of
+            of ground under the ice.
+        kind : {'contourf', 'pcolormesh'}
+        """
+
+        ds = get_ETOPO1(top=top)
+
+        if minute_resolution not in [1, None]:
+            # Thin the dataset to improve performance.
+            ds = ds.thin(minute_resolution)
+
+        ds = ds.where(ds[f"z_{top}"] < 0)
+
+        kwargs.setdefault("zorder", 0)
+        kwargs.setdefault("cmap", "Blues_r")
+        kwargs.setdefault("levels", range(-10000, 1, 500))
+        kwargs.setdefault("vmax", 0)
+        kwargs.setdefault("vmin", -10000)
+
+        if kind == "contourf":
+            _ = kwargs.pop("vmax")
+            _ = kwargs.pop("vmin")
+            self.ax.contourf(ds.lon, ds.lat, ds[f"z_{top}"], transform=pc, **kwargs)
+        elif kind == "pcolormesh":
+            _ = kwargs.pop("levels")
+            self.ax.pcolormesh(ds.lon, ds.lat, ds[f"z_{top}"], transform=pc, **kwargs)
+
+        return self
 
     def PLAYAS(self, **kwargs):
         """Color-filled playa area"""
@@ -745,7 +879,7 @@ class common_features:
         self.ax.add_image(image, zoom)
         if alpha < 1:
             # Need to manually put a white layer over the STAMEN terrain
-            if dark:
+            if self.dark:
                 alpha_color = "k"
             else:
                 alpha_color = "w"
