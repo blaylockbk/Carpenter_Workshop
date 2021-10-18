@@ -75,10 +75,18 @@ def _to_180(lon):
     lon : array_like
         Longitude values
     """
-    lon = np.array(lon)
     lon = (lon + 180) % 360 - 180
     return lon
 
+
+# Map extent regions.
+_extents = dict(
+    NW=(-180, 0, 0, 90),
+    SW=(-180, 0, -90, 0),
+    NE=(0, 180, 0, 90),
+    SE=(0, 180, -90, 0),
+    CONUS=(-130, -60, 20, 55),
+)
 
 ########################################################################
 # Methods attached to axes created by `common_features`
@@ -320,21 +328,30 @@ def check_cartopy_axes(ax=None, crs=pc, *, verbose=False):
             raise TypeError("🌎 Sorry. The `ax` you gave me is not a cartopy axes.")
 
 
-def get_ETOPO1(top="ice"):
+def get_ETOPO1(top="ice", coarsen=None, thin=None):
     """
-    Return path to the ETOPO1 NetCDF file.
+    Return the ETOPO1 elevation and bathymetry DataArray.
 
-    The ETOPO1 dataset is huge (446 MB).
+    The ETOPO1 dataset is huge (446 MB). This function saves coarsened
+    versions of the data for faster loading.
 
     Download the data from http://iridl.ldeo.columbia.edu/SOURCES/.NOAA/.NGDC
-    because it doesn't require a password.
 
-    An alternatvie source is https://rda.ucar.edu/datasets/ds759.4/
+    An alternatvie source is https://ngdc.noaa.gov/mgg/global/, but the
+    Dataset may have a different structure.
+
 
     Parameters
     ----------
     top : {'bedrock', 'ice'}
-
+        There are two types of ETOPO1 files, one that is the top of the
+        ice layers, and another that is the top of the bedrock. This
+        is necessary for Greenland and Antarctic ice sheets. I'm guessing
+        that 99% of the time you will want the top of the ice sheets.
+    thin : int
+        Thin the Dataset by getting every nth element
+    coarsen : int
+        Coarsen the Dataset by taking the mean of the nxn box.
     """
 
     def _reporthook(a, b, c):
@@ -354,17 +371,41 @@ def get_ETOPO1(top="ice"):
             end="",
         )
 
-    # If the dataset does not exists, then download it.
+    if coarsen == 1:
+        coarsen = None
+    if thin == 1:
+        thin = None
+    assert not all([coarsen, thin]), "Both `coarsen` and `thin` cannot be None."
+
+    # If the ETOPO1 data does not exists, then download it.
+    # The coarsen method is slow, so save a copy to load.
+    # The thin method is fast, so don't worry about saving a copy.
     src = f"http://iridl.ldeo.columbia.edu/SOURCES/.NOAA/.NGDC/.ETOPO1/.z_{top}/data.nc"
     dst = Path(f"$HOME/.local/share/ETOPO1/ETOPO1_{top}.nc").expand()
+    dst_coarsen = Path(
+        f"$HOME/.local/share/ETOPO1/ETOPO1_{top}_coarsen-{coarsen}.nc"
+    ).expand()
 
     if not dst.exists():
+        # Download the full ETOPO1 dataset
         if not dst.parent.exists():
             dst.parent.mkdir(parents=True)
         urllib.request.urlretrieve(src, dst, _reporthook)
         print(f"{' ':70}", end="")
 
-    return xr.open_dataset(dst)
+    if coarsen:
+        if dst_coarsen.exists():
+            ds = xr.open_dataset(dst_coarsen)
+        else:
+            ds = xr.open_dataset(dst)
+            ds = ds.coarsen({"lon": coarsen, "lat": coarsen}, boundary="pad").mean()
+            ds.to_netcdf(dst_coarsen)
+    else:
+        ds = xr.open_dataset(dst)
+        if thin:
+            ds = ds.thin(thin)
+
+    return ds[f"z_{top}"]
 
 
 class common_features:
@@ -479,16 +520,7 @@ class common_features:
         self.ax.__class__.center_extent = _center_extent
         self.ax.__class__.copy_extent = _copy_extent
 
-    ##------------------------------------------------------------------
-    ## Add each element to the plot
-    ## When combining kwargs,
-    ##  - kwargs is the main value
-    ##  - FEATURE_kwargs is the overwrite for the feature
-    ## For example:
-    ##     {**kwargs, **FEATURE_kwargs}
-    ## the kwargs are overwritten by FEATURE_kwargs
-    ##------------------------------------------------------------------
-
+    # Feature Elements
     def COASTLINES(self, **kwargs):
         kwargs.setdefault("zorder", 100)
         kwargs.setdefault("facecolor", "none")
@@ -592,9 +624,11 @@ class common_features:
 
     def TERRAIN(
         self,
-        minute_resolution=30,
+        coarsen=30,
+        *,
         top="ice",
         kind="pcolormesh",
+        extent=None,
         **kwargs,
     ):
         """
@@ -602,26 +636,56 @@ class common_features:
 
         Parameters
         ----------
-        minute_resolution : int
+        coarsen : int
             ETOPO1 data is a 1-minute arc dataset. This is huge.
             For global plots, you don't need this resolution, and can
-            be happy with a 60-minute arch resolution.
-            If you are transforming to a projection other than
-            PlateCarree you should use a larger number (>100) if you
-            don't want to take too long.
+            be happy with a 30-minute arc resolution (default).
         top : {"ice", "bedrock"}
             Top of the elevation model. "ice" is top of ice sheets in
             Greenland and Antarctica and "bedrock" is elevation of
             of ground under the ice.
-        kind : {'contourf', 'pcolormesh'}
+        kind : {"contourf", "pcolormesh"}
+            Plot data as a contour plot or pcolormesh
+        extent :
+            Trim the huge dataset to a specific region. (Variable cases).
+            - by hemisphere {"NE", "SE", "NW", "SW"}
+            - by region {"CONUS"}
+            - by extent (len==4 tuple/list), e.g. `[-130, -100, 20, 50]`
+            - by xarray.Dataset (must have coordinates 'lat' and 'lon')
+              TODO: Currently does not allow domains that cross -180 lon.
         """
-        ds = get_ETOPO1(top=top)
+        da = get_ETOPO1(top=top, coarsen=coarsen)
 
-        if minute_resolution not in [1, None]:
-            # Thin the dataset to improve performance.
-            ds = ds.thin(minute_resolution)
+        if extent:
+            if isinstance(extent, (list, tuple)):
+                assert (
+                    len(extent) == 4
+                ), "extent tuple must be len 4 (minLon, maxLon, minLat, maxLat)"
+            elif isinstance(extent, str):
+                assert (
+                    extent in _extents
+                ), f"extent string must be one of {_extents.keys()}"
+                extent = _extents[extent]
+            elif hasattr(extent, "coords"):
+                # Get extent from lat/lon bounds in xarray DataSet
+                extent = extent.rename({"latitude": "lat", "longitude": "lon"})
+                extent["lon"] = _to_180(extent["lon"])
+                extent = (
+                    extent.lon.min().item(),
+                    extent.lon.max().item(),
+                    extent.lat.min().item(),
+                    extent.lat.max().item(),
+                )
 
-        ds = ds.where(ds[f"z_{top}"] >= 0)
+            da = da.where(
+                (da.lon >= extent[0])
+                & (da.lon <= extent[1])
+                & (da.lat >= extent[2])
+                & (da.lat <= extent[3])
+            )
+
+        # Get "land" points (elevation is 0 and above, crude estimation)
+        da = da.where(da >= 0)
 
         kwargs.setdefault("zorder", 0)
         kwargs.setdefault("cmap", "YlOrBr")
@@ -632,18 +696,20 @@ class common_features:
         if kind == "contourf":
             _ = kwargs.pop("vmax")
             _ = kwargs.pop("vmin")
-            self.ax.contourf(ds.lon, ds.lat, ds[f"z_{top}"], transform=pc, **kwargs)
+            self.ax.contourf(da.lon, da.lat, da, transform=pc, **kwargs)
         elif kind == "pcolormesh":
             _ = kwargs.pop("levels")
-            self.ax.pcolormesh(ds.lon, ds.lat, ds[f"z_{top}"], transform=pc, **kwargs)
+            self.ax.pcolormesh(da.lon, da.lat, da, transform=pc, **kwargs)
 
         return self
 
     def BATHYMETRY(
         self,
-        minute_resolution=30,
+        coarsen=30,
+        *,
         top="ice",
         kind="pcolormesh",
+        extent=None,
         **kwargs,
     ):
         """
@@ -651,27 +717,56 @@ class common_features:
 
         Parameters
         ----------
-        minute_resolution : int
+        coarsen : int
             ETOPO1 data is a 1-minute arc dataset. This is huge.
             For global plots, you don't need this resolution, and can
-            be happy with a 60-minute arch resolution.
-            If you are transforming to a projection other than
-            PlateCarree you should use a larger number (>100) if you
-            don't want to take too long.
+            be happy with a 30-minute arc resolution (default).
         top : {"ice", "bedrock"}
             Top of the elevation model. "ice" is top of ice sheets in
             Greenland and Antarctica and "bedrock" is elevation of
             of ground under the ice.
-        kind : {'contourf', 'pcolormesh'}
+        kind : {"contourf", "pcolormesh"}
+            Plot data as a contour plot or pcolormesh
+        extent :
+            Trim the huge dataset to a specific region. (Variable cases).
+            - by hemisphere {"NE", "SE", "NW", "SW"}
+            - by region {"CONUS"}
+            - by extent (len==4 tuple/list), e.g. `[-130, -100, 20, 50]`
+            - by xarray.Dataset (must have coordinates 'lat' and 'lon')
+              TODO: Currently does not allow domains that cross -180 lon.
         """
+        da = get_ETOPO1(top=top, coarsen=coarsen)
 
-        ds = get_ETOPO1(top=top)
+        if extent:
+            if isinstance(extent, (list, tuple)):
+                assert (
+                    len(extent) == 4
+                ), "extent tuple must be len 4 (minLon, maxLon, minLat, maxLat)"
+            elif isinstance(extent, str):
+                assert (
+                    extent in _extents
+                ), f"extent string must be one of {_extents.keys()}"
+                extent = _extents[extent]
+            elif hasattr(extent, "coords"):
+                # Get extent from lat/lon bounds in xarray DataSet
+                extent = extent.rename({"latitude": "lat", "longitude": "lon"})
+                extent["lon"] = _to_180(extent["lon"])
+                extent = (
+                    extent.lon.min().item(),
+                    extent.lon.max().item(),
+                    extent.lat.min().item(),
+                    extent.lat.max().item(),
+                )
 
-        if minute_resolution not in [1, None]:
-            # Thin the dataset to improve performance.
-            ds = ds.thin(minute_resolution)
+            da = da.where(
+                (da.lon >= extent[0])
+                & (da.lon <= extent[1])
+                & (da.lat >= extent[2])
+                & (da.lat <= extent[3])
+            )
 
-        ds = ds.where(ds[f"z_{top}"] < 0)
+        # Get "water" points (elevation is 0 and above, crude estimation)
+        da = da.where(da <= 0)
 
         kwargs.setdefault("zorder", 0)
         kwargs.setdefault("cmap", "Blues_r")
@@ -682,10 +777,10 @@ class common_features:
         if kind == "contourf":
             _ = kwargs.pop("vmax")
             _ = kwargs.pop("vmin")
-            self.ax.contourf(ds.lon, ds.lat, ds[f"z_{top}"], transform=pc, **kwargs)
+            self.ax.contourf(da.lon, da.lat, da, transform=pc, **kwargs)
         elif kind == "pcolormesh":
             _ = kwargs.pop("levels")
-            self.ax.pcolormesh(ds.lon, ds.lat, ds[f"z_{top}"], transform=pc, **kwargs)
+            self.ax.pcolormesh(da.lon, da.lat, da, transform=pc, **kwargs)
 
         return self
 
@@ -812,6 +907,7 @@ class common_features:
                 self.ax.text(x, y, name, clip_on=True, **label_kw)
         return self
 
+    # Tiled images
     def STAMEN(self, style="terrain-background", zoom=10, alpha=1):
         """
         Add Stamen map tiles to background.
@@ -900,6 +996,7 @@ class common_features:
         self.ax.stock_img()
         return self
 
+    # Other
     def DOMAIN(
         self,
         x,
@@ -1027,6 +1124,18 @@ class common_features:
 
         self.domain_polygon = domain_polygon
         self.domain_polygon_latlon = domain_polygon_latlon
+        return self
+
+    def set_extent(self, *args, **kwargs):
+        self.ax.set_extent(*args, **kwargs)
+        return self
+
+    def center_extent(self, *args, **kwargs):
+        self.ax.center_extent(*args, **kwargs)
+        return self
+
+    def adjust_extent(self, *args, **kwargs):
+        self.ax.adjust_extent(*args, **kwargs)
         return self
 
 
