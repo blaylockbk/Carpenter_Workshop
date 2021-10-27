@@ -12,7 +12,7 @@ Functions related to wind vectors
 - uv_to_spddir
 - unit_vector
 - angle_between
-    
+
 """
 
 import numpy as np
@@ -76,6 +76,8 @@ def spddir_to_uv(wspd, wdir):
     """
     Calculate the u and v wind components from wind speed and direction.
 
+    See https://earthscience.stackexchange.com/a/11989/18840
+
     Parameters
     ----------
     wspd, wdir : array_like
@@ -89,7 +91,7 @@ def spddir_to_uv(wspd, wdir):
         wspd = np.array(wspd, dtype=float)
         wdir = np.array(wdir, dtype=float)
 
-    rad = 4.0 * np.arctan(1) / 180.0
+    rad = np.pi / 180.0
     u = -wspd * np.sin(rad * wdir)
     v = -wspd * np.cos(rad * wdir)
 
