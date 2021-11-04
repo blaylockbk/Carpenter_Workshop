@@ -1263,9 +1263,9 @@ def grid_and_earth_relative_vectors(
     return grid_relative, earth_relative
 
 
-def state_polygon(state):
+def state_polygon(state=None, country="USA", county=None):
     """
-    Return a shapely polygon of US state boundaries.
+    Return a shapely polygon of US state boundaries or country borders.
 
     GeoJSON Data: https://raw.githubusercontent.com/johan/world.geo.json
     Helpful tip: https://medium.com/@pramukta/recipe-importing-geojson-into-shapely-da1edf79f41d
@@ -1273,18 +1273,29 @@ def state_polygon(state):
     Parameters
     ----------
     state : str
-        Abbreviated state
+        Abbreviated state {'UT', 'CA', 'ID', etc.}
+    country : str
+        Abbreviated country {'USA', 'CAN', 'MEX', 'DEU', 'FRA', 'CHN', 'RUS', etc.}
+    county : str
+        Abbreviated county (for US states only)
     """
-    URL = (
-        "https://raw.githubusercontent.com/johan/world.geo.json/master/countries/USA/%s.geo.json"
-        % state.upper()
-    )
+    if country == "USA":
+        if county is None:
+            URL = f"https://raw.githubusercontent.com/johan/world.geo.json/master/countries/USA/{state.upper()}.geo.json"
+        else:
+            URL = f"https://raw.githubusercontent.com/johan/world.geo.json/master/countries/USA/{state.upper()}/{county}.geo.json"
+    else:
+        URL = f"https://raw.githubusercontent.com/johan/world.geo.json/master/countries/{country.upper()}.geo.json"
+
     f = requests.get(URL)
 
     features = f.json()["features"]
     poly = GeometryCollection(
         [shape(feature["geometry"]).buffer(0) for feature in features]
     )
+
+    print("Here's the Polygon; you may need to do `_.geoms[i]` to get Polygons from the shape.")
+
     return poly
 
 
