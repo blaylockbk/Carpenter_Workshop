@@ -1,4 +1,4 @@
-name: basic38
+name: basic38_pc
 channels:
   - conda-forge
   - defaults
@@ -81,7 +81,7 @@ dependencies:
       - SynopticPy
       - herbie-data
       - goes2go
-      - git:https://github.com/blaylockbk/Carpenter_Workshop.git
+      #- git:https://github.com/blaylockbk/Carpenter_Workshop.git
 
       - bootstrapped
       - highlight-text # Matplotlib Text Highlighting: https://github.com/znstrider/highlight_text
