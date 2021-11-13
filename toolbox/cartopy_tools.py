@@ -42,7 +42,7 @@ import requests
 import xarray as xr
 from cartopy.io import shapereader
 from paint.standard2 import cm_dpt, cm_rh, cm_tmp, cm_wind
-from shapely.geometry import GeometryCollection, Polygon, shape
+from shapely.geometry import GeometryCollection, Polygon, MultiPoint, shape
 
 from toolbox.stock import Path
 
@@ -1263,7 +1263,7 @@ def grid_and_earth_relative_vectors(
     return grid_relative, earth_relative
 
 
-def state_polygon(state=None, country="USA", county=None):
+def state_polygon(state=None, country="USA", county=None, verbose=True):
     """
     Return a shapely polygon of US state boundaries or country borders.
 
@@ -1294,7 +1294,8 @@ def state_polygon(state=None, country="USA", county=None):
         [shape(feature["geometry"]).buffer(0) for feature in features]
     )
 
-    print("Here's the Polygon; you may need to do `_.geoms[i]` to get Polygons from the shape.")
+    if verbose:
+        print("Here's the Polygon; you may need to do `_.geoms[i]` to get Polygons from the shape.")
 
     return poly
 
