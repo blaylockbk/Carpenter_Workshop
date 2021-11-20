@@ -24,8 +24,8 @@ import sys
 import warnings
 
 import multiprocessing
-from multiprocessing import Pool, cpu_count          # Multiprocessing
-from multiprocessing.dummy import Pool as ThreadPool # Multithreading
+from multiprocessing import Pool, cpu_count  # Multiprocessing
+from multiprocessing.dummy import Pool as ThreadPool  # Multithreading
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -33,8 +33,9 @@ import matplotlib.pyplot as plt
 try:
     from dask import delayed, compute
 except Exception as e:
-    print(f"WARNING! {e}")
-    print('Without dask, you cannot use dask for multiprocessing.')
+    pass
+    # print(f"WARNING! {e}")
+    # print("Without dask, you cannot use dask for multiprocessing.")
 
 
 # ==============
@@ -55,7 +56,8 @@ def _expand(self):
     """
     return Path(os.path.expandvars(self)).expanduser().resolve()
 
-def _copy(self, target, verbose=True):
+
+def _copy(self, dst, parents=True, verbose=True):
     """
     Add this copy method to a Path object.
 
@@ -69,10 +71,14 @@ def _copy(self, target, verbose=True):
     ----------
     self : pathlib.Path
         A Path object file to be copied.
-    target : {str, pathlib.Path}
+    dst : {str, pathlib.Path}
         The destination Path to copy the file to.
-        If target is a directory, will preserve the file name.
-        If target is a file, will rename the file.
+        If dst is a directory, will preserve the file name.
+        If dst is a file, will rename the file.
+    parents : bool
+        If the dst parent directory does not exist, then make it.
+
+    Note: 🐍 Python 3.7+ is required for shutil to accept Path object.
 
     Example
     -------
@@ -86,18 +92,33 @@ def _copy(self, target, verbose=True):
     >>> Path('this_file.txt').copy(Path('this_dir'))
     """
     assert self.is_file()
-    assert python_version >= 3.7, "🐍 Python 3.7+ is required for shutil to accept Path object."
 
-    shutil.copy(self, target)
+    if not dst.parent.exists() and parents:
+        dst.parent.mkdir(parents=parents)
+        if verbose:
+            print(f"👨🏻‍🏭 Created path to {dst.parents}")
+    else:
+        raise TypeError(
+            f"Parent path does not exist: [{dst.parent}]."
+            "Set `parents=True` to create that path."
+        )
 
-    if verbose: print(f"📄➡📁 Copied [{self}] to [{target}]")
+    shutil.copy(self, dst)
 
-def _tree(self, max_depth=None, *,
-          show_hidden=False,
-          show_files=True,
-          show_directories=True,
-          exclude_suffix = ['.pyc'],
-          exclude_dirs = ['__pycache__']):
+    if verbose:
+        print(f"📄➡📁 Copied [{self}] to [{dst}]")
+
+
+def _tree(
+    self,
+    max_depth=None,
+    *,
+    show_hidden=False,
+    show_files=True,
+    show_directories=True,
+    exclude_suffix=[".pyc"],
+    exclude_dirs=["__pycache__"],
+):
     """
     Print directory contents in a tree
 
@@ -109,40 +130,40 @@ def _tree(self, max_depth=None, *,
         Maximum directory depth to show
     """
     # ASCII escape colors
-    ENDC = '\033[m'
-    RED = '\033[31m'
-    GREEN = '\033[32m'
-    YELLOW = '\033[33m'
-    BLUE = '\033[34m'
+    ENDC = "\033[m"
+    RED = "\033[31m"
+    GREEN = "\033[32m"
+    YELLOW = "\033[33m"
+    BLUE = "\033[34m"
 
     icons = {
-        '.gz'    : '🎁',
-        '.zip'   : '🤐',
-        '.py'    : '🐍',
-        '.ipynb' : '📔',
-        '.pdf'   : '📕',
-        '.docx'  : '📘',
-        '.xlsx'  : '📗',
-        '.pptx'  : '📙',
-        '.avi'   : '🎥',
-        '.mp4'   : '🎥',
-        '.mp3'   : '🎵',
-        '.png'   : '📷',
-        '.jpeg'  : '📷',
-        '.gif'   : '📷',
-        '.css'   : '🎨',
-        '.nc'    : '🌐',
-        '.grib'  : '🌐',
-        '.grib2' : '🌐',
-        '.html'  : '💻',
-        '.config': '⚙',
+        ".gz": "🎁",
+        ".zip": "🤐",
+        ".py": "🐍",
+        ".ipynb": "📔",
+        ".pdf": "📕",
+        ".docx": "📘",
+        ".xlsx": "📗",
+        ".pptx": "📙",
+        ".avi": "🎥",
+        ".mp4": "🎥",
+        ".mp3": "🎵",
+        ".png": "📷",
+        ".jpeg": "📷",
+        ".gif": "📷",
+        ".css": "🎨",
+        ".nc": "🌐",
+        ".grib": "🌐",
+        ".grib2": "🌐",
+        ".html": "💻",
+        ".config": "⚙",
     }
-    print(f'📦 {RED}{self}{ENDC}')
+    print(f"📦 {RED}{self}{ENDC}")
 
     if max_depth <= 1:
-        contents = sorted(self.glob('*'))
+        contents = sorted(self.glob("*"))
     else:
-        contents = sorted(self.rglob('*'))
+        contents = sorted(self.rglob("*"))
 
     n = len(contents)
     for i, path in enumerate(contents):
@@ -157,43 +178,41 @@ def _tree(self, max_depth=None, *,
 
         # Exclude hidden directories and files
         if not show_hidden:
-            if any([i.startswith('.') for i in path.relative_to(self).parts]):
+            if any([i.startswith(".") for i in path.relative_to(self).parts]):
                 continue
 
         depth = len(path.relative_to(self).parts)
 
-        if i+1 < n:
-            depth_next = len(contents[i+1].relative_to(self).parts)
+        if i + 1 < n:
+            depth_next = len(contents[i + 1].relative_to(self).parts)
             if max_depth is not None and depth > max_depth:
                 continue
             if depth_next < depth:
-                mark = '└── '
+                mark = "└── "
             else:
-                mark = '├── '
+                mark = "├── "
         else:
-            mark = '└── '
+            mark = "└── "
 
-        if depth <= 1 :
-            spacer = f'{mark}' * depth
+        if depth <= 1:
+            spacer = f"{mark}" * depth
         else:
-            if i+1 < n:
-                spacer = '│    ' * (depth-1) + f'{mark}'
+            if i + 1 < n:
+                spacer = "│    " * (depth - 1) + f"{mark}"
             else:
-                spacer = '┴    ' * (depth-1) + f'{mark}'
-
-
-
+                spacer = "┴    " * (depth - 1) + f"{mark}"
 
         if path.is_dir() and show_directories:
-            print(f'{spacer}📂 {BLUE}{path.name}{ENDC}')
+            print(f"{spacer}📂 {BLUE}{path.name}{ENDC}")
 
         if path.is_file() and show_files:
             if path.suffix in icons:
-                print(f'{spacer}{icons[path.suffix]} {path.name}')
+                print(f"{spacer}{icons[path.suffix]} {path.name}")
             else:
-                print(f'{spacer}📄 {path.name}')
+                print(f"{spacer}📄 {path.name}")
 
     return contents
+
 
 Path.expand = _expand
 Path.copy = _copy
@@ -245,18 +264,20 @@ def full_path(p, must_exist=True, mkdir=False, verbose=True):
 
     # Make Directory if it doesn't exist
     if not p.exists() and mkdir:
-        if p.suffix == '':
+        if p.suffix == "":
             p.mkdir(parents=True)
         else:
             p.parent.mkdir(parents=True)  # because p is a file.
-        if verbose: print(f'👷🏼‍♂️ Created directory: {p}')
+        if verbose:
+            print(f"👷🏼‍♂️ Created directory: {p}")
 
     if must_exist:
         assert p.exists(), f"🦇 Does Not Exist: {p}."
 
     return p
 
-def ls(p, pattern='*', which='files', recursive=False, hidden=False):
+
+def ls(p, pattern="*", which="files", recursive=False, hidden=False):
     """
     List contents of a directory path; files, directories, or both.
 
@@ -284,27 +305,28 @@ def ls(p, pattern='*', which='files', recursive=False, hidden=False):
     else:
         glob_obj = p.glob(pattern)
 
-    if which == 'files':
+    if which == "files":
         f = filter(lambda x: x.is_file(), glob_obj)
-    elif which == 'dirs':
+    elif which == "dirs":
         f = filter(lambda x: x.is_dir(), glob_obj)
     else:
         f = glob_obj
 
     if hidden:
-        f = filter(lambda x: x.name.startswith('.'), f)
+        f = filter(lambda x: x.name.startswith("."), f)
     else:
-        f = filter(lambda x: not x.name.startswith('.'), f)
+        f = filter(lambda x: not x.name.startswith("."), f)
 
     f = list(f)
     f.sort()
 
     if len(f) == 0:
-        warnings.warn(f'🤔 None from {p}')
+        warnings.warn(f"🤔 None from {p}")
 
     return f
 
-def cp(src, dst='$TMPDIR', name=None, verbose=True):
+
+def cp(src, dst="$TMPDIR", name=None, verbose=True):
     """
     Copy a file to another directory.
 
@@ -335,9 +357,11 @@ def cp(src, dst='$TMPDIR', name=None, verbose=True):
 
     shutil.copyfile(src, dst)
 
-    if verbose: print(f"📄➡📁 Copied [{src}] to [{dst}]")
+    if verbose:
+        print(f"📄➡📁 Copied [{src}] to [{dst}]")
 
     return dst
+
 
 def create_path(p, verbose=True):
     """
@@ -352,9 +376,11 @@ def create_path(p, verbose=True):
 
     try:
         p.mkdir(parents=True)
-        if verbose: print(f'📂 Created directory: {p}')
+        if verbose:
+            print(f"📂 Created directory: {p}")
     except:
-        if verbose: print(f'🍄 Directory already exists: {p}')
+        if verbose:
+            print(f"🍄 Directory already exists: {p}")
 
     return p
 
@@ -366,20 +392,30 @@ def create_path(p, verbose=True):
 # - https://chriskiehl.com/article/parallelism-in-one-line
 # - https://stackoverflow.com/questions/2846653/how-can-i-use-threading-in-python
 
+
 def _multipro_helper_MP(job_arg):
     i, n, func, args, kwargs = job_arg
-    if not hasattr(args, '__len__'):
+    if not hasattr(args, "__len__"):
         args = [args]
     process = multiprocessing.current_process().name
     thread = multiprocessing.dummy.current_process().name
     output = func(*args, **kwargs)
-    print(f"\r    ⏳ {process}/{thread} completed task [{i:,}/{n:,}] {' '*15}", end='')
+    print(f"\r    ⏳ {process}/{thread} completed task [{i:,}/{n:,}] {' '*15}", end="")
     return output
 
-def multipro_helper(func, args, kwargs={}, *,
-                    cpus=None, threads=None, dask=None,
-                    max_threads=20, max_dask_workers=32,
-                    verbose=True):
+
+def multipro_helper(
+    func,
+    args,
+    kwargs={},
+    *,
+    cpus=None,
+    threads=None,
+    dask=None,
+    max_threads=20,
+    max_dask_workers=32,
+    verbose=True,
+):
     """
     Multiprocessing and multithreading helper.
 
@@ -444,49 +480,59 @@ def multipro_helper(func, args, kwargs={}, *,
         dask = None
 
     info = {}
-    info['n'] = len(inputs)
+    info["n"] = len(inputs)
 
     # Multiprocessing
     if cpus is not None:
-        assert isinstance(cpus, (int, np.integer)), f"👻 cpus must be an int. You gave {type(cpus)}"
+        assert isinstance(
+            cpus, (int, np.integer)
+        ), f"👻 cpus must be an int. You gave {type(cpus)}"
         cpus = np.minimum(cpus, cpu_count())
         cpus = np.minimum(cpus, len(inputs))
-        print(f'🤹🏻‍♂️ Multiprocessing [{func.__module__}.{func.__name__}] with [{cpus:,}] CPUs for [{n:,}] items.')
+        print(
+            f"🤹🏻‍♂️ Multiprocessing [{func.__module__}.{func.__name__}] with [{cpus:,}] CPUs for [{n:,}] items."
+        )
         with Pool(cpus) as p:
             results = p.map(_multipro_helper_MP, inputs)
             p.close()
             p.join()
-        info['TYPE'] = 'multiprocessing'
-        info['cpus'] = cpus
-        info['timer'] = datetime.now()-timer
+        info["TYPE"] = "multiprocessing"
+        info["cpus"] = cpus
+        info["timer"] = datetime.now() - timer
 
     # Multithreading
     elif threads is not None:
-        assert isinstance(threads, (int, np.integer)), f"👻 threads must be an int. You gave {type(threads)}"
+        assert isinstance(
+            threads, (int, np.integer)
+        ), f"👻 threads must be an int. You gave {type(threads)}"
         threads = np.minimum(threads, max_threads)
         threads = np.minimum(threads, len(inputs))
-        print(f'🧵 Multithreading [{func.__module__}.{func.__name__}] with [{threads:,}] threads for [{n:,}] items.')
+        print(
+            f"🧵 Multithreading [{func.__module__}.{func.__name__}] with [{threads:,}] threads for [{n:,}] items."
+        )
         with ThreadPool(threads) as p:
             results = p.map(_multipro_helper_MP, inputs)
             p.close()
             p.join()
-        info['TYPE'] = 'multithreading'
-        info['threads'] = threads
-        info['timer'] = datetime.now()-timer
+        info["TYPE"] = "multithreading"
+        info["threads"] = threads
+        info["timer"] = datetime.now() - timer
 
     # Dask delayed
     elif dask is not None:
         jobs = [delayed(_multipro_helper_MP)(i) for i in inputs]
-        if dask == 'processes':
+        if dask == "processes":
             workers = np.minimum(max_dask_workers, len(jobs))
         else:
             workers = None
-        print(f"🐲 Dask delayed [{func.__module__}.{func.__name__}] with [num_workers={workers}, scheduler='{dask}'] for [{n:,}] items.")
+        print(
+            f"🐲 Dask delayed [{func.__module__}.{func.__name__}] with [num_workers={workers}, scheduler='{dask}'] for [{n:,}] items."
+        )
         results = compute(jobs, num_workers=workers, scheduler=dask)[0]
-        info['TYPE'] = 'Dask.delayed'
-        info['dask scheduler'] = dask
-        info['dask workers'] = workers
-        info['timer'] = datetime.now()-timer
+        info["TYPE"] = "Dask.delayed"
+        info["dask scheduler"] = dask
+        info["dask workers"] = workers
+        info["timer"] = datetime.now() - timer
         # I'm not super convinced I'm doing this Dask stuff right.
         # https://docs.dask.org/en/latest/delayed-best-practices.html
         # https://docs.dask.org/en/latest/delayed.html
@@ -494,21 +540,31 @@ def multipro_helper(func, args, kwargs={}, *,
 
     # Sequential jobs via list comprehension
     else:
-        print(f'📏 Sequentially do [{func.__module__}.{func.__name__}] for [{n:,}] items.')
+        print(
+            f"📏 Sequentially do [{func.__module__}.{func.__name__}] for [{n:,}] items."
+        )
         results = [_multipro_helper_MP(i) for i in inputs]
-        info['TYPE'] = 'sequential'
-        info['timer'] = datetime.now()-timer
+        info["TYPE"] = "sequential"
+        info["timer"] = datetime.now() - timer
 
-    print(f"\r    Completed task [{len(results):,}/{n:,}]  Timer={datetime.now()-timer} {' '*15}")
+    print(
+        f"\r    Completed task [{len(results):,}/{n:,}]  Timer={datetime.now()-timer} {' '*15}"
+    )
 
     return results, info
 
-def plot_multipro_efficiency(func, args=(), kwargs={},
-                             pools=range(1,11),
-                             plot_multipro=True,
-                             plot_multithread=True,
-                             plot_sequential=True,
-                             plot_dask=True, figsize=(7,5)):
+
+def plot_multipro_efficiency(
+    func,
+    args=(),
+    kwargs={},
+    pools=range(1, 11),
+    plot_multipro=True,
+    plot_multithread=True,
+    plot_sequential=True,
+    plot_dask=True,
+    figsize=(7, 5),
+):
     """
     Display a figure showing the multiprocessing/multithreadding
     efficiency for a range of Pool sizes.
@@ -520,11 +576,13 @@ def plot_multipro_efficiency(func, args=(), kwargs={},
     pools : list of int
         List of number of Pools to start for multiprocessing/multithreading.
     """
-    plt.rcParams['hatch.linewidth'] = 8
+    plt.rcParams["hatch.linewidth"] = 8
 
     pools = [i for i in pools if i > 0]
 
-    assert 'MP_kwargs' in inspect.getfullargspec(func).args, "👺 The function {func.__name__} does not have a `MP_kwargs` argument."
+    assert (
+        "MP_kwargs" in inspect.getfullargspec(func).args
+    ), "👺 The function {func.__name__} does not have a `MP_kwargs` argument."
 
     plt.figure(figsize=figsize)
 
@@ -533,67 +591,110 @@ def plot_multipro_efficiency(func, args=(), kwargs={},
         for i in pools:
             timer = datetime.now()
             _, info = func(*args, **kwargs, MP_kwargs=dict(cpus=i))
-            timer = datetime.now()-timer
+            timer = datetime.now() - timer
             multipro.append(timer)
-        plt.bar(list(pools), [i.total_seconds() for i in multipro],
-                label='Multiprocessing', color='.1', zorder=5)
+        plt.bar(
+            list(pools),
+            [i.total_seconds() for i in multipro],
+            label="Multiprocessing",
+            color=".1",
+            zorder=5,
+        )
 
     if plot_multithread:
         multithread = []
         for i in pools:
             timer = datetime.now()
             _, info = func(*args, **kwargs, MP_kwargs=dict(threads=i))
-            timer = datetime.now()-timer
+            timer = datetime.now() - timer
             multithread.append(timer)
-        plt.bar(list(pools), [i.total_seconds() for i in multithread],
-                label='Multithreading', hatch='/', edgecolor='tab:blue',
-                alpha=.33, color='tab:blue', zorder=6)
+        plt.bar(
+            list(pools),
+            [i.total_seconds() for i in multithread],
+            label="Multithreading",
+            hatch="/",
+            edgecolor="tab:blue",
+            alpha=0.33,
+            color="tab:blue",
+            zorder=6,
+        )
 
     if plot_sequential:
         timer = datetime.now()
-        _, info = func(*args, **kwargs, MP_kwargs=dict(cpus=None, threads=None, dask=None))
-        timer = datetime.now()-timer
+        _, info = func(
+            *args, **kwargs, MP_kwargs=dict(cpus=None, threads=None, dask=None)
+        )
+        timer = datetime.now() - timer
         sequential = timer
-        plt.axhline(sequential.total_seconds(), color='k', lw=3,
-                    label='Sequential', zorder=4)
+        plt.axhline(
+            sequential.total_seconds(), color="k", lw=3, label="Sequential", zorder=4
+        )
 
     if plot_dask:
-        for scheduler, color, ls in zip(['single-threaded', 'threads', 'processes'], ['tab:green', 'tab:red', 'tab:purple'], ['--', '-.', ':']):
+        for scheduler, color, ls in zip(
+            ["single-threaded", "threads", "processes"],
+            ["tab:green", "tab:red", "tab:purple"],
+            ["--", "-.", ":"],
+        ):
             try:
                 timer = datetime.now()
-                _, info = func(*args, **kwargs, MP_kwargs=dict(cpus=None, threads=None, dask=scheduler))
-                dask_timer = datetime.now()-timer
-                plt.axhline(dask_timer.total_seconds(), ls=ls, color=color, label=f"Dask '{scheduler}'", zorder=6)
+                _, info = func(
+                    *args,
+                    **kwargs,
+                    MP_kwargs=dict(cpus=None, threads=None, dask=scheduler),
+                )
+                dask_timer = datetime.now() - timer
+                plt.axhline(
+                    dask_timer.total_seconds(),
+                    ls=ls,
+                    color=color,
+                    label=f"Dask '{scheduler}'",
+                    zorder=6,
+                )
             except Exception as e:
                 print(f"Error with Dask scheduler{scheduler}''.")
                 print(f"Error is {e}")
                 pass
 
     # Cosmetics
-    plt.ylabel('Seconds')
-    plt.xlabel('Number in Pool')
-    plt.title(f"{func.__module__}.{func.__name__}", loc='left', fontweight='bold')
-    plt.title(f"Number of Tasks: {info['n']}", loc='right')
+    plt.ylabel("Seconds")
+    plt.xlabel("Number in Pool")
+    plt.title(f"{func.__module__}.{func.__name__}", loc="left", fontweight="bold")
+    plt.title(f"Number of Tasks: {info['n']}", loc="right")
     plt.xticks(list(pools))
-    plt.grid(zorder=0, ls='--', alpha=.25)
-    plt.legend(loc='center left', bbox_to_anchor=(1.0, 0.5))
+    plt.grid(zorder=0, ls="--", alpha=0.25)
+    plt.legend(loc="center left", bbox_to_anchor=(1.0, 0.5))
 
-    #return multipro, multithread, sequential
+    # return multipro, multithread, sequential
 
 
 # ======================================================================
 # Other
 # ======================================================================
 # ASCII Escape Codes
-_text_color = dict(zip(['black', 'red', 'green', 'yellow', 'blue', 'purple', 'cyan', 'white'],
-                     range(30,38)))
-_text_style = dict(zip(['bold', 'dark', '', 'underline', 'blink', '', 'reverse', 'concealed'],
-                       range(1,9)))
-_color_alias = dict(zip(['k', 'r', 'g', 'y', 'b', 'p', 'c', 'w'],
-                        ['black', 'red', 'green', 'yellow', 'blue', 'purple', 'cyan', 'white']))
+_text_color = dict(
+    zip(
+        ["black", "red", "green", "yellow", "blue", "purple", "cyan", "white"],
+        range(30, 38),
+    )
+)
+_text_style = dict(
+    zip(
+        ["bold", "dark", "", "underline", "blink", "", "reverse", "concealed"],
+        range(1, 9),
+    )
+)
+_color_alias = dict(
+    zip(
+        ["k", "r", "g", "y", "b", "p", "c", "w"],
+        ["black", "red", "green", "yellow", "blue", "purple", "cyan", "white"],
+    )
+)
 
-def colored_text(text, color=None, background=None, style=None, *,
-                 show_code=False, do_print=True):
+
+def colored_text(
+    text, color=None, background=None, style=None, *, show_code=False, do_print=True
+):
     """
     Print colored text to the terminal in Python with ASCII escape codes.
 
@@ -622,16 +723,17 @@ def colored_text(text, color=None, background=None, style=None, *,
     >>> colored_text(string, 'blue', 'red')
     >>> colored_text(string, 'g', 'y', ['underline', 'reverse'])
     """
-    ENDC = '\033[m'
+    ENDC = "\033[m"
 
     if isinstance(color, int):
-        CODE = f'38;5;{color}'
+        CODE = f"38;5;{color}"
     elif isinstance(background, int):
-        CODE = f'48;5;{background}'
+        CODE = f"48;5;{background}"
     else:
         if not isinstance(style, list):
             style = [style]
-        if color is not None: color = color.lower()
+        if color is not None:
+            color = color.lower()
         style = [i.lower() for i in style if i is not None]
 
         if background is not None:
@@ -650,16 +752,17 @@ def colored_text(text, color=None, background=None, style=None, *,
             if i is not None:
                 codes.append(str(_text_style[i]))
         if background is not None:
-            codes.append(str(_text_color[background]+10))
+            codes.append(str(_text_color[background] + 10))
 
-        CODE = ';'.join(codes)
+        CODE = ";".join(codes)
 
-    string = f'\033[{CODE}m{text}{ENDC}'
+    string = f"\033[{CODE}m{text}{ENDC}"
 
     if do_print:
         print(string)
     if show_code:
         return string
+
 
 def no_print(func, *args, **kwargs):
     """When a function insists on printing, force it not to.
@@ -697,6 +800,7 @@ def no_print(func, *args, **kwargs):
     with open(os.devnull, "w") as f, contextlib.redirect_stdout(f):
         value = func(*args, **kwargs)
     return value
+
 
 def str_operator(left, operator_str, right):
     """
@@ -742,25 +846,29 @@ def str_operator(left, operator_str, right):
     >>> str_operator(a, '>', c)
     array([ True, False, False])
     """
-    op_list = {'>': operator.gt,
-               '>=': operator.ge,
-               '==': operator.eq,
-               '<': operator.lt,
-               '<=': operator.le,
-               '+': operator.add,
-               '-': operator.sub,
-               '*': operator.mul,
-               '/': operator.truediv,
-               '//': operator.floordiv,
-               '%': operator.mod,
-               '**': operator.pow,
-               'is': operator.is_,
-               'is not': operator.is_not,
-               'in': operator.contains,
-               }
-    assert operator_str in list(op_list), f"`operator_str` must be one of {list(op_list)}"
+    op_list = {
+        ">": operator.gt,
+        ">=": operator.ge,
+        "==": operator.eq,
+        "<": operator.lt,
+        "<=": operator.le,
+        "+": operator.add,
+        "-": operator.sub,
+        "*": operator.mul,
+        "/": operator.truediv,
+        "//": operator.floordiv,
+        "%": operator.mod,
+        "**": operator.pow,
+        "is": operator.is_,
+        "is not": operator.is_not,
+        "in": operator.contains,
+    }
+    assert operator_str in list(
+        op_list
+    ), f"`operator_str` must be one of {list(op_list)}"
 
     return op_list[operator_str](left, right)
+
 
 def normalize(value, lower_limit, upper_limit, clip=True):
     """
@@ -793,10 +901,11 @@ def normalize(value, lower_limit, upper_limit, clip=True):
     Output:
         Values normalized between the upper and lower limit.
     """
-    norm = (value-lower_limit)/(upper_limit-lower_limit)
+    norm = (value - lower_limit) / (upper_limit - lower_limit)
     if clip:
         norm = np.clip(norm, 0, 1)
     return norm
+
 
 def timer(func):
     """
@@ -825,6 +934,7 @@ def timer(func):
     >>> #out: 'AWAKE! 👹'
 
     """
+
     @wraps(func)
     def wrapper(*args, **kwargs):
         start = datetime.now()
@@ -832,4 +942,5 @@ def timer(func):
         duration = datetime.now() - start
         print(f"⏱ Timer [{func.__name__}]:  {duration}")
         return ret
+
     return wrapper
