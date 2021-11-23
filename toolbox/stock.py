@@ -93,15 +93,16 @@ def _copy(self, dst, parents=True, verbose=True):
     """
     assert self.is_file()
 
-    if not dst.parent.exists() and parents:
-        dst.parent.mkdir(parents=parents)
-        if verbose:
-            print(f"👨🏻‍🏭 Created path to {dst.parents}")
-    else:
-        raise TypeError(
-            f"Parent path does not exist: [{dst.parent}]."
-            "Set `parents=True` to create that path."
-        )
+    if not dst.parent.exists():
+        if parents:
+            dst.parent.mkdir(parents=parents)
+            if verbose:
+                print(f"👨🏻‍🏭 Created path to {dst.parent}")
+        else:
+            raise TypeError(
+                f"Parent path does not exist: [{dst.parent}]. "
+                "Set `parents=True` to create that path."
+            )
 
     shutil.copy(self, dst)
 
