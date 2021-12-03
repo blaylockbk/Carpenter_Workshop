@@ -18,7 +18,7 @@ If you want to use these colors as your matplotlib color cycle just do
 """
 
 from cycler import cycler
-import matplotlib as plt
+import matplotlib as mpl
 
 # 95% accessible colors
 simple_colors_9500 = {
@@ -130,7 +130,7 @@ class simple_colors:
     @property
     def set_rcParams(self):
         """Set the Matplotlib rcParams to cycle through the colors"""
-        plt.rcParams['axes.prop_cycle'] = self.cycler
+        mpl.rcParams['axes.prop_cycle'] = self.cycler
 
 
 
