@@ -906,7 +906,7 @@ class common_features:
         return self
 
     # Tiled images
-    def STAMEN(self, style="terrain-background", zoom=10, alpha=1):
+    def STAMEN(self, style="terrain-background", zoom=3, alpha=1):
         """
         Add Stamen map tiles to background.
 
