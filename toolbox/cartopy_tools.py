@@ -49,13 +49,15 @@ from toolbox.stock import Path
 try:
     from metpy.plots import USCOUNTIES
 except Exception as e:
-    warnings.warn(f"{e} Without metpy, you cannot draw COUNTIES on the map.")
+    #warnings.warn(f"{e} Without metpy, you cannot draw COUNTIES on the map.")
+    pass
 try:
     import geopandas
 except Exception as e:
-    warnings.warn(
-        f'{e} Without geopandas, you cannot subset some NaturalEarthFeatures shapefiles, like "Major Highways" from roads.'
-    )
+    #warnings.warn(
+    #    f'{e} Without geopandas, you cannot subset some NaturalEarthFeatures shapefiles, like "Major Highways" from roads.'
+    #)
+    pass
 
 pc = ccrs.PlateCarree()
 pc._threshold = 0.01  # https://github.com/SciTools/cartopy/issues/8
