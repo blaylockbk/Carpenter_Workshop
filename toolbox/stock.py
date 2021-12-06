@@ -945,3 +945,71 @@ def timer(func):
         return ret
 
     return wrapper
+
+
+def haversine(lat1, lon1, lat2, lon2, z1=None, z2=None):
+    """
+    The Haversine formula calculates distance between two points on earth.
+
+    - https://andrew.hedges.name/experiments/haversine/
+    - https://en.wikipedia.org/wiki/Haversine_formula
+
+
+    Optionally, consider distance when altitude is involved
+    Distance between p1 and p2 is:  C=sqrt(A^2+B^2)
+    Where distance A is the haversine equation (gives distance in meters)
+    and distance B is the change in altitude (in meteres).
+    (I don't know if this is really that important given that the
+    differences when altitude is involved may be small for long
+    distances and may fall within the margin of error for the
+    representation of the globe??)
+
+              p2
+              +
+            . |
+        C .   |
+        .     | B
+      .       |
+     +--------o
+   p1     A
+
+
+    Parameters
+    ----------
+    lat1, lon1 : number
+        Origin latitude and longitude in degrees
+    lat2, lon2 : number
+        Destination latitude and longitude in degrees
+    z1, z2 : number
+        OPTIONAL -- The vertical height of point 1 and point 2 in meters.
+        If heights are given, the haversine formula is used with the
+        pythagorean theorem to estimate the distance between the points.
+
+    Returns
+    -------
+    Approximate distance between two points in meters
+    """
+    R = 6373.0  # approximate radius of earth in km
+
+    # convert degrees to radians
+    lat1 = np.radians(lat1)
+    lon1 = np.radians(lon1)
+
+    lat2 = np.radians(lat2)
+    lon2 = np.radians(lon2)
+
+    dlat = lat2 - lat1
+    dlon = lon2 - lon1
+
+    a = np.sin(dlat / 2) ** 2 + np.cos(lat1) * np.cos(lat2) * np.sin(dlon / 2) ** 2
+    c = 2 * np.arctan2(np.sqrt(a), np.sqrt(1 - a))
+    distance = R * c * 1000  # convert to meters
+
+    # If two points have different height, use pythagorean theorem
+    if z1 is not None and z2 is not None:
+        A = distance
+        B = z2 - z1
+        C = np.sqrt(A**2 + B**2)
+        distance = C
+
+    return distance

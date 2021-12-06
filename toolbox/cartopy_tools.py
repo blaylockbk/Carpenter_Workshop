@@ -1193,7 +1193,7 @@ def grid_and_earth_relative_vectors(
     if "lat" in srcData.coords:
         srcData = srcData.rename({"lat": "latitude", "lon": "longitude"})
 
-    # Plate Carree is an earth-relative projection system
+    # PlateCarree is an earth-relative projection system
     # i.e, map gridlines align with the left-right/down-up directions.
     pc = ccrs.PlateCarree()
 
@@ -1324,7 +1324,7 @@ class xr_to_cartopy:
 
         Parameters
         ----------
-        ds : xarrray.Dataset or xarray.DataArray
+        ds : xarray.Dataset or xarray.DataArray
             A 2-dimension Dataset or DataArray.
         variable : {'spd', 'wspd', OTHER VARIABLE in `ds`}
             The variable from the Dataset `ds` to plot.
