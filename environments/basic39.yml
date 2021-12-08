@@ -54,20 +54,18 @@ dependencies:
   # Formatter
   # ---------
   - black # * I prefer Black at the moment
-  - autopep8
 
   # Documentation
   # -------------
-  - sphinx=4.0.3 # ? Issues with 4.1.2
+  - sphinx
   #- rstcheck      # restructuredText linter    # ! Some issues with this linter causing too many jobs
   - nbsphinx
-  - sphinx_rtd_theme # ReadTheDocs Sphinx Theme
-  - pydata-sphinx-theme # PyData Sphinx Theme (i.e, Numpy, Pandas, MetPy)
+  - pydata-sphinx-theme
   - recommonmark
   - sphinxcontrib-jsmath
   - sphinx-markdown-tables
   - autodocsumm
-  - sphinx-autosummary-accessors # pandas and xarray accessor docs
+  - sphinx-autosummary-accessors # pandas and xarray accessor docs. Not sure how to use yet.
   - latexmk
 
   # Other
@@ -81,6 +79,7 @@ dependencies:
       - herbie-data
       - goes2go
       - bootstrapped
-      - highlight-text # Matplotlib Text Highlighting: https://github.com/znstrider/highlight_text
+      - bubbleprint
+      #- highlight-text # Matplotlib Text Highlighting: https://github.com/znstrider/highlight_text
       - jupyter-fortran-kernel
       - tldr # better help pages. https://github.com/tldr-pages/tldr
