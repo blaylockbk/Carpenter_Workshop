@@ -5,9 +5,9 @@ channels:
 dependencies:
   - git
   - julia
- 
+
 # Add the Julia kernel to Jupyter with the following:
-# 1) Activate this environment and run 
+# 1) Activate this environment and run
 #
 # $ julia
 #
@@ -16,6 +16,11 @@ dependencies:
 # julia> using Pkg
 # julia> Pkg.add("IJulia")
 #
-# 3) In your other environment, open Jupyter Lab
-#    and 
 
+# Well, I was getting a segmentation fault from the conda implementation,
+# so I just installed Julia from the downloads binary.
+# https://julialang.org/downloads/
+
+# > cd ~/software/
+# > mkdir julia && julia
+# > wget https://julialang-s3.julialang.org/bin/linux/x64/1.7/julia-1.7.0-linux-x86_64.tar.gz

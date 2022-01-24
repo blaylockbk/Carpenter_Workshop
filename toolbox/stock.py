@@ -400,6 +400,12 @@ def _multipro_helper_MP(job_arg):
         args = [args]
     process = multiprocessing.current_process().name
     thread = multiprocessing.dummy.current_process().name
+
+    if i == 0:
+        print(f"function: {func}")
+        print(f"args: {args}")
+        print(f"kwargs: {kwargs}")
+
     output = func(*args, **kwargs)
     print(f"\r    ⏳ {process}/{thread} completed task [{i:,}/{n:,}] {' '*15}", end="")
     return output
