@@ -25,6 +25,7 @@ import warnings
 
 import multiprocessing
 from multiprocessing import Pool, cpu_count  # Multiprocessing
+from multiprocessing import get_context
 from multiprocessing.dummy import Pool as ThreadPool  # Multithreading
 
 import numpy as np
@@ -499,7 +500,14 @@ def multipro_helper(
         print(
             f"🤹🏻‍♂️ Multiprocessing [{func.__module__}.{func.__name__}] with [{cpus:,}] CPUs for [{n:,}] items."
         )
-        with Pool(cpus) as p:
+
+        # TODO: Implement this "spawn" method and test...
+        # TODO: See https://pythonspeed.com/articles/python-multiprocessing/
+        # TODO: >>> from multiprocessing import get_context
+        # TODO: >>> with get_context("spawn").Pool() as p:
+
+        #with Pool(cpus) as p:
+        with get_context("spawn").Pool() as p:
             results = p.map(_multipro_helper_MP, inputs)
             p.close()
             p.join()

@@ -18,8 +18,8 @@ university_of_utah = dict(red="#CC0000", black="#000000", grey="#808080")
 BYU = dict(navy="#002E5D", white="#FFFFFF", royal="#0062B8")
 
 # Naval Research Lab
-# <url source>
-naval_research_lab = dict(blue="#152A55", blue2='#223A5',. blue3='#6488BE')
+# from Design Guide on Pipline
+naval_research_lab = dict(navy="#162956", blue='#2E5590', light_blue='#6DA9CF', gray="#4C4F59", yellow="#FAB208")
 
 # NASA
 # https://w3.cs.jmu.edu/bernstdh/web/common/policies/NASA_StyleGuide_Nov06.pdf
