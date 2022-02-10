@@ -1,8 +1,5 @@
 name: fortran-kernel
-channels:
-  - conda-forge
-  - defaults
-dependencies:
+c
   - python=3.8
   - pip
   - git
@@ -11,7 +8,7 @@ dependencies:
   - jupyter
   - jupyterlab
   - nodejs
-  
+
   # Toolbox
   - requests
   - matplotlib
