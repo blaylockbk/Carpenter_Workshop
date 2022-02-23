@@ -507,7 +507,8 @@ def multipro_helper(
         # TODO: >>> with get_context("spawn").Pool() as p:
 
         #with Pool(cpus) as p:
-        with get_context("spawn").Pool() as p:
+        #with get_context("spawn").Pool() as p:
+        with multiprocessing.Pool(cpus) as p:
             results = p.map(_multipro_helper_MP, inputs)
             p.close()
             p.join()
