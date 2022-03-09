@@ -110,6 +110,56 @@ def _copy(self, dst, parents=True, verbose=True):
     if verbose:
         print(f"📄➡📁 Copied [{self}] to [{dst}]")
 
+def _ls(self, pattern="*", which="files", recursive=False, hidden=False):
+    """
+    List contents of a directory path; files, directories, or both.
+
+    Parameters
+    ----------
+    p : pathlib.Path
+        The directories path you want to search in for files.
+    pattern : str
+        A glob pattern to search for files. Default is '\*' to search for
+        all files, but other examples are '\*.txt' for all text files.
+    which : {'files', 'dirs', 'both'}
+        Specify which type of Path object to list.
+    recursive : bool
+        True, will search for files recursively in subdirectories.
+        False, will search only the provided Path (default).
+    hidden : bool
+        True, show hidden files or directories (name starts with '.').
+        False, do not show hidden files or directories (default).
+    """
+
+    if not self.is_dir():
+        raise ValueError("the Path object must be a directory")
+
+    if recursive:
+        glob_obj = self.rglob(pattern)
+    else:
+        glob_obj = self.glob(pattern)
+
+    if which == "files":
+        f = filter(lambda x: x.is_file(), glob_obj)
+    elif which == "dirs":
+        f = filter(lambda x: x.is_dir(), glob_obj)
+    elif which is None:
+        f = glob_obj
+    else:
+        raise ValueError("which must be either 'files' or 'dirs'")
+
+    if hidden:
+        f = filter(lambda x: x.name.startswith("."), f)
+    else:
+        f = filter(lambda x: not x.name.startswith("."), f)
+
+    f = list(f)
+    f.sort()
+
+    if len(f) == 0:
+        print(f"🤔 No {which} from {p}")
+
+    return f
 
 def _tree(
     self,
@@ -218,6 +268,7 @@ def _tree(
 
 Path.expand = _expand
 Path.copy = _copy
+Path.ls = _ls
 Path.tree = _tree
 
 # ======================================================================
