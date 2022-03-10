@@ -38,11 +38,14 @@ import cartopy.io.img_tiles as cimgt
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import pyproj
 import requests
 import xarray as xr
 from cartopy.io import shapereader
+from functools import partial
 from paint.standard2 import cm_dpt, cm_rh, cm_tmp, cm_wind
-from shapely.geometry import GeometryCollection, Polygon, MultiPoint, shape
+from shapely.ops import transform
+from shapely.geometry import GeometryCollection, Point, Polygon, MultiPoint, shape
 
 from toolbox.stock import Path
 
@@ -1142,7 +1145,36 @@ class common_features:
 ########################################################################
 # Useful tools
 
+def point_radius_polygon(lon, lat, radius):
+    """
+    Create a polygon centered around a point with the specified radius.
 
+    Uses the azimuthal equidistant projection to transform the radius.
+    Source: https://gis.stackexchange.com/a/289923/123261
+
+    Parameters
+    ----------
+    lon, lat : float
+        Center location.
+    radius : int/float
+        Radius from center point, in kilometers
+
+    Returns
+    -------
+    A shapely polygon (a circle with radius centered at lat/lon)
+    
+    """
+    proj_wgs84 = pyproj.Proj('+proj=longlat +datum=WGS84')
+    aeqd_proj = '+proj=aeqd +lat_0={lat} +lon_0={lon} +x_0=0 +y_0=0'
+    project = partial(
+        pyproj.transform,
+        pyproj.Proj(aeqd_proj.format(lat=lat, lon=lon)),
+        proj_wgs84)
+
+    radius_meters = radius * 1000
+    buf = Point(0, 0).buffer(radius_meters)  # distance in metres, converted to km
+    points = transform(project, buf).exterior.coords[:]
+    return Polygon(points)
 
 def grid_and_earth_relative_vectors(
     srcData,
