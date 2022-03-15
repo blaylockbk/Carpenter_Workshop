@@ -68,6 +68,18 @@ https://github.com/matplotlib/ipympl
 import matplotlib.pyplot as plt
 ```
 
+### Matplotlib: Placing Text with transform coordinates
+```python
+ax = plt.subplots(2, 3)
+txt_fmt = {'horizontalalignment': 'center',
+    'verticalalignment': 'center'}
+plt.text(.5, .75, 'transFigure', transform=plt.gcf().transFigure,
+    color='b', **txt_fmt)
+plt.text(.5, .75, 'transAxes', transform=plt.gca().transAxes,
+    color='r', **txt_fmt)
+
+```
+
 ### Matplotlib: Jupyter Figure Transparency
 Use Jupyter Magic to give transparency to the figure displayed in the notebook
 ```python
@@ -89,6 +101,22 @@ plt.rcParams["axes.axisbelow"] = True
 
 # Needed this to modify fonts in Adobe Illustrator
 plt.rcParams['svg.fonttype'] = 'none'
+```
+### Matplotlib: Stand-alone Colorbar
+See my answer on Stack Overflow https://stackoverflow.com/a/62436015/2383070
+```python
+import matplotlib.pyplot as plt
+import matplotlib as mpl
+fig = plt.figure()
+ax = fig.add_axes([0.05, 0.80, 0.9, 0.1])
+cb = mpl.colorbar.ColorbarBase(ax, orientation='horizontal',
+ cmap='gist_ncar',
+ norm=mpl.colors.Normalize(0, 10), # vmax and vmin
+ extend='both',
+ label='This is a label',
+ ticks=[0, 3, 6, 9])
+plt.savefig('just_colorbar', bbox_inches='tight')
+
 ```
 
 ### Matplotlib: Discrete Colormap and Norm
@@ -121,6 +149,54 @@ ax.xaxis.set_major_locator(mdates.HourLocator(range(0, 24, 3)))
 ax.xaxis.set_minor_locator(mdates.HourLocator(range(0, 24, 1)))
 ```
 
+Set date autoformatter:
+```python
+plt.rcParams['date.autoformatter.day'] = '%b %d\n%H:%M'
+plt.rcParams['date.autoformatter.hour'] = '%b %d\n%H:%M'
+```
+
+Set date ticks
+```python
+from matplotlib.dates import HourLocator, DateFormatter
+plt.plot(pd.date_range('2017-01-01', '2017-01-02', freq='h'), range(25))
+plt.gca().xaxis.set_major_locator(HourLocator(byhour=range(0,24,6)))
+plt.gca().xaxis.set_major_formatter(DateFormatter('%d %b %Y\n%H:%M\n%A'))
+```
+### Matplotlib: Colorbars
+Custom discreate range
+```python
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+data = np.random.rand(5, 5)*100
+bounds = [5, 15, 35, 65, 100]
+cmap = plt.get_cmap('Spectral_r', len(bounds))
+norm = mpl.colors.BoundaryNorm(bounds, cmap.N)
+plt.pcolormesh(data, cmap=cmap, norm=norm)
+plt.colorbar(spacing='proportional')
+
+```
+
+Adjust colorbar object
+```python
+import numpy as np
+import matplotlib.pyplot as plt
+data = np.random.rand(5, 5)*100 
+fig = plt.figure()
+plt.pcolormesh(data)
+plt.colorbar()
+print(fig.axes)
+fig.axes[1].tick_params(labelsize=30)
+```
+
+Colorbar fraction size to match axes
+```python
+# The magic number is 0.045
+# Left plot
+plt.colorbar()
+# Right plot
+plt.colorbar(fraction=0.045)
+
+```
 
 ### Matplotlib: Latex Strings
 The syntax depends on the character you use. Some require an escape character or use the raw string format.
@@ -162,11 +238,49 @@ for ax in axes:
 ![image](https://user-images.githubusercontent.com/6249613/135505540-68df0136-06ac-432d-82a0-be17e96b0fb9.png)
 
 
+## Pandas Snippets:
+### Pandas: DateOffset Strings
+Several functions accept a DateOffset frequency string, https://pandas.pydata.org/pandas-docs/stable/user_guide/timeseries.html#dateoffset-objects
+``` python
+df.resample('5T').mean()
+pd.date_range('2015-01-01', '2015-02-01', freq='5D')
+```
 
-### Exceptions Warning
+| String | Meaning | Example
+|-------|---------|--------
+|'M' |Month end | '3M' - every three months 
+|'SM'| Semi month end | 'SM' - every 15th and last day of month. 
+|'A' |Year end | '3A' - every 3 years 
+|'D' |Day | '2D' -every 2 days 
+|'H' |Hour | '6H' -every 6 hours 
+|'T' |or 'min' Minute | '5T' - every five minutes 
+|'S' |Second | '30S' - every 30 seconds
+
+## Exceptions Warning
 ```python
 try:
     (do something)
 except Exception as e:
     print(f"WARNING: {e}")
+```
+
+## Debugging: Reload a package
+The importlib.reload module allows you to reload a package without closing and restarting a python session.
+When I am developing in a notebook that uses imported functions from another module I have written, I sometimes need to make changes to the imported 
+module. But simply rerunning the cell that imported the module would not reload the module with the changes I made to that module. I used to think I had 
+to rerun the entire script I was working on to included the edits to that module, but you can actually do a hard reload of a package with the importlib.
+reload module.
+Note that reloading doesn't appear to work for single functions from a package. For example, if you have a function called do_this in a package called my
+_pkg , then this will not work:
+
+```python
+# DOES NOT WORK!
+from my_pkg import do_this
+reload(do_this)
+
+# THIS DOES WORK :)
+import my_pkg as pkg
+reload(pkg)
+pkg.do_this()
+
 ```
