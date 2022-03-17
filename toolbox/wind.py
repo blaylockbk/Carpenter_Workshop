@@ -187,6 +187,7 @@ def wind_degree_labels(res="m"):
     elif res in ["h", 22.5]:
         return degrees, labels
 
+
 def wind_profile_power_law(wind_speed_ref, z_ref, z=10, alpha=0.143):
     """
     Adjust a wind to a different height above ground with the power law.
@@ -208,15 +209,18 @@ def wind_profile_power_law(wind_speed_ref, z_ref, z=10, alpha=0.143):
 
     References
     ----------
-    https://en.wikipedia.org/wiki/Wind_profile_power_law
-    https://doi.org/10.1175/1520-0450(1994)033%3C0757:DTPLWP%3E2.0.CO;2
+
+    - https://en.wikipedia.org/wiki/Wind_profile_power_law
+    - https://doi.org/10.1175/1520-0450(1994)033%3C0757:DTPLWP%3E2.0.CO;2
+    - https://github.com/ydeos/ydeos_aerodynamics/blob/8f42a4959f093f204228aff682ed40b0a9bd3a27/ydeos_aerodynamics/profiles.py
+
     """
-    if alpha == 'water':
+    if alpha == "water":
         alpha = 0.11
-    elif alpha == 'land':
+    elif alpha == "land":
         alpha = 0.143
 
-    wind_speed_z = wind_speed_ref * (z/z_ref)**alpha
+    wind_speed_z = wind_speed_ref * (z / z_ref) ** alpha
     return wind_speed_z
 
 
