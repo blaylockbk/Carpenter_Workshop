@@ -157,7 +157,7 @@ def _ls(self, pattern="*", which="files", recursive=False, hidden=False):
     f.sort()
 
     if len(f) == 0:
-        print(f"🤔 No {which} from {p}")
+        print(f"🤔 No {which} in {self}")
 
     return f
 

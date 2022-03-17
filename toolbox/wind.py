@@ -18,60 +18,6 @@ Functions related to wind vectors
 import numpy as np
 
 
-def wind_degree_labels(res="m"):
-    """Wind degree increment and direction labels
-
-    This is useful for labeling a matplotlib wind direction axis ticks.
-
-    .. code-block:: python
-
-        plt.yticks(*wind_degree_labels())
-
-    .. code-block:: python
-
-        ticks, labels = wind_degree_labels()
-        ax.set_yticks(ticks)
-        ax.set_yticklabels(labels)
-
-    ..image:: https://rechneronline.de/geo-coordinates/wind-rose.png
-
-    Parameters
-    ----------
-    res : {'l', 'm', 'h'} or {90, 45, 22.5}
-        Low, medium, and high increment resolution.
-        - l : returns 4 cardinal directions [N, E, S, W, N]
-        - m : returns 8 cardinal directions [N, NE, E, SE, ...]
-        - h : returns 16 cardinal directions [N, NNE, NE, ENE, E, ...]
-    """
-    labels = [
-        "N",
-        "NNE",
-        "NE",
-        "ENE",
-        "E",
-        "ESE",
-        "SE",
-        "SSE",
-        "S",
-        "SSW",
-        "SW",
-        "WSW",
-        "W",
-        "WNW",
-        "NW",
-        "NNW",
-        "N",
-    ]
-    degrees = np.arange(0, 361, 22.5)
-
-    if res in ["l", 90]:
-        return degrees[::4], labels[::4]
-    elif res in ["m", 45]:
-        return degrees[::2], labels[::2]
-    elif res in ["h", 22.5]:
-        return degrees, labels
-
-
 def spddir_to_uv(wspd, wdir):
     """
     Calculate the u and v wind components from wind speed and direction.
@@ -186,6 +132,92 @@ def angle_between(i1, j1, i2, j2):
     theta = np.arccos(dot_product / (magnitude1 * magnitude2))
 
     return np.rad2deg(theta).round(3)
+
+
+def wind_degree_labels(res="m"):
+    """Wind degree increment and direction labels
+
+    This is useful for labeling a matplotlib wind direction axis ticks.
+
+    .. code-block:: python
+
+        plt.yticks(*wind_degree_labels())
+
+    .. code-block:: python
+
+        ticks, labels = wind_degree_labels()
+        ax.set_yticks(ticks)
+        ax.set_yticklabels(labels)
+
+    ..image:: https://rechneronline.de/geo-coordinates/wind-rose.png
+
+    Parameters
+    ----------
+    res : {'l', 'm', 'h'} or {90, 45, 22.5}
+        Low, medium, and high increment resolution.
+        - l : returns 4 cardinal directions [N, E, S, W, N]
+        - m : returns 8 cardinal directions [N, NE, E, SE, ...]
+        - h : returns 16 cardinal directions [N, NNE, NE, ENE, E, ...]
+    """
+    labels = [
+        "N",
+        "NNE",
+        "NE",
+        "ENE",
+        "E",
+        "ESE",
+        "SE",
+        "SSE",
+        "S",
+        "SSW",
+        "SW",
+        "WSW",
+        "W",
+        "WNW",
+        "NW",
+        "NNW",
+        "N",
+    ]
+    degrees = np.arange(0, 361, 22.5)
+
+    if res in ["l", 90]:
+        return degrees[::4], labels[::4]
+    elif res in ["m", 45]:
+        return degrees[::2], labels[::2]
+    elif res in ["h", 22.5]:
+        return degrees, labels
+
+def wind_profile_power_law(wind_speed_ref, z_ref, z=10, alpha=0.143):
+    """
+    Adjust a wind to a different height above ground with the power law.
+
+    Parameters
+    ----------
+    wind_speed_ref : float or array-like
+        The reference wind speed, wind u, or wind v (m/s) at height z_ref.
+    z_ref : float or int
+        The reference height of the given reference wind (m)
+    z : float or int
+        The height to adjust the wind. Default is 10 m.
+    alpha : float or int, {'land', 'water'}
+        The empirical alpha value for the power law relationship.
+        Default is 0.143 (which is ~1/7), valid for neutral stability
+        conditions over open land.
+        - "land" is an alias for 0.143
+        - "water" is an alias for 0.11
+
+    References
+    ----------
+    https://en.wikipedia.org/wiki/Wind_profile_power_law
+    https://doi.org/10.1175/1520-0450(1994)033%3C0757:DTPLWP%3E2.0.CO;2
+    """
+    if alpha == 'water':
+        alpha = 0.11
+    elif alpha == 'land':
+        alpha = 0.143
+
+    wind_speed_z = wind_speed_ref * (z/z_ref)**alpha
+    return wind_speed_z
 
 
 if __name__ == "__main__":
