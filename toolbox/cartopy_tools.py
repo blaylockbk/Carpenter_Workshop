@@ -52,14 +52,14 @@ from toolbox.stock import Path
 try:
     from metpy.plots import USCOUNTIES
 except Exception as e:
-    #warnings.warn(f"{e} Without metpy, you cannot draw COUNTIES on the map.")
+    # warnings.warn(f"{e} Without metpy, you cannot draw COUNTIES on the map.")
     pass
 try:
     import geopandas
 except Exception as e:
-    #warnings.warn(
+    # warnings.warn(
     #    f'{e} Without geopandas, you cannot subset some NaturalEarthFeatures shapefiles, like "Major Highways" from roads.'
-    #)
+    # )
     pass
 
 pc = ccrs.PlateCarree()
@@ -1145,6 +1145,7 @@ class common_features:
 ########################################################################
 # Useful tools
 
+
 def point_radius_polygon(lon, lat, radius):
     """
     Create a polygon centered around a point with the specified radius.
@@ -1162,19 +1163,19 @@ def point_radius_polygon(lon, lat, radius):
     Returns
     -------
     A shapely polygon (a circle with radius centered at lat/lon)
-    
+
     """
-    proj_wgs84 = pyproj.Proj('+proj=longlat +datum=WGS84')
-    aeqd_proj = '+proj=aeqd +lat_0={lat} +lon_0={lon} +x_0=0 +y_0=0'
+    proj_wgs84 = pyproj.Proj("+proj=longlat +datum=WGS84")
+    aeqd_proj = "+proj=aeqd +lat_0={lat} +lon_0={lon} +x_0=0 +y_0=0"
     project = partial(
-        pyproj.transform,
-        pyproj.Proj(aeqd_proj.format(lat=lat, lon=lon)),
-        proj_wgs84)
+        pyproj.transform, pyproj.Proj(aeqd_proj.format(lat=lat, lon=lon)), proj_wgs84
+    )
 
     radius_meters = radius * 1000
     buf = Point(0, 0).buffer(radius_meters)  # distance in metres, converted to km
     points = transform(project, buf).exterior.coords[:]
     return Polygon(points)
+
 
 def grid_and_earth_relative_vectors(
     srcData,
@@ -1330,7 +1331,9 @@ def state_polygon(state=None, country="USA", county=None, verbose=True):
     )
 
     if verbose:
-        print("Here's the Polygon; you may need to do `_.geoms[i]` to get Polygons from the shape.")
+        print(
+            "Here's the Polygon; you may need to do `_.geoms[i]` to get Polygons from the shape."
+        )
 
     return poly
 

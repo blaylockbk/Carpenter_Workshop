@@ -110,6 +110,7 @@ def _copy(self, dst, parents=True, verbose=True):
     if verbose:
         print(f"📄➡📁 Copied [{self}] to [{dst}]")
 
+
 def _ls(self, pattern="*", which="files", recursive=False, hidden=False):
     """
     List contents of a directory path; files, directories, or both.
@@ -160,6 +161,7 @@ def _ls(self, pattern="*", which="files", recursive=False, hidden=False):
         print(f"🤔 No {which} in {self}")
 
     return f
+
 
 def _tree(
     self,
@@ -557,8 +559,8 @@ def multipro_helper(
         # TODO: >>> from multiprocessing import get_context
         # TODO: >>> with get_context("spawn").Pool() as p:
 
-        #with Pool(cpus) as p:
-        #with get_context("spawn").Pool() as p:
+        # with Pool(cpus) as p:
+        # with get_context("spawn").Pool() as p:
         with multiprocessing.Pool(cpus) as p:
             results = p.map(_multipro_helper_MP, inputs)
             p.close()
@@ -1015,45 +1017,45 @@ def timer(func):
 
 def haversine(lat1, lon1, lat2, lon2, z1=None, z2=None):
     """
-    The Haversine formula calculates distance between two points on earth.
+     The Haversine formula calculates distance between two points on earth.
 
-    - https://andrew.hedges.name/experiments/haversine/
-    - https://en.wikipedia.org/wiki/Haversine_formula
-
-
-    Optionally, consider distance when altitude is involved
-    Distance between p1 and p2 is:  C=sqrt(A^2+B^2)
-    Where distance A is the haversine equation (gives distance in meters)
-    and distance B is the change in altitude (in meteres).
-    (I don't know if this is really that important given that the
-    differences when altitude is involved may be small for long
-    distances and may fall within the margin of error for the
-    representation of the globe??)
-
-              p2
-              +
-            . |
-        C .   |
-        .     | B
-      .       |
-     +--------o
-   p1     A
+     - https://andrew.hedges.name/experiments/haversine/
+     - https://en.wikipedia.org/wiki/Haversine_formula
 
 
-    Parameters
-    ----------
-    lat1, lon1 : number
-        Origin latitude and longitude in degrees
-    lat2, lon2 : number
-        Destination latitude and longitude in degrees
-    z1, z2 : number
-        OPTIONAL -- The vertical height of point 1 and point 2 in meters.
-        If heights are given, the haversine formula is used with the
-        pythagorean theorem to estimate the distance between the points.
+     Optionally, consider distance when altitude is involved
+     Distance between p1 and p2 is:  C=sqrt(A^2+B^2)
+     Where distance A is the haversine equation (gives distance in meters)
+     and distance B is the change in altitude (in meteres).
+     (I don't know if this is really that important given that the
+     differences when altitude is involved may be small for long
+     distances and may fall within the margin of error for the
+     representation of the globe??)
 
-    Returns
-    -------
-    Approximate distance between two points in meters
+               p2
+               +
+             . |
+         C .   |
+         .     | B
+       .       |
+      +--------o
+    p1     A
+
+
+     Parameters
+     ----------
+     lat1, lon1 : number
+         Origin latitude and longitude in degrees
+     lat2, lon2 : number
+         Destination latitude and longitude in degrees
+     z1, z2 : number
+         OPTIONAL -- The vertical height of point 1 and point 2 in meters.
+         If heights are given, the haversine formula is used with the
+         pythagorean theorem to estimate the distance between the points.
+
+     Returns
+     -------
+     Approximate distance between two points in meters
     """
     R = 6373.0  # approximate radius of earth in km
 

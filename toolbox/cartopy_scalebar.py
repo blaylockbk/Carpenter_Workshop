@@ -122,6 +122,7 @@ def _point_along_line(ax, start, distance, angle=0, tol=0.01):
         b_phys = _axes_to_lonlat(ax, b_axes)
 
         import cartopy
+
         cartopy_version = float(".".join(cartopy.__version__.split(".")[0:2]))
         if cartopy_version >= 0.2:
             return geodesic.inverse(a_phys, b_phys)[0, 0]

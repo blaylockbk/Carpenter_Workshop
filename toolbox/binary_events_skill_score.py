@@ -477,7 +477,7 @@ class Contingency:
         def radial_footprint(radius):
             """A footprint with the given radius"""
             y, x = np.ogrid[-radius : radius + 1, -radius : radius + 1]
-            footprint = x ** 2 + y ** 2 <= radius ** 2
+            footprint = x**2 + y**2 <= radius**2
             footprint = 1 * footprint.astype(float)
             return footprint
 
@@ -521,7 +521,7 @@ class Contingency:
         if verbose:
             print("Compute fractions skill score")
         MSE = np.mean((obs_fracs - fxx_fracs) ** 2)
-        MSE_ref = np.mean(obs_fracs ** 2) + np.mean(fxx_fracs ** 2)
+        MSE_ref = np.mean(obs_fracs**2) + np.mean(fxx_fracs**2)
 
         FSS = 1 - (MSE / MSE_ref)
 
