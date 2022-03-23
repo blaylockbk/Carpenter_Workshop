@@ -48,45 +48,45 @@ simple_colors_9500 = {
 
 # 99% accessible colors
 simple_colors_9900 = {
-    "Red":"#e6194B",
-    "Green":"#3cb44b",
-    "Yellow":"#ffe119",
-    "Blue":"#4363d8",
-    "Orange":"#f58231",
-    "Cyan":"#42d4f4",
-    "Magenta":"#f032e6",
-    "Pink":"#fabed4",
-    "Teal":"#469990",
-    "Lavender":"#dcbeff",
-    "Brown":"#9A6324",
-    "Beige":"#fffac8",
-    "Maroon":"#800000",
-    "Mint":"#aaffc3",
-    "Navy":"#000075",
-    "Grey":"#a9a9a9",
-    "White":"#ffffff",
+    "Red": "#e6194B",
+    "Green": "#3cb44b",
+    "Yellow": "#ffe119",
+    "Blue": "#4363d8",
+    "Orange": "#f58231",
+    "Cyan": "#42d4f4",
+    "Magenta": "#f032e6",
+    "Pink": "#fabed4",
+    "Teal": "#469990",
+    "Lavender": "#dcbeff",
+    "Brown": "#9A6324",
+    "Beige": "#fffac8",
+    "Maroon": "#800000",
+    "Mint": "#aaffc3",
+    "Navy": "#000075",
+    "Grey": "#a9a9a9",
+    "White": "#ffffff",
     "Black": "#000000",
 }
 
 # 99.99% accessible colors
 simple_colors_9999 = {
-    "Yellow":"#ffe119",
-    "Blue":"#4363d8",
-    "Orange":"#f58231",
-    "Lavender":"#dcbeff",
-    "Maroon":"#800000",
-    "Navy":"#000075",
-    "Grey":"#a9a9a9",
-    "White":"#ffffff",
+    "Yellow": "#ffe119",
+    "Blue": "#4363d8",
+    "Orange": "#f58231",
+    "Lavender": "#dcbeff",
+    "Maroon": "#800000",
+    "Navy": "#000075",
+    "Grey": "#a9a9a9",
+    "White": "#ffffff",
     "Black": "#000000",
 }
 
 # 100% accessible colors
 simple_colors_10000 = {
-    "Yellow":"#ffe119",
-    "Blue":"#4363d8",
-    "Grey":"#a9a9a9",
-    "White":"#ffffff",
+    "Yellow": "#ffe119",
+    "Blue": "#4363d8",
+    "Grey": "#a9a9a9",
+    "White": "#ffffff",
     "Black": "#000000",
 }
 
@@ -101,6 +101,7 @@ class simple_colors:
     >>> from paint.simple_colors import simple_colors
     >>> simple_colors().set_rcParams
     """
+
     def __init__(self, accessibility=0.95):
         """
         Parameters
@@ -130,7 +131,4 @@ class simple_colors:
     @property
     def set_rcParams(self):
         """Set the Matplotlib rcParams to cycle through the colors"""
-        mpl.rcParams['axes.prop_cycle'] = self.cycler
-
-
-
+        mpl.rcParams["axes.prop_cycle"] = self.cycler
