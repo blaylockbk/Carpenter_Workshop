@@ -29,7 +29,6 @@ from multiprocessing import get_context
 from multiprocessing.dummy import Pool as ThreadPool  # Multithreading
 
 import numpy as np
-import matplotlib.pyplot as plt
 
 try:
     from dask import delayed, compute
@@ -643,6 +642,9 @@ def plot_multipro_efficiency(
     pools : list of int
         List of number of Pools to start for multiprocessing/multithreading.
     """
+    # Only import matplotlib if we use this function.
+    import matplotlib.pyplot as plt
+
     plt.rcParams["hatch.linewidth"] = 8
 
     pools = [i for i in pools if i > 0]
@@ -790,7 +792,7 @@ def colored_text(
     >>> colored_text(string, 'blue', 'red')
     >>> colored_text(string, 'g', 'y', ['underline', 'reverse'])
     """
-    ENDC = "\033[m"
+    ENDC = "\033[0m"
 
     if isinstance(color, int):
         CODE = f"38;5;{color}"
