@@ -45,6 +45,7 @@ Search for package and list dependency info
 conda search packageName=<version> --info
 ```
 
+
 ### Matplotlib: Subplot Mosaic
 
 [See documentation](https://matplotlib.org/stable/tutorials/provisional/mosaic.html)
@@ -284,3 +285,10 @@ reload(pkg)
 pkg.do_this()
 
 ```
+
+## Set Operations
+See more at https://www.learnbyexample.org/python-set/
+![](./images/python_set_difference.png)
+![](./images/python_set_union.png)
+![](./images/python_set_symmetric_difference.png)
+![](./images/python_set_intersection.png)
