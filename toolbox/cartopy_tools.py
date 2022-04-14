@@ -495,6 +495,11 @@ class common_features:
 
         self.ax = check_cartopy_axes(ax=self.ax, crs=self.crs, verbose=self.verbose)
 
+        # In a round-about way, you can get this common_features object from the axes
+        # >>> ax = common_features().ax
+        # >>> ax.common_features.STATES()
+        self.ax.common_features = self
+
         self.kwargs.setdefault("linewidth", 0.75)
 
         # NOTE: I don't use the 'setdefault' method here because it doesn't
@@ -1142,7 +1147,6 @@ class common_features:
     def adjust_extent(self, *args, **kwargs):
         self.ax.adjust_extent(*args, **kwargs)
         return self
-
 
 ########################################################################
 # Useful tools
