@@ -1148,6 +1148,7 @@ class common_features:
         self.ax.adjust_extent(*args, **kwargs)
         return self
 
+
 ########################################################################
 # Useful tools
 

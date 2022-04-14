@@ -1079,7 +1079,7 @@ def haversine(lat1, lon1, lat2, lon2, z1=None, z2=None):
     if z1 is not None and z2 is not None:
         A = distance
         B = z2 - z1
-        C = np.sqrt(A**2 + B**2)
+        C = np.sqrt(A ** 2 + B ** 2)
         distance = C
 
     return distance

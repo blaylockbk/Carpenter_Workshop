@@ -83,7 +83,7 @@ def unit_vector(i, j):
     """
     Return a unit vector for a 2D vector.
     """
-    magnitude = np.sqrt(i**2 + j**2)
+    magnitude = np.sqrt(i ** 2 + j ** 2)
     unit_i = i / magnitude
     unit_j = j / magnitude
 
@@ -126,8 +126,8 @@ def angle_between(i1, j1, i2, j2):
     """
 
     dot_product = i1 * i2 + j1 * j2
-    magnitude1 = np.sqrt(i1**2 + j1**2)
-    magnitude2 = np.sqrt(i2**2 + j2**2)
+    magnitude1 = np.sqrt(i1 ** 2 + j1 ** 2)
+    magnitude2 = np.sqrt(i2 ** 2 + j2 ** 2)
 
     theta = np.arccos(dot_product / (magnitude1 * magnitude2))
 

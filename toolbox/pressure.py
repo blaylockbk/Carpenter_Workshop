@@ -18,7 +18,7 @@ def pres_to_alt(p_hPa, h_m):
     c = 0.190284  # Some constant. Not sure what from
 
     alt_hPa = (p_hPa - 0.3) * (
-        1 + ((1013.25**c * 0.0065 / 288) * (h_m / (p_hPa - 0.3) ** c))
+        1 + ((1013.25 ** c * 0.0065 / 288) * (h_m / (p_hPa - 0.3) ** c))
     ) ** (1 / c)
     return alt_hPa
 
