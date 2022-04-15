@@ -18,7 +18,7 @@ projection globes. For global plots, consider using Mollweide projetion
 over Mercator or Robinson. From the website above,
 
     [Mollweide] sacrifices the precision of some of the angles and
-    shapes, in exchange for a better representation of the planet’s
+    shapes, in exchange for a better representation of the planet's
     proportions when that is an important consideration.
 
     [Robinson] represented the continents more accurately than the
@@ -419,7 +419,7 @@ class common_features:
 
     Feature elements from https://www.naturalearthdata.com/features/
 
-    TODO: Rename to CommonFeatures
+    TODO: Rename to CommonFeatures or EasyMap
     """
 
     def __init__(
@@ -433,6 +433,7 @@ class common_features:
         dark=False,
         verbose=False,
         add_coastlines=True,
+        facecolor=None,
         coastlines_kw={},
         **kwargs,
     ):
@@ -483,6 +484,15 @@ class common_features:
         --------
         https://github.com/blaylockbk/Carpenter_Workshop/blob/main/notebooks/demo_cartopy_tools.ipynb
 
+        >>> feat = common_features()
+        >>> feat.OCEAN().STATES()
+        >>> ax = feat.ax
+
+        Alternatively,
+
+        >>> ax = common_features().ax
+        >>> feat = ax.common_features
+        >>> feat.OCEAN().STATES()
         """
         self.scale = scale
         self.ax = ax
@@ -508,15 +518,33 @@ class common_features:
         # but the next time it is called and `dark=True` the defaults do not
         # reset. I don't know why this is the behavior.
         if self.dark:
-            self.land = "#060613"
+            self.land = "#060613"  # dark (default)
+            self.land1 = "#3f3f3f"  # lighter (alternative)
             self.water = "#0f2b38"
             # https://github.com/SciTools/cartopy/issues/880
             self.ax.set_facecolor(self.land)  # requires cartopy >= 0.18
             self.kwargs = {**{"edgecolor": ".5"}, **self.kwargs}
         else:
+            self.land = "#efefdb"  # tan (default)
+            self.land1 = "#dbdbdb"  # grey (alternative)
+            self.water = "#97b6e1"
             self.kwargs = {**{"edgecolor": ".15"}, **self.kwargs}
 
+        if facecolor:
+            # Instead of applying both LAND and OCEAN,
+            # it may be faster to just set the facecolor of land
+            # and then only apply the OCEAN method.
+            if facecolor.lower() == "land":
+                self.ax.set_facecolor(self.land)
+            elif facecolor.lower() == "land1":
+                self.ax.set_facecolor(self.land1)
+            elif facecolor.lower() == "water":
+                self.ax.set_facecolor(self.water)
+            else:
+                self.ax.set_facecolor(facecolor)
+
         if add_coastlines:
+            # Default map will automatically add COASTLINES
             self.COASTLINES(**coastlines_kw)
 
         if figsize is not None:
@@ -608,7 +636,7 @@ class common_features:
         if self.dark:
             kwargs = {**{"color": self.water}, **kwargs}
         else:
-            kwargs = {**{"color": feature.COLORS["water"]}, **kwargs}
+            kwargs = {**{"color": self.water}, **kwargs}
 
         self.ax.add_feature(feature.RIVERS.with_scale(self.scale), **kwargs)
         if self.verbose == "debug":

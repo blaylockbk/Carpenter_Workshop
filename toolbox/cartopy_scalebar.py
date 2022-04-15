@@ -178,7 +178,7 @@ def scale_bar(
         **text_kwargs:   Keyword arguments for text, overridden by **kwargs.
         **kwargs:        Keyword arguments for both plot and text.
     """
-    warnings.warn("``ax.set_exten()`` must be applied before the scale bar")
+    warnings.warn("``ax.set_extent()`` must be applied before the scale bar")
 
     # Setup kwargs, update plot_kwargs and text_kwargs.
     if plot_kwargs is None:
