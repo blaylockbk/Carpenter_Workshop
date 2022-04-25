@@ -5,7 +5,7 @@
 ================
 Terrain Colormap
 ================
-Brian's custom terrain colormap. 
+Brian's custom terrain colormap.
 
 """
 import matplotlib as mpl
@@ -65,7 +65,12 @@ class cm_terrain:
     """
 
     def __init__(
-        self, water=True, water_threshold=-99, ocean_bottom=-500, land_top=3650
+        self,
+        water=True,
+        water_threshold=-99,
+        ocean_bottom=-500,
+        land_top=3650,
+        land_color_scheme=1,
     ):
         self.water = water
         self.water_threshold = water_threshold
@@ -83,19 +88,34 @@ class cm_terrain:
             )
             colors_ocean = colors_ocean(np.linspace(0, 1, 256))
 
-        landcolors = [
-            "yellowgreen",
-            "darkgreen",
-            "forestgreen",
-            "wheat",
-            "tan",
-            "sienna",
-            "snow",
-        ]
-        nodes = [0.0, 0.03, 0.08, 0.45, 0.60, 0.95, 1.0]
-        colors_land = mcolors.LinearSegmentedColormap.from_list(
-            "land", list(zip(nodes, landcolors))
-        )
+        if land_color_scheme == 1:
+            landcolors = [
+                (0.0, "yellowgreen"),
+                (0.03, "darkgreen"),
+                (0.08, "forestgreen"),
+                (0.45, "wheat"),
+                (0.60, "tan"),
+                (0.95, "sienna"),
+                (1.00, "snow"),
+            ]
+        elif land_color_scheme == 2:
+            landcolors = [
+                (0, "#ffad7d"),
+                (0.5, "#b46f46"),
+                (1, "#6b3d22"),
+            ]
+        elif land_color_scheme == 3:
+            landcolors = [
+                (0, "#f8b893"),
+                (0.4, "#c0784f"),
+                (0.6, "#97674c"),
+                (.85, "#6b3d22"),
+                (1, "#dadada"),
+            ]
+        else:
+            landcolors = land_color_scheme
+
+        colors_land = mcolors.LinearSegmentedColormap.from_list("land", landcolors)
         colors_land = colors_land(np.linspace(0, 1, 256))
 
         if water:
