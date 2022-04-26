@@ -161,6 +161,22 @@ def _ls(self, pattern="*", which="files", recursive=False, hidden=False):
 
     return f
 
+def _grep(self, searchString, options="", verbose=True):
+    """
+    Apply the grep command on the file and return the output string.
+
+    Parameters
+    ----------
+    searchString : str
+        A regular expression search string
+    """
+    cmd = f'grep {options} "{searchString}" {self}'
+    if verbose:
+        print("🎢 :: ", cmd)
+
+    out = subprocess.run(cmd, shell=True, capture_output=True, check=True)
+    return out.stdout.decode("utf-8")
+
 
 def _tree(
     self,
@@ -270,6 +286,7 @@ def _tree(
 Path.expand = _expand
 Path.copy = _copy
 Path.ls = _ls
+Path.grep = _grep
 Path.tree = _tree
 
 # ======================================================================
