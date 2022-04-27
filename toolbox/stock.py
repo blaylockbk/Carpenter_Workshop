@@ -161,7 +161,7 @@ def _ls(self, pattern="*", which="files", recursive=False, hidden=False):
 
     return f
 
-def _grep(self, searchString, options="", verbose=True):
+def _grep(self, searchString, options="-E", verbose=True):
     """
     Apply the grep command on the file and return the output string.
 
@@ -169,6 +169,10 @@ def _grep(self, searchString, options="", verbose=True):
     ----------
     searchString : str
         A regular expression search string
+    options : str
+        Options for grep. The default ``-E`` or ``--extended-regexp``
+        enables the use of regular expression special characters like
+        ()*|{}.
     """
     cmd = f'grep {options} "{searchString}" {self}'
     if verbose:
