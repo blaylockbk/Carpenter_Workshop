@@ -37,6 +37,7 @@ dependencies:
   - pygrib
   - h5py
   - h5netcdf
+  - rich # "rich" text highlighting
   - xesmf # Not available on PC
   - esmpy # Not available on PC
   - cf_xarray
