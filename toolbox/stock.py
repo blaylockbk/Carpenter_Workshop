@@ -22,6 +22,7 @@ import shutil
 import contextlib
 import sys
 import warnings
+import subprocess
 
 import multiprocessing
 from multiprocessing import Pool, cpu_count  # Multiprocessing
@@ -160,6 +161,7 @@ def _ls(self, pattern="*", which="files", recursive=False, hidden=False):
         print(f"🤔 No {which} in {self}")
 
     return f
+
 
 def _grep(self, searchString, options="-E", verbose=True):
     """
@@ -1100,7 +1102,7 @@ def haversine(lat1, lon1, lat2, lon2, z1=None, z2=None):
     if z1 is not None and z2 is not None:
         A = distance
         B = z2 - z1
-        C = np.sqrt(A ** 2 + B ** 2)
+        C = np.sqrt(A**2 + B**2)
         distance = C
 
     return distance
