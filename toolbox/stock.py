@@ -38,6 +38,8 @@ except Exception as e:
     # print(f"WARNING! {e}")
     # print("Without dask, you cannot use dask for multiprocessing.")
 
+import logging
+log = logging.getLogger(__name__)
 
 # ==============
 # Python Version
@@ -177,8 +179,7 @@ def _grep(self, searchString, options="-E", verbose=True):
         ()*|{}.
     """
     cmd = f'grep {options} "{searchString}" {self}'
-    if verbose:
-        print("🎢 :: ", cmd)
+    log.debug("🎢 :: ", cmd)
 
     out = subprocess.run(cmd, shell=True, capture_output=True, check=True)
     return out.stdout.decode("utf-8")
