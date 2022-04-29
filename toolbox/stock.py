@@ -295,172 +295,6 @@ Path.ls = _ls
 Path.grep = _grep
 Path.tree = _tree
 
-# ======================================================================
-# File paths
-# ======================================================================
-def full_path(p, must_exist=True, mkdir=False, verbose=True):
-    """
-    Convert string to ``pathlib.Path``. Resolve path and environment variables.
-
-    ``pathlib.Path`` does not resolve environment variables in a path string.
-    This function replaces environment variables like '$HOME' with the value
-    of ``os.environ['HOME']`` and returns a pathlib.Path.
-
-    Parameters
-    ----------
-    p : {str, pathlib.Path}
-        The file path that may include '~', '..', or environment
-        variables, (i.e., ``$HOME``, ``$PWD``, ``$WORKDIR``, ``${HOME}``).
-        One Windows, may use both ``$USERPROFILE``, ``${USERPROFILE}``, or
-        ``%USERPROFILE%`` because os.path.expandvars can handle both syntax.
-    must_exist : bool
-        True, the resolved Path must exist, or else an assert error is raised.
-        False, the resolved Path does not have to exist.
-    mkdir : bool
-        True, make the directory if it does not exist.
-        False, do not make the directory.
-
-    Returns
-    -------
-    The fully resolved pathlib.Path.
-
-    Examples
-    --------
-    >>> full_path('$HOME/figs')
-    PosixPath('/p/home/blaylock/figs')
-
-    >>> full_path("~/pyBKB_NRL")
-    PosixPath('/p/home/blaylock/pyBKB_NRL')
-
-    """
-    if isinstance(p, str):
-        p = Path(p)
-
-    # Replace environment variables values (with my custom method above)
-    p = p.expand()
-
-    # Make Directory if it doesn't exist
-    if not p.exists() and mkdir:
-        if p.suffix == "":
-            p.mkdir(parents=True)
-        else:
-            p.parent.mkdir(parents=True)  # because p is a file.
-        if verbose:
-            print(f"👷🏼‍♂️ Created directory: {p}")
-
-    if must_exist:
-        assert p.exists(), f"🦇 Does Not Exist: {p}."
-
-    return p
-
-
-def ls(p, pattern="*", which="files", recursive=False, hidden=False):
-    """
-    List contents of a directory path; files, directories, or both.
-
-    Parameters
-    ----------
-    p : pathlib.Path
-        The directories path you want to search in for files.
-    pattern : str
-        A glob pattern to search for files. Default is ``\*`` to search for
-        all files, but other examples are ``\*.txt`` for all text files.
-    which : {'files', 'dirs', 'both'}
-        Specify which type of Path object to list.
-    recursive : bool
-        True, will search for files recursively in subdirectories.
-        False, will search only the provided Path (default).
-    hidden : bool
-        True, show hidden files or directories (name starts with '.').
-        False, do not show hidden files or directories (default).
-    """
-
-    p = full_path(p)
-
-    if recursive:
-        glob_obj = p.rglob(pattern)
-    else:
-        glob_obj = p.glob(pattern)
-
-    if which == "files":
-        f = filter(lambda x: x.is_file(), glob_obj)
-    elif which == "dirs":
-        f = filter(lambda x: x.is_dir(), glob_obj)
-    else:
-        f = glob_obj
-
-    if hidden:
-        f = filter(lambda x: x.name.startswith("."), f)
-    else:
-        f = filter(lambda x: not x.name.startswith("."), f)
-
-    f = list(f)
-    f.sort()
-
-    if len(f) == 0:
-        warnings.warn(f"🤔 None from {p}")
-
-    return f
-
-
-def cp(src, dst="$TMPDIR", name=None, verbose=True):
-    """
-    Copy a file to another directory.
-
-    Parameters
-    ----------
-    src : {str, pathlib.Path}
-        The source file to be copied.
-    dst : {str, pathlib.path}
-        A directory path to copy the file.
-        Default is a temporary directory at $WORKDIR/tmp
-    name : {None, str}
-        If None (default), the src filename is preserved, otherwise change
-        the name to something else.
-    """
-    src = full_path(src)
-    dst = full_path(dst)
-
-    assert src.is_file()
-    assert dst.is_dir()
-
-    if name is None:
-        dst = dst / src.name
-    else:
-        dst = dst / name
-
-    if not dst.parent.exists():
-        dst.mkdir(parents=True, exist_ok=True)
-
-    shutil.copyfile(src, dst)
-
-    if verbose:
-        print(f"📄➡📁 Copied [{src}] to [{dst}]")
-
-    return dst
-
-
-def create_path(p, verbose=True):
-    """
-    Create a path if it does not exist.
-
-    Parameters
-    ----------
-    p : string or pathlib.Path
-        Path of directory that will be created if it does not exist.
-    """
-    p = full_path(p, must_exist=False)
-
-    try:
-        p.mkdir(parents=True)
-        if verbose:
-            print(f"📂 Created directory: {p}")
-    except:
-        if verbose:
-            print(f"🍄 Directory already exists: {p}")
-
-    return p
-
 
 # ======================================================================
 # Multiprocessing and Multithreading 🤹🏻‍♂️ 🧵 📏 🐲
@@ -1106,3 +940,175 @@ def haversine(lat1, lon1, lat2, lon2, z1=None, z2=None):
         distance = C
 
     return distance
+
+
+
+# ======================================================================
+# File paths (these are old, can I delete them yet?)
+# ======================================================================
+'''
+def full_path(p, must_exist=True, mkdir=False, verbose=True):
+    """
+    Convert string to ``pathlib.Path``. Resolve path and environment variables.
+
+    ``pathlib.Path`` does not resolve environment variables in a path string.
+    This function replaces environment variables like '$HOME' with the value
+    of ``os.environ['HOME']`` and returns a pathlib.Path.
+
+    Parameters
+    ----------
+    p : {str, pathlib.Path}
+        The file path that may include '~', '..', or environment
+        variables, (i.e., ``$HOME``, ``$PWD``, ``$WORKDIR``, ``${HOME}``).
+        One Windows, may use both ``$USERPROFILE``, ``${USERPROFILE}``, or
+        ``%USERPROFILE%`` because os.path.expandvars can handle both syntax.
+    must_exist : bool
+        True, the resolved Path must exist, or else an assert error is raised.
+        False, the resolved Path does not have to exist.
+    mkdir : bool
+        True, make the directory if it does not exist.
+        False, do not make the directory.
+
+    Returns
+    -------
+    The fully resolved pathlib.Path.
+
+    Examples
+    --------
+    >>> full_path('$HOME/figs')
+    PosixPath('/p/home/blaylock/figs')
+
+    >>> full_path("~/pyBKB_NRL")
+    PosixPath('/p/home/blaylock/pyBKB_NRL')
+
+    """
+    warnings.warn("This `full_path` function depreciated. Use my custom `Path().expand()` instead")
+
+    if isinstance(p, str):
+        p = Path(p)
+
+    # Replace environment variables values (with my custom method above)
+    p = p.expand()
+
+    # Make Directory if it doesn't exist
+    if not p.exists() and mkdir:
+        if p.suffix == "":
+            p.mkdir(parents=True)
+        else:
+            p.parent.mkdir(parents=True)  # because p is a file.
+        if verbose:
+            print(f"👷🏼‍♂️ Created directory: {p}")
+
+    if must_exist:
+        assert p.exists(), f"🦇 Does Not Exist: {p}."
+
+    return p
+
+
+def ls(p, pattern="*", which="files", recursive=False, hidden=False):
+    """
+    List contents of a directory path; files, directories, or both.
+
+    Parameters
+    ----------
+    p : pathlib.Path
+        The directories path you want to search in for files.
+    pattern : str
+        A glob pattern to search for files. Default is ``\*`` to search for
+        all files, but other examples are ``\*.txt`` for all text files.
+    which : {'files', 'dirs', 'both'}
+        Specify which type of Path object to list.
+    recursive : bool
+        True, will search for files recursively in subdirectories.
+        False, will search only the provided Path (default).
+    hidden : bool
+        True, show hidden files or directories (name starts with '.').
+        False, do not show hidden files or directories (default).
+    """
+
+    p = full_path(p)
+
+    if recursive:
+        glob_obj = p.rglob(pattern)
+    else:
+        glob_obj = p.glob(pattern)
+
+    if which == "files":
+        f = filter(lambda x: x.is_file(), glob_obj)
+    elif which == "dirs":
+        f = filter(lambda x: x.is_dir(), glob_obj)
+    else:
+        f = glob_obj
+
+    if hidden:
+        f = filter(lambda x: x.name.startswith("."), f)
+    else:
+        f = filter(lambda x: not x.name.startswith("."), f)
+
+    f = list(f)
+    f.sort()
+
+    if len(f) == 0:
+        warnings.warn(f"🤔 None from {p}")
+
+    return f
+
+
+def cp(src, dst="$TMPDIR", name=None, verbose=True):
+    """
+    Copy a file to another directory.
+
+    Parameters
+    ----------
+    src : {str, pathlib.Path}
+        The source file to be copied.
+    dst : {str, pathlib.path}
+        A directory path to copy the file.
+        Default is a temporary directory at $WORKDIR/tmp
+    name : {None, str}
+        If None (default), the src filename is preserved, otherwise change
+        the name to something else.
+    """
+    src = full_path(src)
+    dst = full_path(dst)
+
+    assert src.is_file()
+    assert dst.is_dir()
+
+    if name is None:
+        dst = dst / src.name
+    else:
+        dst = dst / name
+
+    if not dst.parent.exists():
+        dst.mkdir(parents=True, exist_ok=True)
+
+    shutil.copyfile(src, dst)
+
+    if verbose:
+        print(f"📄➡📁 Copied [{src}] to [{dst}]")
+
+    return dst
+
+
+def create_path(p, verbose=True):
+    """
+    Create a path if it does not exist.
+
+    Parameters
+    ----------
+    p : string or pathlib.Path
+        Path of directory that will be created if it does not exist.
+    """
+    p = full_path(p, must_exist=False)
+
+    try:
+        p.mkdir(parents=True)
+        if verbose:
+            print(f"📂 Created directory: {p}")
+    except:
+        if verbose:
+            print(f"🍄 Directory already exists: {p}")
+
+    return p
+'''
