@@ -300,12 +300,21 @@ Path.tree = _tree
 # ======================================================================
 # Multiprocessing and Multithreading 🤹🏻‍♂️ 🧵 📏 🐲
 # ======================================================================
+
+
+
+
+
+# ======================================================================
+# (OLD) Multiprocessing and Multithreading 🤹🏻‍♂️ 🧵 📏 🐲
+# ======================================================================
 # Resources:
 # - https://chriskiehl.com/article/parallelism-in-one-line
 # - https://stackoverflow.com/questions/2846653/how-can-i-use-threading-in-python
 
 
 def _multipro_helper_MP(job_arg):
+    warnings.warn("THIS IS OLD. Use MultiTasks instead.")
     i, n, func, args, kwargs = job_arg
     if not hasattr(args, "__len__"):
         args = [args]
@@ -381,7 +390,7 @@ def multipro_helper(
         This seems to just be a problem when the 'processes' scheduler
         is used, not the 'threads' or 'single-threaded' scheduler.
     """
-
+    warnings.warn("THIS IS OLD. Use MultiTasks instead.")
     assert callable(func), f"👻 {func} must be a callable function."
     assert hasattr(args, "__len__"), f"👻 args must have length."
     assert isinstance(kwargs, dict), f"👻 kwargs must be a dict."
@@ -479,122 +488,6 @@ def multipro_helper(
 
     return results, info
 
-
-def plot_multipro_efficiency(
-    func,
-    args=(),
-    kwargs={},
-    pools=range(1, 11),
-    plot_multipro=True,
-    plot_multithread=True,
-    plot_sequential=True,
-    plot_dask=True,
-    figsize=(7, 5),
-):
-    """
-    Display a figure showing the multiprocessing/multithreadding
-    efficiency for a range of Pool sizes.
-
-    func : function
-        A function that has keyword arguments for ``cpus`` and ``threads``.
-    args, kwargs :
-        Arguments and keyword arguments for the function.
-    pools : list of int
-        List of number of Pools to start for multiprocessing/multithreading.
-    """
-    # Only import matplotlib if we use this function.
-    import matplotlib.pyplot as plt
-
-    plt.rcParams["hatch.linewidth"] = 8
-
-    pools = [i for i in pools if i > 0]
-
-    assert (
-        "MP_kwargs" in inspect.getfullargspec(func).args
-    ), "👺 The function {func.__name__} does not have a `MP_kwargs` argument."
-
-    plt.figure(figsize=figsize)
-
-    if plot_multipro:
-        multipro = []
-        for i in pools:
-            timer = datetime.now()
-            _, info = func(*args, **kwargs, MP_kwargs=dict(cpus=i))
-            timer = datetime.now() - timer
-            multipro.append(timer)
-        plt.bar(
-            list(pools),
-            [i.total_seconds() for i in multipro],
-            label="Multiprocessing",
-            color=".1",
-            zorder=5,
-        )
-
-    if plot_multithread:
-        multithread = []
-        for i in pools:
-            timer = datetime.now()
-            _, info = func(*args, **kwargs, MP_kwargs=dict(threads=i))
-            timer = datetime.now() - timer
-            multithread.append(timer)
-        plt.bar(
-            list(pools),
-            [i.total_seconds() for i in multithread],
-            label="Multithreading",
-            hatch="/",
-            edgecolor="tab:blue",
-            alpha=0.33,
-            color="tab:blue",
-            zorder=6,
-        )
-
-    if plot_sequential:
-        timer = datetime.now()
-        _, info = func(
-            *args, **kwargs, MP_kwargs=dict(cpus=None, threads=None, dask=None)
-        )
-        timer = datetime.now() - timer
-        sequential = timer
-        plt.axhline(
-            sequential.total_seconds(), color="k", lw=3, label="Sequential", zorder=4
-        )
-
-    if plot_dask:
-        for scheduler, color, ls in zip(
-            ["single-threaded", "threads", "processes"],
-            ["tab:green", "tab:red", "tab:purple"],
-            ["--", "-.", ":"],
-        ):
-            try:
-                timer = datetime.now()
-                _, info = func(
-                    *args,
-                    **kwargs,
-                    MP_kwargs=dict(cpus=None, threads=None, dask=scheduler),
-                )
-                dask_timer = datetime.now() - timer
-                plt.axhline(
-                    dask_timer.total_seconds(),
-                    ls=ls,
-                    color=color,
-                    label=f"Dask '{scheduler}'",
-                    zorder=6,
-                )
-            except Exception as e:
-                print(f"Error with Dask scheduler{scheduler}''.")
-                print(f"Error is {e}")
-                pass
-
-    # Cosmetics
-    plt.ylabel("Seconds")
-    plt.xlabel("Number in Pool")
-    plt.title(f"{func.__module__}.{func.__name__}", loc="left", fontweight="bold")
-    plt.title(f"Number of Tasks: {info['n']}", loc="right")
-    plt.xticks(list(pools))
-    plt.grid(zorder=0, ls="--", alpha=0.25)
-    plt.legend(loc="center left", bbox_to_anchor=(1.0, 0.5))
-
-    # return multipro, multithread, sequential
 
 
 # ======================================================================
