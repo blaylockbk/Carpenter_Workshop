@@ -966,6 +966,12 @@ class common_features:
             Alpha value (transparency); a value between 0 and 1.
         """
 
+        # Zoom can't be bigger than 11
+        zoom = min(11,zoom)
+
+        # Zoom can't be smaller than 0
+        zoom = max(0, zoom)
+
         if self.verbose:
             print(
                 "😎 Please use `ax.set_extent` before increasing Zoom level for faster plotting."
