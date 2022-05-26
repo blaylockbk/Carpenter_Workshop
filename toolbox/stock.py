@@ -179,9 +179,15 @@ def _grep(self, searchString, options="-E", verbose=True):
         ()*|{}.
     """
     cmd = f'grep {options} "{searchString}" {self}'
-    log.debug("🎢 :: ", cmd)
+    #log.debug("🎢 :: ", cmd)
 
-    out = subprocess.run(cmd, shell=True, capture_output=True, check=True)
+    out = subprocess.run(cmd, shell=True, capture_output=True, check=False)
+
+    if out.returncode == 1:
+        print(f">>grep: no matching lines found. {searchString} not found in {self}")
+    elif out.returncode >= 2:
+        raise RuntimeError(f">>grep: exit code {out.returncode}")
+
     return out.stdout.decode("utf-8")
 
 
