@@ -96,6 +96,9 @@ def angle_diff(dir1, dir2, signed=True, round=3):
     ----------
     dir1, dir2 :
         Wind direction (in degrees)
+    signed : bool
+        If True, then will return angle difference of dir2 relative to dir1.
+        If False, then will return absolute value of difference
     round : int
         Round the angle to a few decimal places.
     """
