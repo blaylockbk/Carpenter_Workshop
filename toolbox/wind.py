@@ -18,11 +18,14 @@ Functions related to wind vectors
 import numpy as np
 
 
-def spddir_to_uv(wspd, wdir):
-    """
-    Calculate the u and v wind components from wind speed and direction.
+def spddir_to_uv(wspd, wdir, round=3):
+    """Compute u and v wind components from wind speed and direction.
 
-    See https://earthscience.stackexchange.com/a/11989/18840
+    https://earthscience.stackexchange.com/a/11989/18840
+
+    NOTE: You could use MetPy; but dealing with units is slow.
+
+    NOTE: Watch for components near zero caused by limitation of float precision of sin(180)
 
     Parameters
     ----------
@@ -34,49 +37,71 @@ def spddir_to_uv(wspd, wdir):
     u and v wind components
     """
     if isinstance(wspd, list) or isinstance(wdir, list):
-        wspd = np.array(wspd, dtype=float)
-        wdir = np.array(wdir, dtype=float)
+        wspd = np.array(wspd)
+        wdir = np.array(wdir)
 
-    rad = np.pi / 180.0
-    u = -wspd * np.sin(rad * wdir)
-    v = -wspd * np.cos(rad * wdir)
+    wdir = np.deg2rad(wdir)
 
-    # If the speed is zero, then u and v should be set to zero (not NaN)
-    if hasattr(u, "__len__"):
-        u[np.where(wspd == 0)] = 0
-        v[np.where(wspd == 0)] = 0
-    elif wspd == 0:
-        u = float(0)
-        v = float(0)
+    u = -wspd * np.sin(wdir)
+    v = -wspd * np.cos(wdir)
 
-    return np.round(u, 3), np.round(v, 3)
+    if round:
+        u = u.round(round)
+        v = v.round(round)
+
+    return u, v
 
 
-def uv_to_spddir(u, v):
-    """
-    Calculates the wind speed and direction from u and v components.
+def uv_to_spddir(u, v, round=3):
+    """Calculates wind speed and direction from u and v components.
 
     Takes into account the wind direction coordinates is different than
     the trig unit circle coordinate.
-    If the wind direction is 360, then return zero.
+
+    - If wind speed is zero, then wind direction is NaN.
+    - If wind direction is 360, then return zero.
+
+    Confirm conversion with this online calculator:
+    https://www.cactus2000.de/uk/unit/masswin.shtml
 
     Parameters
     ----------
     u, v: array_like
         u (west to east) and v (south to north) wind component.
+    round : int
+        The number of decimal places to round the values to.
+        Default 3.
+        If None, then no rounding is done.
 
     Returns
     -------
     Wind speed and direction
+
     """
-    if isinstance(u, list) or isinstance(v, list):
+    def calc_wspd_wdir(u, v):
+        wspd = np.sqrt(u * u + v * v)
+        wdir = (270 - np.rad2deg(np.arctan2(v, u))) % 360
+        if round:
+            wspd = wspd.round(round)
+            wdir = wdir.round(round)
+        return wspd, wdir
+
+    if isinstance(u, (int, float)) and isinstance(v, (int, float)):
+        if (u == 0) and (v == 0):
+            # The case that there is no wind
+            return 0, np.nan
+        else:
+            return calc_wspd_wdir(u, v)
+    elif isinstance(u, list) or isinstance(v, list):
         u = np.array(u)
         v = np.array(v)
 
-    wdir = (270 - np.rad2deg(np.arctan2(v, u))) % 360
-    wspd = np.sqrt(u * u + v * v)
+    wspd, wdir = calc_wspd_wdir(u, v)
 
-    return wspd.round(3), wdir.round(3)
+    # Zero wind speed should be NaN wind direction
+    wdir[wspd==0] = np.nan
+
+    return wspd, wdir
 
 
 def unit_vector(i, j):
