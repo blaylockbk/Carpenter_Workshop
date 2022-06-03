@@ -89,6 +89,27 @@ def unit_vector(i, j):
 
     return unit_i, unit_j
 
+def angle_diff(dir1, dir2, signed=True, round=3):
+    """ Return the angle difference between two wind directions
+    
+    Parameters
+    ----------
+    dir1, dir2 :
+        Wind direction (in degrees)
+    round : int
+        Round the angle to a few decimal places.
+    """
+    # Convert direction from degrees to radians
+    dir1 = np.deg2rad(dir1)
+    dir2 = np.deg2rad(dir2)
+    
+    diff = np.arctan2(np.sin(dir2-dir1), np.cos(dir2-dir1))
+    diff = np.rad2deg(diff).round(round)
+
+    if signed:
+        return diff
+    else:
+        return np.abs(diff)
 
 def angle_between(i1, j1, i2, j2):
     """
