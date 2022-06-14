@@ -64,9 +64,6 @@ def _copy(self, dst, parents=True, verbose=True):
     """
     Add this copy method to a Path object.
 
-    For Path objects created by ``toolbox.stock.full_path``, there will
-    be this copy method added for easy copying the file to other Paths.
-
     .. note::
         Based answer on `StackOverflow <https://stackoverflow.com/a/40319071/2383070/>`_
 
@@ -81,7 +78,7 @@ def _copy(self, dst, parents=True, verbose=True):
     parents : bool
         If the dst parent directory does not exist, then make it.
 
-    Note: 🐍 Python 3.7+ is required for shutil to accept Path object.
+    NOTE: 🐍 Python 3.7+ is required for shutil to accept Path object.
 
     Example
     -------
@@ -100,11 +97,11 @@ def _copy(self, dst, parents=True, verbose=True):
         if parents:
             dst.parent.mkdir(parents=parents)
             if verbose:
-                print(f"👨🏻‍🏭 Created path to {dst.parent}")
+                print(f"👨🏻‍🏭 Created path to [{dst.parent}]")
         else:
             raise TypeError(
                 f"Parent path does not exist: [{dst.parent}]. "
-                "Set `parents=True` to create that path."
+                f"Set `parents=True` to create that path."
             )
 
     shutil.copy(self, dst)
