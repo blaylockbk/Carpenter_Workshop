@@ -42,6 +42,33 @@ except Exception as e:
     # print("Without dask, you cannot use dask for multiprocessing.")
 
 
+def p_apply(df, func, cores=4):
+    """
+    Parallel Apply for Pandas DataFrames
+
+    From Nathan Cheever: https://www.youtube.com/watch?v=nxWginnBklU
+
+    Parameters
+    ----------
+    df : pandas.DataFrame
+        A Dataframe to apply a function too.
+    func : function
+        The function to apply to the DataFrame
+    cores : int
+        Number of cores to split the work onto
+
+    Usage
+    -----
+    >>> df = p_apply(df, func=some_func)
+    """
+    df_split = np.array_split(df, cores)
+    pool = multiprocessing.Pool(cores)
+    df = pd.concat(pool.map(func, df_split))
+    pool.close()
+    pool.join()
+    return df
+
+
 class EasyParallel:
     """A class to help you complete embarrassingly parallel tasks."""
 
