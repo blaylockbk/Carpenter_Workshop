@@ -9,9 +9,9 @@ I have a lot of useful python tools. Instead of letting them be strewn across th
 - Stay up-to-date on the most recent stable software. When a new version comes out, use it and read the release notes. New features are added because someone needed those features, and they might be useful in your own work (or, at least useful to know about).
     - Do not assume sticking with a certain version number will prevent breaking changes. [It wont](https://hynek.me/articles/semver-will-not-save-you/). If you want to future-proof your code, it's best to update to newest versions rapidly, find and fixx the breaking changes quickly, and enjoy modern software.
 - Learn how to use a debugger (like in vscode).
-- "If the wine is sour, throw it out!" Well, I'd never know if wine was sour because I don't drink wine. But this saying means if the script you are writing is giving you trouble and just isn't working, toss it and start over. You'll have better luck starting with a clean slate and fresh mind. 
+- "If the milk is sour, throw it out!" If the script or block of code you are writing is giving you trouble and just isn't working, toss it and start over. You'll have better luck starting with a clean slate and fresh mind. 
 - "If It Ain't Broke, You're Not Trying" – Uncle Red (The Red Green Show). To me, this means that it's ok to have broken code. Don't be too dissapointed in yourself. There is nothing a little duct tape can't repair. It can be fixed, and that is the joy of coding.
-- A workman can't have too many tools. Everything has its place.
+- A workman can't have too many tools. Everything has its place. Know how to use your tools. Keep them organized.
     - Use a code formatter; it helps you write cleaner code. (I'm using Black to format my python code.)
 
 <br><br>
