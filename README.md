@@ -6,7 +6,8 @@ I have a lot of useful python tools. Instead of letting them be strewn across th
 - Code should clearly commented. Nay, code should be clearly _narrated_! 
     - Yes, I know this goes against the idea of "don't comment too much," but I feel it's better to error on the side of commenting too much rather than commenting too little.
     - Comments don't necessarily have to say what a line or block does, but it should say _why_ you are doing it that way.
-- Stay up-to-date on the most recent stable software. When a new version comes out, use it and read the release notes. New features are added because someone needed those features, and they might be useful in your own work (or, at least useful to know about)
+- Stay up-to-date on the most recent stable software. When a new version comes out, use it and read the release notes. New features are added because someone needed those features, and they might be useful in your own work (or, at least useful to know about).
+    - Do not assume sticking with a certain version number will prevent breaking changes. [It wont](https://hynek.me/articles/semver-will-not-save-you/). If you want to future-proof your code, it's best to update to newest versions rapidly, find and fixx the breaking changes quickly, and enjoy modern software.
 - Learn how to use a debugger (like in vscode).
 - "If the wine is sour, throw it out!" Well, I'd never know if wine was sour because I don't drink wine. But this saying means if the script you are writing is giving you trouble and just isn't working, toss it and start over. You'll have better luck starting with a clean slate and fresh mind. 
 - "If It Ain't Broke, You're Not Trying" – Uncle Red (The Red Green Show). To me, this means that it's ok to have broken code. Don't be too dissapointed in yourself. There is nothing a little duct tape can't repair. It can be fixed, and that is the joy of coding.
