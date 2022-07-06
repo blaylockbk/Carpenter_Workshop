@@ -13,6 +13,7 @@ I have a lot of useful python tools. Instead of letting them be strewn across th
 - "If It Ain't Broke, You're Not Trying" – Uncle Red (The Red Green Show). To me, this means that it's ok to have broken code. Don't be too dissapointed in yourself. There is nothing a little duct tape can't repair. It can be fixed, and that is the joy of coding.
 - A workman can't have too many tools. Everything has its place. Know how to use your tools. Keep them organized.
     - Use a code formatter; it helps you write cleaner code. (I'm using Black to format my python code.)
+- Old band-aids are grows. Don't keep them in your code; fix the issues and then THROW THEM AWAY!
 
 <br><br>
 
