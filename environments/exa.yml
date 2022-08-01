@@ -1,0 +1,5 @@
+name: conda_exa
+channels:
+ - conda-forge
+dependencies:
+ - exa        # Replacement of `ls` command.

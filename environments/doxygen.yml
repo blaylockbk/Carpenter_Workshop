@@ -1,0 +1,9 @@
+name: doxygen
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3
+  - pip
+  - git
+  - doxygen
