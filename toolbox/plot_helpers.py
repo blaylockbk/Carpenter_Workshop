@@ -14,10 +14,11 @@ https://dev.to/skotaro/artist-in-matplotlib---something-i-wanted-to-know-before-
 """
 import pickle
 
-import matplotlib.dates as mdates
-import matplotlib.pyplot as plt
 import numpy as np
-from matplotlib.ticker import MultipleLocator
+import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
+import matplotlib.ticker as mticker
+import matplotlib.transforms as mtransforms
 
 # Sometimes it is useful to put this at the top of your scripts to
 # format the date axis formatting.
@@ -181,70 +182,71 @@ def center_axis_on_zero(x=True, y=False, ax=None):
         ax.set_ylim(-du_max, du_max)
 
 
-def add_fig_letters(axes, offset=0.03, facecolor="#f9ecd2", labels=None, **kwargs):
-    """
-    Add a figure letter to top-left corner for all axes
+def add_fig_letters(axes, bbox={}, **kwargs):
+    """Add a figure letter to top-left corner for all axes.
 
-    Like is done in a publication figure, all axes are labeled with a
+    This is useful for publication figure; all axes are labeled with a
     letter so individual axes can be referred to from the text.
+
+    https://matplotlib.org/stable/gallery/text_labels_and_annotations/label_subplots.html
 
     Parameters
     ----------
-    axes : list of matplotlib axes
-        maplotlib axes to label
-    offset : float or tuple of float
-        Either a float or tuple of floats (x-offset, y-offset)
-    facecolor : color
-        a color
-    labels : None or str
-        If none, the default is to cycle the axes with lables, 'a', 'b', 'c', etc.
+    axes : dict, array, or list of matplotlib axes
+        matplotlib axes to label
 
-    Example
-    -------
+    Examples
+    --------
 
     .. code-block: python
 
         fig, axes = plt.subplots(4,4)
         add_fig_letters(axes)
 
-    """
-    if not hasattr(offset, "__len__"):
-        offset = (offset, offset)
+    .. code-block: python
 
-    if not hasattr(axes, "__len__"):
-        axes = [axes]
-
-    assert len(offset) == 2, "Offset must be a number or tuple"
-
-    if not hasattr(axes, "flat"):
-        np.array(axes)
-
-    ### Add letters to plots
-    if labels is None:
-        import string
-
-        labels = string.ascii_letters
-
-    try:
-        axes = axes.flat
-    except:
-        pass
-
-    for i, (ax, letter) in enumerate(zip(axes, labels)):
-        plt.sca(ax)
-
-        # Add figure letter
-        box_prop = dict(boxstyle="round", facecolor=facecolor, alpha=1, linewidth=0.5)
-
-        plt.text(
-            0 + offset[0],
-            1 - offset[1],
-            f"{letter}",
-            transform=ax.transAxes,
-            fontfamily="monospace",
-            va="top",
-            ha="left",
-            bbox=box_prop,
-            zorder=100_000,
-            **kwargs,
+        axd = plt.figure().subplot_mosaic(
+            '''
+            AAAA
+            BBCC
+            BBCC
+            DDCC
+            '''
         )
+        add_labels(axd)
+
+    """
+
+    # Style the label
+    bbox.setdefault("boxstyle", "round")
+    bbox.setdefault("facecolor", "#f9ecd2")
+    bbox.setdefault("alpha", 1)
+    bbox.setdefault("linewidth", 0.5)
+    bbox.setdefault("pad", 0.35)
+
+    # Position the label
+    kwargs.setdefault("fontfamily", "monospace")
+    kwargs.setdefault("va", "top")
+    kwargs.setdefault("ha", "left")
+    kwargs.setdefault("zorder", 100_000)
+
+    def add_label(ax, label):
+        fig = ax.get_figure()
+
+        # These numbers adjust the position of the label (in and down)
+        trans = mtransforms.ScaledTranslation(6 / 72, -6 / 72, fig.dpi_scale_trans)
+
+        ax.text(
+            0.0, 1.0, f"{label}", transform=ax.transAxes + trans, bbox=bbox, **kwargs
+        )
+
+    if isinstance(axes, dict):
+        # For axes that are made by plt.figure().subplot_mosaic()
+        for label, ax in axes.items():
+            add_label(ax, label)
+    elif isinstance(axes, (np.ndarray, list)):
+        # For axes that are made by plt.subplots()
+        axes = axes.flat
+        labels = string.ascii_letters
+        for label, ax in zip(labels, axes):
+            add_label(ax, label)
