@@ -1,4 +1,5 @@
-theme: just-the-docs
+title: "Remote theme example"
+remote_theme: just-the-docs/just-the-docs
 # Aux links for the upper right navigation
 aux_links:
   "Just the Docs on GitHub":
