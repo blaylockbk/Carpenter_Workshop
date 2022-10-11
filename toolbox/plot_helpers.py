@@ -14,6 +14,7 @@ https://dev.to/skotaro/artist-in-matplotlib---something-i-wanted-to-know-before-
 """
 import pickle
 
+import string
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
@@ -246,7 +247,7 @@ def add_fig_letters(axes, bbox={}, **kwargs):
             add_label(ax, label)
     elif isinstance(axes, (np.ndarray, list)):
         # For axes that are made by plt.subplots()
-        axes = axes.flat
+        axes = np.array(axes).flat
         labels = string.ascii_letters
         for label, ax in zip(labels, axes):
             add_label(ax, label)
