@@ -78,6 +78,7 @@ def uv_to_spddir(u, v, round=3):
     Wind speed and direction
 
     """
+
     def calc_wspd_wdir(u, v):
         wspd = np.sqrt(u * u + v * v)
         wdir = (270 - np.rad2deg(np.arctan2(v, u))) % 360
@@ -99,24 +100,43 @@ def uv_to_spddir(u, v, round=3):
     wspd, wdir = calc_wspd_wdir(u, v)
 
     # Zero wind speed should be NaN wind direction
-    wdir[wspd==0] = np.nan
+    wdir[wspd == 0] = np.nan
 
     return wspd, wdir
+
+
+def mean_wind_direction(wspd, wdir, from_unit_vector=False):
+    """Compute the average wind direction
+
+    Source: https://math.stackexchange.com/a/1920805
+    """
+    if from_unit_vector:
+        mean_u = np.nanmean(np.sin(wdir * np.pi / 180))
+        mean_v = np.nanmean(np.cos(wdir * np.pi / 180))
+    else:
+        mean_u = np.nanmean(wspd * np.sin(wdir * np.pi / 180))
+        mean_v = np.nanmean(wspd * np.cos(wdir * np.pi / 180))
+
+    mean_dir = np.arctan2(mean_u, mean_v) * 180 / np.pi
+    mean_dir = (360 + mean_dir) % 360
+
+    return mean_dir
 
 
 def unit_vector(i, j):
     """
     Return a unit vector for a 2D vector.
     """
-    magnitude = np.sqrt(i ** 2 + j ** 2)
+    magnitude = np.sqrt(i**2 + j**2)
     unit_i = i / magnitude
     unit_j = j / magnitude
 
     return unit_i, unit_j
 
+
 def angle_diff(dir1, dir2, signed=True, round=3):
-    """ Return the angle difference between two wind directions
-    
+    """Return the angle difference between two wind directions
+
     Parameters
     ----------
     dir1, dir2 :
@@ -130,14 +150,15 @@ def angle_diff(dir1, dir2, signed=True, round=3):
     # Convert direction from degrees to radians
     dir1 = np.deg2rad(dir1)
     dir2 = np.deg2rad(dir2)
-    
-    diff = np.arctan2(np.sin(dir2-dir1), np.cos(dir2-dir1))
+
+    diff = np.arctan2(np.sin(dir2 - dir1), np.cos(dir2 - dir1))
     diff = np.rad2deg(diff).round(round)
 
     if signed:
         return diff
     else:
         return np.abs(diff)
+
 
 def angle_between(i1, j1, i2, j2):
     """
@@ -175,8 +196,8 @@ def angle_between(i1, j1, i2, j2):
     """
 
     dot_product = i1 * i2 + j1 * j2
-    magnitude1 = np.sqrt(i1 ** 2 + j1 ** 2)
-    magnitude2 = np.sqrt(i2 ** 2 + j2 ** 2)
+    magnitude1 = np.sqrt(i1**2 + j1**2)
+    magnitude2 = np.sqrt(i2**2 + j2**2)
 
     theta = np.arccos(dot_product / (magnitude1 * magnitude2))
 
