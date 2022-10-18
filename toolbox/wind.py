@@ -109,6 +109,14 @@ def mean_wind_direction(wspd, wdir, from_unit_vector=False):
     """Compute the average wind direction
 
     Source: https://math.stackexchange.com/a/1920805
+
+    Parameters
+    ----------
+    wspd, wdir : array like
+        Wind speed and wind direction (degrees)
+    from_unit_vector: bool
+        If True, compute the mean from the unit vectors
+        If False, compute from the mean of the vectors.
     """
     if from_unit_vector:
         mean_u = np.nanmean(np.sin(wdir * np.pi / 180))
