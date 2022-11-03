@@ -1,0 +1,17 @@
+name: basic311
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.11
+  - pip
+  - git
+
+  # Toolbox
+  # -------
+  - black
+  - cartopy
+  - matplotlib
+  - numpy
+  - pandas
+  - requests
