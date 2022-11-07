@@ -7,10 +7,12 @@ dependencies:
   - pip
   - git
 
+  #=========
   # Toolbox
-  # -------
+  #=========
   - black
   - cartopy
+  - jupyter
   - matplotlib
   - numpy
   - pandas
