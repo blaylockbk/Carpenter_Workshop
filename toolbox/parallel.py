@@ -72,7 +72,7 @@ def p_apply(df, func, cores=4):
 class EasyParallel:
     """A class to help you complete embarrassingly parallel tasks."""
 
-    def __init__(self, func, args, **kwargs):
+    def __init__(self, func, args, verbose=True, **kwargs):
         """
         A class to help you complete embarrassingly parallel tasks.
 
@@ -87,6 +87,8 @@ class EasyParallel:
             A list of input arguments for the function being called.
             These are *different* for each process. If multiple arguments
             are needed, then each item in the list should be a tuple.
+        verbose : bool
+            If True, print lots of info.
         kwargs : dict
             Keyword arguments for the function.
             These are the *same* for each process.
@@ -99,6 +101,7 @@ class EasyParallel:
         self.args = args
         self.kwargs = kwargs
         self.n = len(args)
+        self.verbose = verbose
 
         self.inputs = [(i, arg) for i, arg in enumerate(self.args, start=1)]
 
@@ -128,10 +131,12 @@ class EasyParallel:
         if not hasattr(args, "__len__"):
             args = [args]
         output = self.func(*args, **self.kwargs)
-        print(
-            f"\r    ⏳ {process}/{thread} completed task [{i:,}/{self.n:,}] {' '*15}",
-            end="",
-        )
+
+        if self.verbose:
+            print(
+                f"    ⏳ {process}/{thread} completed task [{i:,}/{self.n:,}] {' '*15}",
+                end="\r",
+            )
         return output
 
     def sequential(self):
