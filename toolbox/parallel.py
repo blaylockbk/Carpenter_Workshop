@@ -134,7 +134,7 @@ class EasyParallel:
 
         if self.verbose:
             print(
-                f"    ⏳ {process}/{thread} completed task [{i:,}/{self.n:,}] {' '*15}",
+                f"\r    ⏳ {process}/{thread} completed task [{i:,}/{self.n:,}] {' '*15}",
                 end="\r",
             )
         return output
