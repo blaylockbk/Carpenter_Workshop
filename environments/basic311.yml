@@ -12,8 +12,12 @@ dependencies:
   #=========
   - black
   - cartopy
+  - cfgrib
   - jupyter
   - matplotlib
+  - metpy
   - numpy
   - pandas
   - requests
+  - scikit-learn
+  - xarray
