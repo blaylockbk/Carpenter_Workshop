@@ -292,7 +292,7 @@ def _add_cbar(artist, ax=None, labels=None, **cbar_kwargs):
 
 ########################################################################
 # Main Functions
-def check_cartopy_axes(ax=None, crs=pc, *, verbose=False):
+def check_cartopy_axes(ax=None, crs=pc, *, fignum=None, verbose=False):
     """
     Check if an axes is a cartopy axes, else create a new cartopy axes.
 
@@ -305,7 +305,16 @@ def check_cartopy_axes(ax=None, crs=pc, *, verbose=False):
         If the axes being checked is not a cartopy axes, then create one
         with this coordinate reference system (crs, aka "projection").
         Default is ccrs.PlateCarree()
+    fignum : int
+        If given, create a new figure and supblot for the given crs.
+        (This might be handy in a loop when you want to create maps on
+        several figures instead of plotting on the same figure.)
     """
+    if isinstance(fignum, int):
+        plt.figure(fignum)
+        ax = plt.subplot(1, 1, 1, projection=crs)
+        return ax
+
     # A cartopy axes should be of type `cartopy.mpl.geoaxes.GeoAxesSubplot`
     # One way to check that is to see if ax has the 'coastlines' attribute.
     if ax is None:
@@ -429,6 +438,7 @@ class common_features:
         crs=pc,
         *,
         figsize=None,
+        fignum=None,
         dpi=None,
         dark=False,
         verbose=False,
@@ -475,8 +485,13 @@ class common_features:
         coastlines_kw : dict
             kwargs for the default COASTLINES method.
 
-        figsize : tuple
-            Set the figure size
+        figsize : tuple or float
+            Set the figure size.
+            If single number given, then will make a square figure.
+        fignum : int
+            If given, create a new figure and supblot for the given crs.
+            (This might be handy in a loop when you want to create maps on
+            several figures instead of plotting on the same figure.)
         dpi : int
             Set the figure dpi
 
@@ -498,12 +513,15 @@ class common_features:
         self.ax = ax
         self.crs = crs
         self.figsize = figsize
+        self.fignum = fignum
         self.dpi = dpi
         self.dark = dark
         self.verbose = verbose
         self.kwargs = kwargs
 
-        self.ax = check_cartopy_axes(ax=self.ax, crs=self.crs, verbose=self.verbose)
+        self.ax = check_cartopy_axes(
+            ax=self.ax, crs=self.crs, fignum=self.fignum, verbose=self.verbose
+        )
 
         # In a round-about way, you can get this common_features object from the axes
         # >>> ax = common_features().ax
@@ -548,8 +566,12 @@ class common_features:
             self.COASTLINES(**coastlines_kw)
 
         if figsize is not None:
-            plt.gcf().set_figwidth(self.figsize[0])
-            plt.gcf().set_figheight(self.figsize[1])
+            if hasattr(figsize, "__len__"):
+                plt.gcf().set_figwidth(self.figsize[0])
+                plt.gcf().set_figheight(self.figsize[1])
+            else:
+                plt.gcf().set_figwidth(self.figsize)
+                plt.gcf().set_figheight(self.figsize)
         if dpi is not None:
             plt.gcf().set_dpi(self.dpi)
 
@@ -967,7 +989,7 @@ class common_features:
         """
 
         # Zoom can't be bigger than 11
-        zoom = min(11,zoom)
+        zoom = min(11, zoom)
 
         # Zoom can't be smaller than 0
         zoom = max(0, zoom)
