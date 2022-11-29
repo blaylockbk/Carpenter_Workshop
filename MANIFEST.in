@@ -1,0 +1,10 @@
+prune .github
+prune .vscode
+prune ci
+prune docs
+prune images
+prune notebooks
+prune sample_data
+exclude *.ipynb
+exclude *.nc
+exclude *.grib2
