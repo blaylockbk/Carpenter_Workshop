@@ -17,11 +17,27 @@ I have a lot of useful python tools. Instead of letting them be strewn across th
 
 <br><br>
 
----
+# Install
 
-> **Other packages or tools I want to remember that might come in use later**
-> - [Thermofeel](https://github.com/ecmwf-projects/thermofeel) calculate human thermal comfort indexes
-> -
+Installation is easy with pip.
+
+```
+pip install git+https://github.com/blaylockbk/Carpenter_Workshop.git
+```
+
+Or, clone the repo and install as an "editable" package (so you can pull changes).
+
+```
+git clone https://github.com/blaylockbk/Carpenter_Workshop.git
+cd Carpenter_Workshop
+pip install -e .
+```
+
+
+# Misc.
+**Other packages or tools I want to remember that might come in use later**
+- [Thermofeel](https://github.com/ecmwf-projects/thermofeel) calculate human thermal comfort indexes
+-
 
 <br><br><br>
 ---
