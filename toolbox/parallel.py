@@ -27,6 +27,11 @@ Class for doing embarrassingly parallel tasks fast!
     ezpz.multipro()
     ezpz.dask_delayed()
 
+
+Resources
+---------
+- https://superfastpython.com/parallel-nested-for-loops-in-python/
+
 """
 import multiprocessing
 from multiprocessing.dummy import Pool as ThreadPool  # Multithreading
