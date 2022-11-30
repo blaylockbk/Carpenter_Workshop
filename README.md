@@ -63,6 +63,14 @@ Search for package and list dependency info
 conda search packageName=<version> --info
 ```
 
+### Subprocess
+
+```python
+def run_command(cmd):
+    "Run a command in the shell and return the output"
+    return subprocess.run(cmd, shell=True, capture_output=True, check=False)
+```
+
 
 ### Matplotlib: Subplot Mosaic
 
