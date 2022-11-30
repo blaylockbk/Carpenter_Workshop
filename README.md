@@ -63,6 +63,11 @@ Search for package and list dependency info
 conda search packageName=<version> --info
 ```
 
+Clean unneeded files
+```bash
+conda clean -tp
+```
+
 ### Subprocess
 
 ```python
