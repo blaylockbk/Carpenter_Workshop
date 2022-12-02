@@ -32,13 +32,10 @@ pip install -e .
 # How to Cite and Acknowledge
 If you borrow my tools, please cite this software and/or include me in your acknowledgments.
 
-*Suggested Citation*
+***Suggested Citation***
 
-```
-Blaylock, B. K. (2022). Carpenter Workshop (Version 2022.11.0) [Computer software]. https://github.com/blaylockbk/Carpenter_Workshop
-```
+>Blaylock, B. K. (2022). Carpenter Workshop (Version 2022.11.0) [Computer software]. https://github.com/blaylockbk/Carpenter_Workshop
 
-*Suggested Acknowledgment*
-```
-A portion of this work used code generously provided by Brian Blaylock's Carpenter Workshop python package (https://github.com/blaylockbk/Carpenter_Workshop)
-```
+***Suggested Acknowledgment***
+
+> A portion of this work used code generously provided by Brian Blaylock's Carpenter Workshop python package (https://github.com/blaylockbk/Carpenter_Workshop)
