@@ -20,7 +20,7 @@
 |Cry over something not working| 😭 🤷🏻‍♂️ 🥛
 |Reading SWAN data| 🦢
 |Warning| ⚠ 🚧 ❌
-|Something is wrong| 👻 👺 👹 🧛🏻‍♂️
+|Something is wrong (scary)| 👻 👺 👹 🧛🏻‍♂️
 |Map function| 🗺 🌎 
 |Bug| 🐜 🐛
 |Failed| 💀
