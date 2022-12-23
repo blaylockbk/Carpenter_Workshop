@@ -13,6 +13,7 @@ dependencies:
   - black
   - cartopy
   - cfgrib
+  - ipykernel
   - jupyter
   - matplotlib
   - metpy
