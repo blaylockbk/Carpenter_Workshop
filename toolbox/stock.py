@@ -39,6 +39,7 @@ except Exception as e:
     # print("Without dask, you cannot use dask for multiprocessing.")
 
 import logging
+
 log = logging.getLogger(__name__)
 
 # ==============
@@ -48,16 +49,27 @@ python_version = float(f"{sys.version_info.major}.{sys.version_info.minor}")
 
 # ======================================================================
 # Append custom methods to Path module
-def _expand(self):
+def _expand(self, resolve=False, absolute=False):
     """
-    Fully expand and resolve the Path with the given environment variables.
+    Fully expand the Path with the given environment variables.
+
+    Optionally, resolve the path.
 
     Example
     -------
     >>> Path('$HOME').expand()
-    >>> PosixPath('/p/home/blaylock')
+    Results in PosixPath('/p/home/blaylock')
     """
-    return Path(os.path.expandvars(self)).expanduser().resolve()
+    p = Path(os.path.expandvars(self)).expanduser()
+
+    if resolve:
+        # TODO Why does this get stuck sometimes??
+        p = p.resolve()
+
+    if absolute:
+        p = p.absolute()
+
+    return p
 
 
 def _copy(self, dst, parents=True, verbose=True):
@@ -176,7 +188,7 @@ def _grep(self, searchString, options="-E", verbose=True):
         ()*|{}.
     """
     cmd = f'grep {options} "{searchString}" {self}'
-    #log.debug("🎢 :: ", cmd)
+    # log.debug("🎢 :: ", cmd)
 
     out = subprocess.run(cmd, shell=True, capture_output=True, check=False)
 
@@ -303,9 +315,6 @@ Path.tree = _tree
 # ======================================================================
 # Multiprocessing and Multithreading 🤹🏻‍♂️ 🧵 📏 🐲
 # ======================================================================
-
-
-
 
 
 # ======================================================================
@@ -490,7 +499,6 @@ def multipro_helper(
     )
 
     return results, info
-
 
 
 # ======================================================================
@@ -837,7 +845,6 @@ def haversine(lat1, lon1, lat2, lon2, z1=None, z2=None):
         distance = C
 
     return distance
-
 
 
 # ======================================================================
