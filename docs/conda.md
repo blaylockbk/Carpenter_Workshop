@@ -31,6 +31,13 @@ Run conda inside a bash script
 eval "$(conda shell.bash hook)"
 ```
 
+Channel Priority: put this in your `~/.condarc` file
+```yaml
+channels:
+  - conda-forge
+  - defaults
+```
+
 ## Conda Mamba Solver: Faster Environment Solver
 
 Use the [mamba](https://conda.github.io/conda-libmamba-solver/getting-started/) solver in Conda (must be using Conda version>=22.11.0)
