@@ -17,6 +17,7 @@ dependencies:
   - jupyter
   - matplotlib
   - metpy
+  - netcdf4
   - numpy
   - pandas
   - pygrib
