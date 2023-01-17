@@ -116,6 +116,9 @@ ax.xaxis.set_major_locator(mdates.HourLocator(range(0, 24, 3)))
 ax.xaxis.set_minor_locator(mdates.HourLocator(range(0, 24, 1)))
 ```
 
+Use Dates on Colorbar Ticks
+https://github.com/matplotlib/matplotlib/issues/17447#issuecomment-630885219
+
 Set date autoformatter:
 
 ```python
