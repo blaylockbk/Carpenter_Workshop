@@ -312,6 +312,30 @@ Path.grep = _grep
 Path.tree = _tree
 
 
+#==============================================================================
+def infer_dtype(x):
+    """Given a string, infer the dtype that it looks like."""
+    try:
+        int(x)
+        return int
+    except:
+        try:
+            float(x)
+            return float
+        except:
+            return type(x)
+
+def convert_to_dtype(x):
+    """Given a string, attempt to convert it to an int or float."""
+    x = x.strip()
+    try:
+        return float(x)
+    except ValueError:
+        try:
+            return int(x)
+        except ValueError:
+            return x
+
 # ======================================================================
 # Multiprocessing and Multithreading 🤹🏻‍♂️ 🧵 📏 🐲
 # ======================================================================
