@@ -3,4 +3,5 @@ channels:
  - conda-forge
 dependencies:
  - git
+ - git-lfs # git large file storage
  - gh  # GitHub command line interface

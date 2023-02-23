@@ -39,6 +39,7 @@ except Exception as e:
     # print("Without dask, you cannot use dask for multiprocessing.")
 
 import logging
+
 log = logging.getLogger(__name__)
 
 # ==============
@@ -48,16 +49,27 @@ python_version = float(f"{sys.version_info.major}.{sys.version_info.minor}")
 
 # ======================================================================
 # Append custom methods to Path module
-def _expand(self):
+def _expand(self, resolve=False, absolute=False):
     """
-    Fully expand and resolve the Path with the given environment variables.
+    Fully expand the Path with the given environment variables.
+
+    Optionally, resolve the path.
 
     Example
     -------
     >>> Path('$HOME').expand()
-    >>> PosixPath('/p/home/blaylock')
+    Results in PosixPath('/p/home/blaylock')
     """
-    return Path(os.path.expandvars(self)).expanduser().resolve()
+    p = Path(os.path.expandvars(self)).expanduser()
+
+    if resolve:
+        # TODO Why does this get stuck sometimes??
+        p = p.resolve()
+
+    if absolute:
+        p = p.absolute()
+
+    return p
 
 
 def _copy(self, dst, parents=True, verbose=True):
@@ -176,7 +188,7 @@ def _grep(self, searchString, options="-E", verbose=True):
         ()*|{}.
     """
     cmd = f'grep {options} "{searchString}" {self}'
-    #log.debug("🎢 :: ", cmd)
+    # log.debug("🎢 :: ", cmd)
 
     out = subprocess.run(cmd, shell=True, capture_output=True, check=False)
 
@@ -300,12 +312,33 @@ Path.grep = _grep
 Path.tree = _tree
 
 
+#==============================================================================
+def infer_dtype(x):
+    """Given a string, infer the dtype that it looks like."""
+    try:
+        int(x)
+        return int
+    except:
+        try:
+            float(x)
+            return float
+        except:
+            return type(x)
+
+def convert_to_dtype(x):
+    """Given a string, attempt to convert it to an int or float."""
+    x = x.strip()
+    try:
+        return float(x)
+    except ValueError:
+        try:
+            return int(x)
+        except ValueError:
+            return x
+
 # ======================================================================
 # Multiprocessing and Multithreading 🤹🏻‍♂️ 🧵 📏 🐲
 # ======================================================================
-
-
-
 
 
 # ======================================================================
@@ -490,7 +523,6 @@ def multipro_helper(
     )
 
     return results, info
-
 
 
 # ======================================================================
@@ -837,7 +869,6 @@ def haversine(lat1, lon1, lat2, lon2, z1=None, z2=None):
         distance = C
 
     return distance
-
 
 
 # ======================================================================
