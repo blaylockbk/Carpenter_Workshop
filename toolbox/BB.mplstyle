@@ -12,7 +12,7 @@
 # https://matplotlib.org/tutorials/introductory/customizing.html
 #
 # Use in your projects:
-#     plt.style.use('BB_style')
+#     plt.style.use('./BB.mplstyle')
 
 ##=============================================================================
 ##                            Font and Text
@@ -31,18 +31,18 @@ font.family: sans-serif
 font.size: 12
 font.weight: 500
 
-text.color: .98
+text.color: .02
 
-axes.titleweight: 600
-axes.labelweight: 500
-axes.axisbelow: False
+axes.titleweight: 500
+axes.labelweight: 300
+
 ##=============================================================================
 ##                            Axes & Figure
 ##=============================================================================
 figure.titlesize: large
-figure.titleweight: 600
+figure.titleweight: 800
 axes.titlesize: 12
-legend.fontsize: medium
+legend.fontsize: small
 
 #figure.facecolor: white
 figure.facecolor: none
@@ -94,13 +94,13 @@ errorbar.capsize: .5  # length of end cap on error bars in pixels
 ## ***************************************************************************
 ## * SCATTER PLOTS                                                           *
 ## ***************************************************************************
-#scatter.marker: .         # The default marker type for scatter plots.
-#scatter.edgecolors: face  # The default edge colors for scatter plots.
+scatter.marker: .         # The default marker type for scatter plots.
+scatter.edgecolors: face  # The default edge colors for scatter plots.
 
 
-##=============================================================================
-##                             Images
-##=============================================================================
+#* ============================================================================
+#*                             Images
+#* ============================================================================
 image.origin: lower  ## I primarily work with data arrays
                      ## (e.g., GOES-16) and not real "images"
                      ## where origin is the upper corner.
