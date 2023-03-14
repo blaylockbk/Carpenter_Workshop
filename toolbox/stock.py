@@ -811,6 +811,8 @@ def haversine(lat1, lon1, lat2, lon2, z1=None, z2=None):
      - https://en.wikipedia.org/wiki/Haversine_formula
 
 
+    * Perhaps use the haversine package instead
+
      Optionally, consider distance when altitude is involved
      Distance between p1 and p2 is:  C=sqrt(A^2+B^2)
      Where distance A is the haversine equation (gives distance in meters)
