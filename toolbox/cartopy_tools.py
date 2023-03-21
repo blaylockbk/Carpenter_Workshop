@@ -91,6 +91,7 @@ _extents = dict(
     CONUS=(-130, -60, 20, 55),
 )
 
+
 ########################################################################
 # Methods attached to axes created by `common_features`
 def _adjust_extent(self, pad="auto", fraction=0.05, verbose=False):
@@ -640,14 +641,14 @@ class common_features:
         """Color-filled land area"""
         kwargs.setdefault("edgecolor", "none")
         kwargs.setdefault("linewidth", 0)
+        kwargs = {**self.kwargs, **kwargs}
 
-        if not self.dark:
-            # If `dark=True`, the face_color is the land color,
-            # and we don't need to draw it.
-            kwargs = {**self.kwargs, **kwargs}
-            self.ax.add_feature(feature.LAND.with_scale(self.scale), **kwargs)
-            if self.verbose == "debug":
-                print("🐛 LAND:", kwargs)
+        if self.dark:
+            kwargs = {**{"facecolor": self.land}, **kwargs}
+
+        self.ax.add_feature(feature.LAND.with_scale(self.scale), **kwargs)
+        if self.verbose == "debug":
+            print("🐛 LAND:", kwargs)
         return self
 
     def RIVERS(self, **kwargs):
