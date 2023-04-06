@@ -6,20 +6,15 @@
 Unit Converstions
 =================
 
-Functions to convert various units
-
-    - K_to_C
-    - K_to_F
-    - C_to_K
-    - C_to_F
-    - F_to_C
-    - ms_to_mph
-    - mm_to_inches
-    - Pa_to_hPa
-
+Functions to convert various units. Because sometimes importing Pint
+from Metpy just isn't quick enough for something you need without
+much thought.
 """
-########################################################################
+# ======================================================================
 # Longitude
+# ======================================================================
+
+
 def to_180(lon):
     """
     Wrap longitude from degrees [0, 360] to degrees [-180, 180].
@@ -29,8 +24,6 @@ def to_180(lon):
     lon : array_like
         Longitude values
     """
-    if isinstance(lon, list):
-        np.array(lon)
     lon = (lon + 180) % 360 - 180
     return lon
 
@@ -44,13 +37,14 @@ def to_360(lon):
     lon : array_like
         Longitude values
     """
-    if isinstance(lon, list):
-        np.array(lon)
     lon = (lon - 360) % 360
     return lon
 
 
-# --- Temperature -------------------------------------------------------------
+# ======================================================================
+# Temperature
+# ======================================================================
+
 def K_to_C(K):
     """Convert Kelvin to Celsius"""
     return K - 273.15
@@ -75,20 +69,31 @@ def F_to_C(F):
     """Convert Fahrenheit to Celsius"""
     return (F - 32) * 5 / 9
 
+# ======================================================================
+# Wind
+# ======================================================================
 
-# --- Wind --------------------------------------------------------------------
+
 def ms_to_mph(ms):
     """Convert m/s to MPH"""
     return ms * 2.2369
 
 
-# --- Precipitation -----------------------------------------------------------
+# ======================================================================
+# Precipitation
+# ======================================================================
+
+
 def mm_to_inches(mm):
     """Convert mm to inches"""
     return mm * 0.0394
 
 
-# --- Pressure ----------------------------------------------------------------
+# ======================================================================
+# Pressure
+# ======================================================================
+
+
 def Pa_to_hPa(Pa):
     """Convert pascals to hectopascals (millibars, mb)"""
     return Pa / 100

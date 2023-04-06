@@ -1,0 +1,159 @@
+# ==============================================
+# Brian Blaylock's custom matplotlib style sheet
+# ==============================================
+# Goal: A consistent style suitable for both publication and presentation.
+#
+# Copy/link this file to the directory` ~/.config/matplotlib/stylelib`
+#
+#     cd ~/.config/matplotlib/stylelib
+#     ln -sf PATH/TO/BB_style.mplstyle BB_style.mplstyle
+#
+# Look for more style options here:
+# https://matplotlib.org/tutorials/introductory/customizing.html
+#
+# Use in your projects:
+#     plt.style.use('./BB.mplstyle')
+
+##=============================================================================
+##                            Font and Text
+##=============================================================================
+# I like the Fira Code, Mona Sans, and Hubot Sans fonts.
+# You can learn how to install them on Linux here
+# https://blaylockbk.github.io/Carpenter_Workshop/fonts_mpl.html
+
+font.serif: DejaVu Serif, Times New Roman, serif
+font.sans-serif: Mona-Sans, DejaVu Sans, Arial, Helvetica, Avant Garde, sans-serif
+font.cursive: Apple Chancery, Z003, Comic Sans MS, cursive
+font.fantasy: Hubot-Sans, Chicago, Charcoal, Impact, Western, Humor Sans, xkcd, fantasy
+font.monospace: Fira Code, DejaVu Sans Mono, Computer Modern Typewriter, Courier New, Courier, Fixed, Terminal, monospace
+
+font.family: sans-serif
+font.size: 12
+font.weight: 500
+
+text.color: .02
+
+axes.titleweight: 500
+axes.labelweight: 300
+
+##=============================================================================
+##                            Axes & Figure
+##=============================================================================
+figure.titlesize: large
+figure.titleweight: 800
+axes.titlesize: 12
+legend.fontsize: small
+
+#figure.facecolor: white
+figure.facecolor: none
+
+
+## This size is based on the AMS publication guide for a two-column wide color
+## images without type.
+##   https://www.ametsoc.org/index.cfm/aMS/publications/authors/journal-and-bams-authors/figure-information-for-authors/#Raster
+
+## Dots per inch
+## Default 150 is large enough for a presentation and development,
+## but when making a figure for a publication, use 300.
+figure.dpi: 150     # 1100 dpi for black/white line art
+                    #  700 dpi for greyscale/color image with text
+                    #  300 dpi for greyscale/color image without text
+
+
+# Figure width and height
+figure.figsize: 5.7, 3.5
+
+# Note: This default figsize is used for 2-column wide AMS publication
+# figures, and is also generally a good size for adding 4 pannels to a PowerPoint
+
+# Note: Need to add 0.2 inches to the figsize to get the correct figsize.
+# I'm not sure why plt.savefig isn't using the figsize specified.
+# Is it becasue of `savefig.bbox='tight'`?
+# | figsize width | AMS (actual) width             |
+# |---------------|--------------------------------|
+# |     3.4       | 3.2 inches wide for one column |
+# |     4.7       | 4.5 inches wide for 2/3 column |
+# |     5.7       | 5.5 inches wide for two column |
+# |     6.7       | 6.5 inches wide for >two column|
+
+
+figure.subplot.wspace: 0.1
+figure.subplot.hspace: 0.1
+
+##=============================================================================
+##                            Histogram
+##=============================================================================
+hist.bins: 50
+
+
+## ***************************************************************************
+## * ERRORBAR PLOTS                                                          *
+## ***************************************************************************
+errorbar.capsize: .5  # length of end cap on error bars in pixels
+
+## ***************************************************************************
+## * SCATTER PLOTS                                                           *
+## ***************************************************************************
+scatter.marker: .         # The default marker type for scatter plots.
+scatter.edgecolors: face  # The default edge colors for scatter plots.
+
+
+#* ============================================================================
+#*                             Images
+#* ============================================================================
+image.origin: lower  ## I primarily work with data arrays
+                     ## (e.g., GOES-16) and not real "images"
+                     ## where origin is the upper corner.
+
+##=============================================================================
+##                               Grid
+##=============================================================================
+axes.grid: True
+grid.color: 0.85
+grid.linestyle: --
+grid.linewidth: .75
+grid.alpha: 0.5
+
+# Draw gridlines and ticks *behind* patches (i.e., bar plots)
+# https://matplotlib.org/3.3.3/gallery/misc/zorder_demo.html#zorder-demo
+axes.axisbelow: True
+
+##=============================================================================
+##                               Hatches
+##=============================================================================
+hatch.color: (1, 1, 1, .33)
+hatch.linewidth: 8
+
+
+##=============================================================================
+##                            Dates format
+##=============================================================================
+# (someday, a newline character may be used, but not yet)
+date.autoformatter.year: %Y
+date.autoformatter.month: %b %Y
+date.autoformatter.day: %b %d
+date.autoformatter.hour: %b %d %H:%M
+date.autoformatter.minute: %b %d %H:%M
+date.autoformatter.second: %b %d %H:%M:%S
+
+
+##=============================================================================
+##                              Legend
+##=============================================================================
+legend.framealpha: 0.7      ## legend patch transparency
+legend.edgecolor: 0.9      ## background patch boundary color
+legend.labelspacing: 0.4      ## the vertical space between the legend entries
+legend.handlelength: 1.5      ## the length of the legend lines
+legend.handletextpad: 0.6      ## the space between the legend line and legend text
+
+
+##=============================================================================
+##                            Save Settings
+##=============================================================================
+savefig.bbox: tight
+savefig.pad_inches: 0.05
+savefig.dpi: 300
+savefig.transparent: True
+
+# Need this to allow modification of font properties in Illustrator
+svg.fonttype: path

@@ -13,9 +13,11 @@ https://dev.to/skotaro/artist-in-matplotlib---something-i-wanted-to-know-before-
 
 """
 import pickle
-
+import os
 import string
+from pathlib import Path
 import numpy as np
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 import matplotlib.ticker as mticker
@@ -25,6 +27,14 @@ import matplotlib.transforms as mtransforms
 # format the date axis formatting.
 # - plt.rcParams['date.autoformatter.day'] = '%b %d\n%H:%M'
 # - plt.rcParams['date.autoformatter.hour'] = '%b %d\n%H:%M'
+
+
+BB_mplstyle_path = Path(os.path.abspath(__file__)).parent / "BB.mplstyle"
+
+
+def list_fonts():
+    fonts = sorted([f.name for f in mpl.font_manager.fontManager.ttflist])
+    return np.unique(fonts)
 
 
 def copy_fig(fig):

@@ -25,6 +25,33 @@ Clean unneeded files
 conda clean -tp
 ```
 
+Run conda inside a bash script
+
+```bash
+eval "$(conda shell.bash hook)"
+```
+
+Channel Priority: put this in your `~/.condarc` file
+```yaml
+channels:
+  - conda-forge
+  - defaults
+```
+
+## Using Conda in a script
+
+In a Windows .bat script, use
+
+```
+CALL conda.bat activate <env-name>
+```
+
+In a bash script, use
+```
+eval "$(conda shell.bash hook)"
+conda activate <env-name>
+```
+
 ## Conda Mamba Solver: Faster Environment Solver
 
 Use the [mamba](https://conda.github.io/conda-libmamba-solver/getting-started/) solver in Conda (must be using Conda version>=22.11.0)
