@@ -424,7 +424,7 @@ def get_ETOPO1(top="ice", coarsen=None, thin=None):
     return ds[f"z_{top}"]
 
 
-def inset_global_map(ax, x=0.95, y=0.95, size=0.3, facecolor="#f88d0083"):
+def inset_global_map(ax, x=0.95, y=0.95, size=0.3, dark=True, facecolor="#f88d0083"):
     """Add an inset map showing the location of the main map on the globe.
 
     This was pieced together from these resources
@@ -463,7 +463,7 @@ def inset_global_map(ax, x=0.95, y=0.95, size=0.3, facecolor="#f88d0083"):
 
     # ===================
     # Inset Map Cosmetics
-    EasyMap(ax=ax_inset, dark=True, linewidth=0).STATES().LAND().OCEAN()
+    EasyMap(ax=ax_inset, dark=dark, linewidth=0).STATES().LAND().OCEAN()
 
     ax_inset.gridlines(
         xlocs=range(-180, 180, 10),
@@ -686,13 +686,38 @@ class EasyMap:
         return self
 
     def STATES(self, **kwargs):
-        """US state borders. *Includes coastlines*"""
+        """State and Province borders. *Includes coastlines*
+
+        Note: If scale="110m", only the US States are drawn.
+              If scale="50m", then more country states/provinces are drawn.
+              If scale="10m", then even *more* countries drawn.
+        """
         kwargs.setdefault("alpha", 0.15)
 
         kwargs = {**self.kwargs, **kwargs}
         self.ax.add_feature(feature.STATES.with_scale(self.scale), **kwargs)
         if self.verbose == "debug":
             print("🐛 STATES:", kwargs)
+        return self
+
+    def STATES2(self, **kwargs):
+        """States and Provinces (US, Canada, Australia, Brazil, China, Inda, etc.)
+
+        Alternative source for data than provided by STATES.
+        """
+        kwargs.setdefault("alpha", 0.15)
+
+        kwargs = {**self.kwargs, **kwargs}
+        states_provinces = feature.NaturalEarthFeature(
+            category="cultural",
+            name="admin_1_states_provinces_lines",
+            scale="50m",
+            facecolor="none",
+        )
+        self.ax.add_feature(states_provinces, **kwargs)
+
+        if self.verbose == "debug":
+            print("🐛 STATES2:", kwargs)
         return self
 
     def COUNTIES(self, counties_scale="20m", **kwargs):
