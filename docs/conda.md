@@ -1,5 +1,11 @@
 # Conda
 
+Update conda software
+
+```bash
+conda update -n base -c defaults conda
+```
+
 Update environment from yaml file
 
 ```bash
