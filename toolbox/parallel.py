@@ -213,7 +213,7 @@ class EasyParallel:
             f"with [{threads=}] for [{self.n:,}] items."
         )
 
-        with ThreadPoolExecutor(max_threads) as exe:
+        with ThreadPoolExecutor(threads) as exe:
             futures = [
                 exe.submit(self.func, *arg, **self.kwargs)
                 if hasattr(arg, "__len__")
