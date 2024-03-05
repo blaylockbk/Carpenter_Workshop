@@ -1760,6 +1760,3 @@ def north_south_pole_axes(figsize=(12, 7), extent=5821209.866366495, dark=True):
         )
 
     return fig, (ax1, ax2)
-
-
-north_south_pole_axes()
