@@ -1731,3 +1731,35 @@ class xr_to_cartopy:
                 ax.set_title(f"Valid:{date_str}", loc="right")
 
         return ax
+
+
+def north_south_pole_axes(figsize=(12, 7), extent=5821209.866366495, dark=True):
+    """Return a figure and axes that represent the north and southern hemisphere"""
+    fig = plt.figure(figsize=figsize, layout="constrained")
+    ax1 = plt.subplot(121, projection=ccrs.NorthPolarStereo())
+    ax2 = plt.subplot(122, projection=ccrs.SouthPolarStereo())
+
+    for ax in (ax1, ax2):
+        EasyMap(dark=dark, ax=ax).OCEAN().LAND()
+
+        ax.gridlines(
+            xlocs=range(-180, 180, 10),
+            ylocs=range(-90, 90, 10),
+            alpha=0.1,
+            lw=0.3,
+        )
+
+        ax.set_extent(
+            (
+                -extent,
+                extent,
+                -extent,
+                extent,
+            ),
+            crs=ax.projection,
+        )
+
+    return fig, (ax1, ax2)
+
+
+north_south_pole_axes()
