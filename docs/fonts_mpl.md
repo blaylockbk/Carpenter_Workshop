@@ -75,3 +75,8 @@ plt.xlabel("This is a label: 1,2,3", fontfamily='monospace', )
 | Custom Font | Default Font|
 |--|--|
 |![Alt text](assets/custom_fonts.png)|![Alt text](assets/default_fonts.png)|
+
+
+## Additional References
+
+- <https://github.com/pawjast/medium/blob/main/code/17_using_custom_fonts_in_matplotlib.ipynb>
