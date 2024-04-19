@@ -526,7 +526,8 @@ class EasyMap:
         figsize=None,
         fignum=None,
         dpi=None,
-        dark=False,
+        dark=False, #! TODO: deprecate this, use "theme='dark'" instead.
+        theme=None, # {None/'standard', 'dark', 'grey'}
         verbose=False,
         add_coastlines=True,
         facecolor=None,
@@ -595,15 +596,21 @@ class EasyMap:
         >>> feat = ax.EasyMap
         >>> feat.OCEAN().STATES()
         """
+
+
         self.scale = scale
         self.ax = ax
         self.crs = crs
         self.figsize = figsize
         self.fignum = fignum
         self.dpi = dpi
-        self.dark = dark
+        self.theme = theme.lower()
         self.verbose = verbose
         self.kwargs = kwargs
+
+        _theme = {None, 'standard', 'dark', 'grey', 'gray'}
+        if self.theme not in _theme:
+            raise ValueError(f"`theme` must be one of {_theme}.")
 
         self.ax = check_cartopy_axes(
             ax=self.ax, crs=self.crs, fignum=self.fignum, verbose=self.verbose
@@ -621,10 +628,17 @@ class EasyMap:
         # The defaults would be set the first time the function is called,
         # but the next time it is called and `dark=True` the defaults do not
         # reset. I don't know why this is the behavior.
-        if self.dark:
+        if self.theme.lower() == 'dark':
             self.land = "#060613"  # dark (default)
             self.land1 = "#3f3f3f"  # lighter (alternative)
             self.water = "#0f2b38"
+            # https://github.com/SciTools/cartopy/issues/880
+            self.ax.set_facecolor(self.land)  # requires cartopy >= 0.18
+            self.kwargs = {**{"edgecolor": ".5"}, **self.kwargs}
+        elif self.theme.lower() in ['grey', 'gray']:
+            self.land = "#B7B7B8"  # dark (default)
+            self.land1 = "#B7B7B8"  # lighter (alternative)
+            self.water = "#E2EBFF"
             # https://github.com/SciTools/cartopy/issues/880
             self.ax.set_facecolor(self.land)  # requires cartopy >= 0.18
             self.kwargs = {**{"edgecolor": ".5"}, **self.kwargs}
