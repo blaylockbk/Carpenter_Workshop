@@ -64,38 +64,7 @@ plt.rcParams["axes.axisbelow"] = True
 plt.rcParams['svg.fonttype'] = 'none'
 ```
 
-## Dates
 
-```python
-import matplotlib.dates as mdates
-formatter = mdates.DateFormatter('%Y-%m-%d %H:%M:%S')
-ax.xaxis.set_major_formatter(formatter)
-```
-
-```python
-import matplotlib.dates as mdates
-ax.xaxis.set_major_locator(mdates.HourLocator(range(0, 24, 3)))
-ax.xaxis.set_minor_locator(mdates.HourLocator(range(0, 24, 1)))
-```
-
-Use Dates on Colorbar Ticks
-https://github.com/matplotlib/matplotlib/issues/17447#issuecomment-630885219
-
-Set date autoformatter:
-
-```python
-plt.rcParams['date.autoformatter.day'] = '%b %d\n%H:%M'
-plt.rcParams['date.autoformatter.hour'] = '%b %d\n%H:%M'
-```
-
-Set date ticks
-
-```python
-from matplotlib.dates import HourLocator, DateFormatter
-plt.plot(pd.date_range('2017-01-01', '2017-01-02', freq='h'), range(25))
-plt.gca().xaxis.set_major_locator(HourLocator(byhour=range(0,24,6)))
-plt.gca().xaxis.set_major_formatter(DateFormatter('%d %b %Y\n%H:%M\n%A'))
-```
 
 ## Latex Strings
 
