@@ -1,4 +1,4 @@
-# Install Fonts for Matplotlib
+# Matplotlib: Custom Fonts
 
 ## Install Font (Linux)
 
