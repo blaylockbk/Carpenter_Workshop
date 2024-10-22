@@ -14,7 +14,7 @@ Does projection matter? YES!
 
 You've looked at maps with distortion that show Greenland the size of
 South America. For the same reason, you should show data on appropriate
-projection globes. For global plots, consider using Mollweide projetion
+projection globes. For global plots, consider using Mollweide projection
 over Mercator or Robinson. From the website above,
 
     [Mollweide] sacrifices the precision of some of the angles and
@@ -29,6 +29,8 @@ may also be more appropriate than Robinson, but not yet supported by
 Cartopy.
 
 """
+
+
 import urllib.request
 import warnings
 
@@ -41,11 +43,12 @@ import pandas as pd
 import pyproj
 import requests
 import xarray as xr
+import shapely.geometry as sgeom
+from mpl_toolkits.axes_grid1.inset_locator import InsetPosition
 from cartopy.io import shapereader
 from functools import partial
 from paint.standard2 import cm_dpt, cm_rh, cm_tmp, cm_wind
-from shapely.ops import transform
-from shapely.geometry import GeometryCollection, Point, Polygon, MultiPoint, shape
+import shapely.ops as sops
 
 from toolbox.stock import Path
 
@@ -93,7 +96,7 @@ _extents = dict(
 
 
 ########################################################################
-# Methods attached to axes created by `common_features`
+# Methods attached to axes created by `EasyMap`
 def _adjust_extent(self, pad="auto", fraction=0.05, verbose=False):
     """
     Adjust the extent of an existing cartopy axes.
@@ -421,7 +424,89 @@ def get_ETOPO1(top="ice", coarsen=None, thin=None):
     return ds[f"z_{top}"]
 
 
-class common_features:
+def inset_global_map(ax, x=0.95, y=0.95, size=0.3, dark=True, facecolor="#f88d0083"):
+    """Add an inset map showing the location of the main map on the globe.
+
+    This was pieced together from these resources
+    - https://predictablysunny.com/posts/inset_map_cartopy/
+    - https://scitools.org.uk/cartopy/docs/latest/gallery/lines_and_polygons/effects_of_the_ellipse.html#sphx-glr-gallery-lines-and-polygons-effects-of-the-ellipse-py
+    - https://stackoverflow.com/a/53712048/2383070
+
+    Parameters
+    ----------
+    ax : a cartopy axes
+        A cartopy axes with the extent already set (not global).
+    """
+    # ======================
+    # Find the extent center
+    extent = ax.get_extent(crs=pc)
+    center_lon = (extent[0] + extent[1]) / 2
+    center_lat = (extent[2] + extent[3]) / 2
+
+    # ====================
+    # Create the Inset Map
+
+    # Location and size of inset on axis
+    inset_x = x
+    inset_y = y
+    inset_size = size
+
+    # Create and position inset
+    ortho = ccrs.Orthographic(central_latitude=center_lat, central_longitude=center_lon)
+    ax_inset = plt.axes([0, 0, 1, 1], projection=ortho)
+    ax_inset.set_global()
+
+    ip = InsetPosition(
+        ax, [inset_x - inset_size / 2, inset_y - inset_size / 2, inset_size, inset_size]
+    )
+    ax_inset.set_axes_locator(ip)
+
+    # ===================
+    # Inset Map Cosmetics
+    EasyMap(ax=ax_inset, dark=dark, linewidth=0).STATES().LAND().OCEAN()
+
+    ax_inset.gridlines(
+        xlocs=range(-180, 180, 10),
+        ylocs=range(-90, 91, 10),
+        lw=0.1,
+        alpha=0.2,
+    )
+
+    # =========================
+    # Add Bounding Box to Inset
+
+    # Create Boundary box: need to increase the boundary of box Polygon coords
+    crs_extent = ax.get_extent(crs=ax.projection)
+    ring = sgeom.box(
+        crs_extent[0], crs_extent[2], crs_extent[1], crs_extent[3]
+    ).exterior
+
+    # Set the number of points along a side
+    n_points = 200
+
+    # Create a new LinearRing with additional points
+    new_ring_coords = []
+    for i in range(len(ring.coords) - 1):
+        start = ring.coords[i]
+        end = ring.coords[i + 1]
+        line = sgeom.LineString([start, end])
+        new_points = [
+            line.interpolate(i) for i in np.linspace(1, line.length, n_points)
+        ]
+        new_ring_coords += [start] + new_points + [end]
+    new_ring = sgeom.LinearRing(new_ring_coords)
+
+    # Add bounding box to map
+    ax_inset.add_geometries(
+        [new_ring],
+        crs=ax.projection,
+        facecolor=facecolor,
+    )
+
+    return ax_inset
+
+
+class EasyMap:
     """
     Build a matplotlib/cartopy axes with common map elements.
 
@@ -500,14 +585,14 @@ class common_features:
         --------
         https://github.com/blaylockbk/Carpenter_Workshop/blob/main/notebooks/demo_cartopy_tools.ipynb
 
-        >>> feat = common_features()
+        >>> feat = EasyMap()
         >>> feat.OCEAN().STATES()
         >>> ax = feat.ax
 
         Alternatively,
 
-        >>> ax = common_features().ax
-        >>> feat = ax.common_features
+        >>> ax = EasyMap().ax
+        >>> feat = ax.EasyMap
         >>> feat.OCEAN().STATES()
         """
         self.scale = scale
@@ -524,10 +609,10 @@ class common_features:
             ax=self.ax, crs=self.crs, fignum=self.fignum, verbose=self.verbose
         )
 
-        # In a round-about way, you can get this common_features object from the axes
-        # >>> ax = common_features().ax
-        # >>> ax.common_features.STATES()
-        self.ax.common_features = self
+        # In a round-about way, you can get this EasyMap object from the axes
+        # >>> ax = EasyMap().ax
+        # >>> ax.EasyMap.STATES()
+        self.ax.EasyMap = self
 
         self.kwargs.setdefault("linewidth", 0.75)
 
@@ -601,13 +686,38 @@ class common_features:
         return self
 
     def STATES(self, **kwargs):
-        """US state borders. *Includes coastlines*"""
+        """State and Province borders. *Includes coastlines*
+
+        Note: If scale="110m", only the US States are drawn.
+              If scale="50m", then more country states/provinces are drawn.
+              If scale="10m", then even *more* countries drawn.
+        """
         kwargs.setdefault("alpha", 0.15)
 
         kwargs = {**self.kwargs, **kwargs}
         self.ax.add_feature(feature.STATES.with_scale(self.scale), **kwargs)
         if self.verbose == "debug":
             print("🐛 STATES:", kwargs)
+        return self
+
+    def STATES2(self, **kwargs):
+        """States and Provinces (US, Canada, Australia, Brazil, China, Inda, etc.)
+
+        Alternative source for data than provided by STATES.
+        """
+        kwargs.setdefault("alpha", 0.15)
+
+        kwargs = {**self.kwargs, **kwargs}
+        states_provinces = feature.NaturalEarthFeature(
+            category="cultural",
+            name="admin_1_states_provinces_lines",
+            scale="50m",
+            facecolor="none",
+        )
+        self.ax.add_feature(states_provinces, **kwargs)
+
+        if self.verbose == "debug":
+            print("🐛 STATES2:", kwargs)
         return self
 
     def COUNTIES(self, counties_scale="20m", **kwargs):
@@ -976,7 +1086,7 @@ class common_features:
         .. note::
             When adding a tile product to a map, it might be better to add
             it to the map first, then set the map extent, then make a separate
-            call to ``common_features`` to add other features like roads and
+            call to ``EasyMap()`` to add other features like roads and
             counties. The reason is because, if you add a tile map to
 
         Parameters
@@ -1027,7 +1137,7 @@ class common_features:
         .. note::
             When adding a tile product to a map, it might be better to add
             it to the map first, then set the map extent, then make a separate
-            call to ``common_features`` to add other features like roads and
+            call to ``EasyMap()`` to add other features like roads and
             counties. The reason is because, if you add a tile map to
 
         Parameters
@@ -1139,7 +1249,7 @@ class common_features:
         ## -----------------------------
         x = outside[:, 0]
         y = outside[:, 1]
-        domain_polygon_latlon = Polygon(zip(x, y))
+        domain_polygon_latlon = sgeom.Polygon(zip(x, y))
 
         ## Polygon in projection coordinates
         ## ----------------------------------
@@ -1152,7 +1262,7 @@ class common_features:
         x = transform[:, 0]
         y = transform[:, 1]
 
-        domain_polygon = Polygon(
+        domain_polygon = sgeom.Polygon(
             zip(x, y)
         )  # This is the boundary of the LAT/LON array supplied.
         global_polygon = (
@@ -1192,6 +1302,10 @@ class common_features:
         self.domain_polygon = domain_polygon
         self.domain_polygon_latlon = domain_polygon_latlon
         return self
+
+    def INSET_GLOBE(self, **kwargs):
+        """Add an axis showing a global inset map"""
+        return inset_global_map(self.ax, **kwargs)
 
     def set_extent(self, *args, **kwargs):
         self.ax.set_extent(*args, **kwargs)
@@ -1236,9 +1350,9 @@ def point_radius_polygon(lon, lat, radius):
     )
 
     radius_meters = radius * 1000
-    buf = Point(0, 0).buffer(radius_meters)  # distance in metres, converted to km
-    points = transform(project, buf).exterior.coords[:]
-    return Polygon(points)
+    buf = sgeom.Point(0, 0).buffer(radius_meters)  # distance in metres, converted to km
+    points = sops.transform(project, buf).exterior.coords[:]
+    return sgeom.Polygon(points)
 
 
 def grid_and_earth_relative_vectors(
@@ -1390,8 +1504,8 @@ def state_polygon(state=None, country="USA", county=None, verbose=True):
     f = requests.get(URL)
 
     features = f.json()["features"]
-    poly = GeometryCollection(
-        [shape(feature["geometry"]).buffer(0) for feature in features]
+    poly = sgeom.GeometryCollection(
+        [sgeom.shape(feature["geometry"]).buffer(0) for feature in features]
     )
 
     if verbose:
@@ -1617,3 +1731,32 @@ class xr_to_cartopy:
                 ax.set_title(f"Valid:{date_str}", loc="right")
 
         return ax
+
+
+def north_south_pole_axes(figsize=(12, 7), extent=5821209.866366495, dark=True):
+    """Return a figure and axes that represent the north and southern hemisphere"""
+    fig = plt.figure(figsize=figsize, layout="constrained")
+    ax1 = plt.subplot(121, projection=ccrs.NorthPolarStereo())
+    ax2 = plt.subplot(122, projection=ccrs.SouthPolarStereo())
+
+    for ax in (ax1, ax2):
+        EasyMap(dark=dark, ax=ax).OCEAN().LAND()
+
+        ax.gridlines(
+            xlocs=range(-180, 180, 10),
+            ylocs=range(-90, 90, 10),
+            alpha=0.1,
+            lw=0.3,
+        )
+
+        ax.set_extent(
+            (
+                -extent,
+                extent,
+                -extent,
+                extent,
+            ),
+            crs=ax.projection,
+        )
+
+    return fig, (ax1, ax2)
