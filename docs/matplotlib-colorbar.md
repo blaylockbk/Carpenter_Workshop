@@ -98,6 +98,46 @@ plt.colorbar(spacing="proportional")
 ```
 ![alt text](images/image-5.png)
 
+## Text in Colorbar
+
+```python
+import numpy as np
+import matplotlib.pyplot as plt
+
+ax = plt.axes()
+art = ax.pcolormesh(np.random.random([10, 10]), cmap="bwr", vmax=1, vmin=-1)
+
+# Add a shared colorbar for both subplots
+cbar = plt.colorbar(art, ax=ax)
+
+cbar.ax.text(
+    0.5,
+    0.01,
+    "Value is Negative",
+    transform=cbar.ax.transAxes,
+    fontsize=10,
+    fontweight="bold",
+    ha="center",
+    rotation=90,
+    va="bottom",
+    color="white",
+)
+
+cbar.ax.text(
+    0.5,
+    0.99,
+    "Value is Positive",
+    transform=cbar.ax.transAxes,
+    fontsize=10,
+    fontweight="bold",
+    ha="center",
+    rotation=90,
+    va="top",
+    color="white",
+)
+```
+![alt text](images/image-10.png)
+
 ## Adjust colorbar object
 
 ```python
