@@ -42,4 +42,4 @@ plt.gca().xaxis.set_major_formatter(DateFormatter("%d %b %Y\n%H:%M\n%A"))
 ## Dates and colorbars
 
 Use Dates on Colorbar Ticks
-https://github.com/matplotlib/matplotlib/issues/17447#issuecomment-630885219
+<https://github.com/matplotlib/matplotlib/issues/17447#issuecomment-630885219>
