@@ -1,5 +1,17 @@
 # IPython / Jupyter
 
+## Cell Timers
+
+In your jupyter notebook, you can print the time it takes to execute a cell
+```
+%%time
+```
+
+You can also time the exceution many times and print the average time. This is great for measuring code performance as your developing code
+```
+%%timeit
+```
+
 ## Embed IPython in a function
 
 You can embed an IPython in your function or script
