@@ -22,14 +22,14 @@ unzip Fira_Code_v6.2.zip
 cd ~/.fonts
 mkdir MonaSans
 cd MonaSans
-wget https://github.com/github/mona-sans/releases/download/v1.0/Mona.Sans.1.0.zip
+wget https://github.com/github/mona-sans/releases/download/v1.0.1/MonaSans.zip
 unzip Mona.Sans.1.0.zip
 
 # Install Hubot Sans Font
 cd ~/.fonts
 mkdir HubotSans
 cd HubotSans
-wget https://github.com/github/hubot-sans/releases/download/v1.0/Hubot.Sans.1.0.zip
+wget https://github.com/github/hubot-sans/releases/download/v1.0.1/Hubot-Sans.zip
 unzip Hubot.Sans.1.0.zip
 ```
 
