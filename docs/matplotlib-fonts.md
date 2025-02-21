@@ -23,14 +23,14 @@ cd ~/.fonts
 mkdir MonaSans
 cd MonaSans
 wget https://github.com/github/mona-sans/releases/download/v1.0.1/MonaSans.zip
-unzip Mona.Sans.zip
+unzip MonaSans.zip
 
 # Install Hubot Sans Font
 cd ~/.fonts
 mkdir HubotSans
 cd HubotSans
 wget https://github.com/github/hubot-sans/releases/download/v1.0.1/Hubot-Sans.zip
-unzip Hubot.Sans.zip
+unzip Hubot-Sans.zip
 ```
 
 Once you have the fonts downloaded, then update the font cache.
