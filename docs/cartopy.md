@@ -51,3 +51,42 @@ ax4.coastlines()
 plt.subplots_adjust(hspace=0.1, wspace=0.1)
 ```
 ![Alt text](images/multiple_projections2.png)
+
+
+# Dark Theme Map
+![alt text](images/image-13.png)
+
+```python
+import cartopy.crs as ccrs
+import cartopy.feature as cfeature
+
+plt.figure(figsize=[16, 8])
+ax1 = plt.subplot(221, projection=ccrs.PlateCarree())
+ax2 = plt.subplot(222, projection=ccrs.PlateCarree())
+ax3 = plt.subplot(223, projection=ccrs.PlateCarree())
+ax4 = plt.subplot(224, projection=ccrs.PlateCarree())
+axes = (ax1, ax2, ax3, ax4)
+
+for ax in axes:
+    ax.set_global()
+    ax.add_feature(cfeature.LAND.with_scale("50m"), facecolor="#060613")
+    # ax.add_feature(cfeature.OCEAN.with_scale("50m"), facecolor="#0f2b38")
+    ax.set_facecolor("#0f2b38")  # OCEAN color
+    ax.add_feature(
+        cfeature.COASTLINE.with_scale("50m"),
+        zorder=1000,
+        facecolor="none",
+        linewidth=0.1,
+        edgecolor="0.5",
+    )
+    ax.add_feature(
+        cfeature.BORDERS.with_scale("50m"),
+        zorder=1000,
+        facecolor="none",
+        linewidth=0.1,
+        edgecolor="0.5",
+    )
+
+
+plt.tight_layout()
+```
